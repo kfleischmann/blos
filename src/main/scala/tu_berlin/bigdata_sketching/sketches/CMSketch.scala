@@ -13,7 +13,7 @@ case class Hashfunction(BIG_PRIME :  BigInt, w:Int ) extends Serializable {
   }
 }
 
-class CMSketch(delta : Double, epsilon : Double, k : Int ) extends Serializable {
+case class CMSketch(delta : Double, epsilon : Double, k : Int ) extends Serializable {
   val BIG_PRIME :BigInt = 9223372036854775783L
 
   // weights -> space
@@ -44,6 +44,10 @@ class CMSketch(delta : Double, epsilon : Double, k : Int ) extends Serializable 
       count(row)(col) += increment
     }
     update_heap(key)
+  }
+
+  def +( key : String, increment : Int ) = {
+    update(key,increment)
   }
 
   def update_heap( key : String ) = {
@@ -91,7 +95,6 @@ class CMSketch(delta : Double, epsilon : Double, k : Int ) extends Serializable 
     hf
   }
 
-
   def mergeWith( s : CMSketch ) = {
     for( x <- 0 until d){
       for( y <- 0 until w ) {
@@ -101,5 +104,11 @@ class CMSketch(delta : Double, epsilon : Double, k : Int ) extends Serializable 
     // okay i am not sure to be completly correct do find the overall top
     heap.foreach( { x => update_heap(x._2)} )
     s.heap.foreach( { x => update_heap(x._2)} )
+  }
+
+  override def toString = {
+    var out : String = ""+d+","+w+"\n"
+    out = out + count.map( x => x.mkString(" ") ).mkString("\n")
+    out
   }
 }

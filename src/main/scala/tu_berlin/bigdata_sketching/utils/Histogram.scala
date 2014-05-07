@@ -7,7 +7,7 @@ case class Histogram(
                       var bins : scala.collection.mutable.Buffer[(Double,Int)] = scala.collection.mutable.Buffer[(Double,Int)](),
                       var maxBinValue : Double = Double.NegativeInfinity,
                       var minBinValue : Double = Double.PositiveInfinity
-                      ) {
+                      ) extends Serializable {
   def getBins = bins
 
   def getMax = maxBinValue
@@ -76,6 +76,12 @@ case class Histogram(
     for(i<-0 until h.bins.length) h2.update(h.bins(i)._1, h.bins(i)._2)
     h2
   }
+
+  def +( p : Double ) : this.type = {
+    update(p,1)
+    this
+  }
+
   def update ( p : Double ) : this.type = {
     update(p,1)
     this
@@ -131,7 +137,7 @@ case class Histogram(
     }//for
   }
 }
-object Histogram {
+object Histogram extends Serializable {
   def fromString(str:String) = {
     val values = str.split(";")
     val feature=values(0).toInt

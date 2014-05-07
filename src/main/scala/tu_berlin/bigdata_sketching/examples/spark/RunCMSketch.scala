@@ -42,7 +42,6 @@ object RunCMSketch {
 
     val sketch = ds.new_partial_sketch
     sketch.alloc
-    val accum = sc.accumulator( sketch )
 
     println("samples count " + lines.count())
 
