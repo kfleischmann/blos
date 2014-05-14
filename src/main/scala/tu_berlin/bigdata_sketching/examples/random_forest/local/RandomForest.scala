@@ -10,14 +10,14 @@ object RandomForest {
     val num_labels = 10
 
     // false positive in percentage
-    val p = 0.01
+    val p = 0.20
 
 
     // sketching phase
     val sketching = new RFSketchingPhase(num_features, candidates, num_samples, num_labels, p )
     val sketch = sketching.build_sketch("/home/kay/normalized_small.txt")
 
-    val rdt = new RandomDecisionTree(sketch, 10, "/home/kay/rf/rf_output_tree")
+    val rdt = new RandomDecisionTree(sketch, 10, "/home/kay/rf/rf_output_tree_10p")
     // initial all features allowed
     val features = List.range(0,num_features).toArray
 
