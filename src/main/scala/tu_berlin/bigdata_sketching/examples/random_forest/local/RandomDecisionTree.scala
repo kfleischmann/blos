@@ -103,8 +103,8 @@ class RandomDecisionTree(val sketch : RFSketch, minNrOfSplitItems : Int, out : S
     }
 
     val _qj = qj.toList.map(x=>x/numqj.toDouble)
-    val _qjL = qjL.toList.map(x=>x/numqjL.toDouble)
-    val _qjR = qjR.toList.map(x=>x/numqjR.toDouble)
+    val _qjL = qjL.toList.map(x=>x/numqj.toDouble)
+    val _qjR = qjR.toList.map(x=>x/numqj.toDouble)
 
     new SplitCandidate( feature, candidate,
                         numqj, numqjL, numqjR,
@@ -115,9 +115,7 @@ class RandomDecisionTree(val sketch : RFSketch, minNrOfSplitItems : Int, out : S
 
 
   def build_tree( node : TreeNode ) {
-    println("split node "+node.treeId+","+node.nodeId)
     val bestSplit = node.featureSpace.flatMap( feature => sketch.candidates(feature).map( candidate => node_feature_distribution(feature,candidate, node) ) ).maxBy( x => x.get_quality )
-
     if(!isStoppingCriterion(bestSplit)){
       val leftNodeId : BigInt = ((node.nodeId + 1L) * 2) - 1
       val rightNodeId : BigInt = ((node.nodeId + 1L) * 2)
