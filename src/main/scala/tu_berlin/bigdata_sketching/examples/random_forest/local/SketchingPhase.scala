@@ -8,8 +8,8 @@ import org.apache.hadoop.util.bloom.Key
 import java.io._
 
 
-case class RFSketch(val filter : BloomFilter, val histograms : Array[Histogram], val num_samples : Int,
-                    val num_features : Int, val num_canidates : Int ){
+case class RFSketch(val filter : BloomFilter, val candidates : Array[List[Double]], val num_samples : Int,
+                    val num_features : Int, val num_labels : Int, val num_canidates : Int ){
   def write_filter(filename : String ) {
     println("store to file")
     val fos = new FileOutputStream(filename);
@@ -25,7 +25,7 @@ case class RFSketch(val filter : BloomFilter, val histograms : Array[Histogram],
   }
 }
 
-class RFSketchingPhase(val num_features : Int, val candidates : Int, val num_samples : Int , val p : Double ) {
+class RFSketchingPhase(val num_features : Int, val candidates : Int, val num_samples : Int , val num_labels : Int, val p : Double ) {
   /*def num_features = 784
   def candidates = 10
   def num_samples = 1000
@@ -37,7 +37,7 @@ class RFSketchingPhase(val num_features : Int, val candidates : Int, val num_sam
   // prediction in worst case
   // the real case differs from this value. This is due to the fact
   // that invalid split candidates are filtered out
-  def n = num_samples.toDouble*num_features.toDouble*candidates.toDouble
+  def n = num_samples.toDouble*num_features.toDouble*candidates.toDouble+num_samples.toDouble*num_labels
 
   // lets say we want 10% of the storage
   def m = -n*Math.log(p) / (Math.pow( Math.log(2),2.0)) //(0.1*n).toInt
@@ -60,7 +60,6 @@ class RFSketchingPhase(val num_features : Int, val candidates : Int, val num_sam
   def read_histograms( in : String ) = {
     //val source = scala.io.Source.fromFile(file)
     //val histograms = new Array[Histogram](num_features)
-
   }
 
   def read_sketch( in : String ) = {
@@ -86,8 +85,9 @@ class RFSketchingPhase(val num_features : Int, val candidates : Int, val num_sam
     val bloom_filter = getBloomFilter
 
     val histograms = new Array[Histogram](num_features)
+    val feature_candidates = new Array[List[Double]](num_features)
     for(feature_index<-0 until num_features) {
-       histograms(feature_index) = new Histogram(feature_index, max_bins)
+     histograms(feature_index) = new Histogram(feature_index, max_bins)
     }
 
     val file=in
@@ -118,18 +118,29 @@ class RFSketchingPhase(val num_features : Int, val candidates : Int, val num_sam
 
       for(f<- 0 until features.size ){
         val candidates = histograms(f).uniform(max_bins)
+        feature_candidates(f) = candidates
         candidates.foreach( c => {
           val value = features(f);
-          val key="key_" + index + "_"+ f +"_"+ c+"_" + label
+          val keyL="key_" + index + "_"+ f +"_"+ c +"_" + label+"_L"
+          val keyR="key_" + index + "_"+ f +"_"+ c +"_" + label+"_R"
           if( value.toDouble <= c )
-            bloom_filter.add(new Key(key.getBytes()))
+            bloom_filter.add(new Key(keyL.getBytes()))
+          else
+            bloom_filter.add(new Key(keyR.getBytes()))
         })
       }
+
+      // insert label info
+      val key="key_" + index +"_" + label
+      bloom_filter.add(new Key(key.getBytes()))
+
       if(index%1000==0)println("line "+index)
     })
 
     println("sketch built")
 
+
+    /*
     println("measure quality")
 
     var errors = 0
@@ -160,6 +171,15 @@ class RFSketchingPhase(val num_features : Int, val candidates : Int, val num_sam
           }
         })
       }
+      // insert label info
+      val key="key_" + index +"_" + label
+      total+=1
+      if( bloom_filter.membershipTest(new Key(key.getBytes())) ){
+        errors+=1
+        //println(key)
+      }
+
+
       if(index%1000==0){
         println("line "+index)
         println("accuracy: "+ (1.0-(errors.toDouble/total.toDouble)))
@@ -170,7 +190,8 @@ class RFSketchingPhase(val num_features : Int, val candidates : Int, val num_sam
     println("total: "+total)
     println("errors: "+errors)
     println("accuracy: "+ (1.0-(errors.toDouble/total.toDouble)))
+    */
 
-    new RFSketch(bloom_filter, histograms, num_samples, num_features, candidates)
+    new RFSketch(bloom_filter, feature_candidates, num_samples, num_features, num_labels, candidates)
   }
 }

@@ -23,7 +23,17 @@ object DecisionTreeUtils {
       var random = new Random().nextInt(features.length);
       arr(i)=features.remove(random);
     }
-    arr;
+    arr
+  }
+
+  def generateBaggingTable(size : Int, maxRandomNumber : Int ) = {
+    var arr : Array[Int] = Array()
+    arr = Array(size)
+    arr = Array.fill(size)(0)
+    for (i <- 0 until size){
+      arr(i) = Random.nextInt(maxRandomNumber)
+    }
+    arr
   }
 
   var preParseURIForLocalFileSystem = false
