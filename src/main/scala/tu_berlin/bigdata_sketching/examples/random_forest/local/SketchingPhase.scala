@@ -8,19 +8,36 @@ import org.apache.hadoop.util.bloom.Key
 import java.io._
 
 
-object SketchingPhase {
-  def Gbits = 1024*1024*1024.0*8
+case class RFSketch(val filter : BloomFilter, val histograms : Array[Histogram], val num_samples : Int,
+                    val num_features : Int, val num_canidates : Int ){
+  def write_filter(filename : String ) {
+    println("store to file")
+    val fos = new FileOutputStream(filename);
+    val dos = new DataOutputStream(fos);
+    filter.write(dos)
+    // write histograms
+    fos.close()
+    dos.close()
 
-  // 10 GB
-  def num_features = 784
-  def candidates = 5
+  }
+  // not implemented yet
+  def write_histograms(filename : String ) {
+  }
+}
+
+class RFSketchingPhase(val num_features : Int, val candidates : Int, val num_samples : Int , val p : Double ) {
+  /*def num_features = 784
+  def candidates = 10
   def num_samples = 1000
 
-  // real items
-  def n = num_samples.toDouble*num_features.toDouble*candidates.toDouble
+  // false positive in percentage
+  def p = 0.01*/
 
-  // 1% false positive
-  def p = 0.01
+  // real items
+  // prediction in worst case
+  // the real case differs from this value. This is due to the fact
+  // that invalid split candidates are filtered out
+  def n = num_samples.toDouble*num_features.toDouble*candidates.toDouble
 
   // lets say we want 10% of the storage
   def m = -n*Math.log(p) / (Math.pow( Math.log(2),2.0)) //(0.1*n).toInt
@@ -30,6 +47,8 @@ object SketchingPhase {
   def bloomFilterSize = m.toInt
   def numHashfunctions = k.toInt
 
+  // built histograms are scaled to this maximum number of bins
+  // representing the split canidates
   val max_bins = candidates
 
   def getBloomFilter = {
@@ -37,12 +56,14 @@ object SketchingPhase {
   }
 
 
-  def main(args: Array[String]) {
-    build_sketch("/home/kay/normalized_very_small.txt", "/home/kay/bloomfilter_very_small")
-    read_sketch("/home/kay/bloomfilter_very_small")
+  // not implemented yet
+  def read_histograms( in : String ) = {
+    //val source = scala.io.Source.fromFile(file)
+    //val histograms = new Array[Histogram](num_features)
+
   }
 
-  def read_sketch( in : String ) {
+  def read_sketch( in : String ) = {
     val bloom_filter = getBloomFilter
     val fis = new FileInputStream(in);
     val dis = new DataInputStream(fis);
@@ -51,16 +72,16 @@ object SketchingPhase {
 
     fis.close()
     dis.close()
+
+    bloom_filter
   }
 
-  def build_sketch( in : String, out : String) = {
+  def build_sketch( in : String ) = {
     println("n "+n.toLong)
     println("m "+m.toLong)
     println("size: "+(m/8/1024/1024/1024)+" gb")
     println("k "+k.toInt)
     println("numHashfunctions "+numHashfunctions)
-
-    System.exit(0)
 
     val bloom_filter = getBloomFilter
 
@@ -108,12 +129,6 @@ object SketchingPhase {
     })
 
     println("sketch built")
-    println("store to file")
-
-    val fos = new FileOutputStream(out);
-    val dos = new DataOutputStream(fos);
-
-    bloom_filter.write(dos)
 
     println("measure quality")
 
@@ -150,12 +165,12 @@ object SketchingPhase {
         println("accuracy: "+ (1.0-(errors.toDouble/total.toDouble)))
       }
     })
+
     println("------------------------")
     println("total: "+total)
     println("errors: "+errors)
     println("accuracy: "+ (1.0-(errors.toDouble/total.toDouble)))
 
-    fos.close()
-    dos.close()
+    new RFSketch(bloom_filter, histograms, num_samples, num_features, candidates)
   }
 }
