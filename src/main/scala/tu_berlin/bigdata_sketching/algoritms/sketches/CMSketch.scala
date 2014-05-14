@@ -1,7 +1,10 @@
-package main.scala.tu_berlin.bigdata_sketching.sketches
+package main.scala.tu_berlin.bigdata_sketching.algoritms.sketches
 
 import util.Random
 import scala.collection.mutable.PriorityQueue
+import java.security.{NoSuchAlgorithmException, MessageDigest}
+import java.math.BigInteger
+
 
 case class Hashfunction(BIG_PRIME :  BigInt, w:Int ) extends Serializable {
   def random_parameter = Math.abs(Random.nextLong())
@@ -12,6 +15,29 @@ case class Hashfunction(BIG_PRIME :  BigInt, w:Int ) extends Serializable {
     (a*x+b) % BIG_PRIME % w
   }
 }
+
+/*
+// broken
+case class Hashfunction(BIG_PRIME :  BigInt, w:Int ) extends Serializable {
+  implicit def Int2Bytes(value: Int) : Array[Byte] = {
+    val bytes = new Array[Byte](4)
+    bytes.map( x => { val offset = (bytes.size -1 - bytes.indexOf(x)) <<3; ((value >>> offset) & 0xFF).asInstanceOf[Byte]  })
+    bytes
+  }
+
+  def random_parameter = Math.abs(Random.nextLong())
+  val a :BigInt = random_parameter
+  val b :BigInt = random_parameter
+  val algorithm : String = "SHA"
+  private[this] val digest = {
+    try { MessageDigest.getInstance(algorithm) }
+    catch {case e: NoSuchAlgorithmException => null }
+  }
+  def hash( value: Int ) = {
+    digest.update(value )
+    Math.abs(new BigInteger(1, digest.digest).intValue) % (w -1)
+  }
+}*/
 
 case class CMSketch(delta : Double, epsilon : Double, k : Int ) extends Serializable {
   val BIG_PRIME :BigInt = 9223372036854775783L
@@ -43,7 +69,7 @@ case class CMSketch(delta : Double, epsilon : Double, k : Int ) extends Serializ
       val col = hashfunctions.get(row).hash(Math.abs(key.hashCode)).toInt
       count(row)(col) += increment
     }
-    update_heap(key)
+    //update_heap(key)
   }
 
   def +( key : String, increment : Int ) = {
@@ -110,5 +136,9 @@ case class CMSketch(delta : Double, epsilon : Double, k : Int ) extends Serializ
     var out : String = ""+d+","+w+"\n"
     out = out + count.map( x => x.mkString(" ") ).mkString("\n")
     out
+  }
+
+  def print {
+    count.foreach({ x => println(x.mkString(" ")) })
   }
 }

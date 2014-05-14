@@ -1,4 +1,4 @@
-package main.scala.tu_berlin.bigdata_sketching.utils
+package main.scala.tu_berlin.bigdata_sketching.algoritms
 
 
 case class Histogram(

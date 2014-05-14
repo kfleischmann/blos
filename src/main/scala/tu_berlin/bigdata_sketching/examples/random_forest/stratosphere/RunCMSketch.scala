@@ -1,12 +1,12 @@
-package main.scala.tu_berlin.bigdata_sketching.examples.stratosphere
+package main.scala.tu_berlin.bigdata_sketching.examples.random_forest.stratosphere
 
 import org.apache.log4j.Level
 import eu.stratosphere.api.scala._
 import eu.stratosphere.api.scala.operators._
 import eu.stratosphere.client.LocalExecutor
 import eu.stratosphere.api.common._
-import main.scala.tu_berlin.bigdata_sketching.utils._
-import main.scala.tu_berlin.bigdata_sketching.sketches.DistrubutedSketch
+import main.scala.tu_berlin.bigdata_sketching.algoritms._
+import main.scala.tu_berlin.bigdata_sketching.algoritms.sketches.DistrubutedSketch
 
 class RFBuilder()  extends Program with ProgramDescription with Serializable {
 
@@ -16,11 +16,12 @@ class RFBuilder()  extends Program with ProgramDescription with Serializable {
 
   override def getPlan(args: String*) = {
 
-    val ds = new DistrubutedSketch(scala.math.pow(10, -7), 0.00005, 10)
+    val ds = new DistrubutedSketch(scala.math.pow(10, -8), 0.0000005, 10)
     val num_features = 784
     val max_bins = 10
     val input = TextFile( args(0) )
     val outputFile = args(1)
+
 
     val features =input
       .map( l => l.split(" "))
