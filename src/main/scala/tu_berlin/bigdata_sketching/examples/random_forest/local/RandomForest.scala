@@ -6,7 +6,7 @@ object RandomForest {
   def main(args: Array[String]) {
     val num_features = 784
     val candidates = 10
-    val num_samples = 1000
+    val num_samples = 10000
     val num_labels = 10
 
     // false positive in percentage
@@ -15,7 +15,7 @@ object RandomForest {
 
     // sketching phase
     val sketching = new RFSketchingPhase(num_features, candidates, num_samples, num_labels, p )
-    val sketch = sketching.build_sketch("/home/kay/normalized_very_small.txt")
+    val sketch = sketching.build_sketch("/home/kay/normalized_small.txt")
 
     val rdt = new RandomDecisionTree(sketch, 10, "/home/kay/rf/rf_output_tree")
     // initial all features allowed
@@ -28,5 +28,7 @@ object RandomForest {
       val root = new TreeNode(tree, 0, features, featureSpace, -1, -1, -1, baggingTable)
       rdt.build_tree(root)
     }//for
+
+    rdt.close
   }
 }

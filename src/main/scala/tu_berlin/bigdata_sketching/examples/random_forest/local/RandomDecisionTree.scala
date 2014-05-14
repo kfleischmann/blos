@@ -1,8 +1,11 @@
 package main.scala.tu_berlin.bigdata_sketching.examples.random_forest.local
 
 import org.apache.hadoop.util.bloom.Key
+import java.io.FileWriter
 
-case class SplitCandidate( feature : Int, candidate : Double, total : Int , split_left : Int, split_right : Int, qj : List[Double], qjL : List[Double], qjR : List[Double] ) {
+case class SplitCandidate( feature : Int, candidate : Double, total : Int , split_left : Int, split_right : Int,
+                           qj : List[Double], qjL : List[Double], qjR : List[Double],
+                           majority_label : Int ) {
   val tau = 0.5
   val quality = quality_function(tau, qj, qjL, qjR )
 
@@ -26,10 +29,11 @@ case class SplitCandidate( feature : Int, candidate : Double, total : Int , spli
   }
 }
 
-case class TreeNode ( treeId : Long,
-                      nodeId : Long,
+case class TreeNode ( treeId : BigInt,
+
+                      nodeId : BigInt,
                       // list of features total available for this level
-                      val features : Array[Int],
+                      features : Array[Int],
                       // list of features left for random feature-selection (m) - subset of "features"
                       featureSpace : Array[Int],
                       // -1 if not set
@@ -47,25 +51,7 @@ case class TreeNode ( treeId : Long,
 }
 
 class RandomDecisionTree(val sketch : RFSketch, minNrOfSplitItems : Int, out : String ) {
-
-  def majority_class(candidate : SplitCandidate, node : TreeNode ) : (Int,Int) = {
-    val labels = Array.fill[Int](sketch.num_labels)(0)
-
-    for( sample <- node.baggingTable ) {
-      for (label <- 0 until sketch.num_labels) {
-        val keyqjL = "key_"+sample+"_"+candidate.feature+"_"+candidate.candidate+"_"+label+"_L"
-        if( sketch.filter.membershipTest(new Key(keyqjL.getBytes())) ) {
-          labels(label) += 1
-        }
-        val keyqjR = "key_"+sample+"_"+candidate.feature+"_"+candidate.candidate+"_"+label+"_R"
-        if( sketch.filter.membershipTest(new Key(keyqjR.getBytes())) ) {
-          labels(label) += 1
-        }
-      }
-    }
-
-    labels.toList.zipWithIndex.max
-  }
+  val fw = new FileWriter(out, true)
 
   def build_bagging_table(candidate : SplitCandidate, node : TreeNode ) = {
     var left : scala.collection.mutable.Buffer[Int] = scala.collection.mutable.Buffer[Int]()
@@ -89,6 +75,7 @@ class RandomDecisionTree(val sketch : RFSketch, minNrOfSplitItems : Int, out : S
     val qj = Array.fill[Int](sketch.num_labels)(0)
     val qjL = Array.fill[Int](sketch.num_labels)(0)
     val qjR = Array.fill[Int](sketch.num_labels)(0)
+    val labels = Array.fill[Int](sketch.num_labels)(0)
 
     var numqj = 0
     var numqjL = 0
@@ -100,6 +87,7 @@ class RandomDecisionTree(val sketch : RFSketch, minNrOfSplitItems : Int, out : S
         if( sketch.filter.membershipTest(new Key(keyqj.getBytes())) ){
           qj(label) = qj(label) + 1
           numqj+=1
+          labels(label) += 1
         }
         val keyqjL = "key_"+sample+"_"+feature+"_"+candidate+"_"+label+"_L"
         if( sketch.filter.membershipTest(new Key(keyqjL.getBytes())) ) {
@@ -113,13 +101,15 @@ class RandomDecisionTree(val sketch : RFSketch, minNrOfSplitItems : Int, out : S
         }
       }
     }
+
     val _qj = qj.toList.map(x=>x/numqj.toDouble)
     val _qjL = qjL.toList.map(x=>x/numqjL.toDouble)
     val _qjR = qjR.toList.map(x=>x/numqjR.toDouble)
 
     new SplitCandidate( feature, candidate,
                         numqj, numqjL, numqjR,
-                        _qj, _qjL, _qjR )
+                        _qj, _qjL, _qjR,
+                        labels.toList.zipWithIndex.max._2 )
 
   }
 
@@ -128,16 +118,16 @@ class RandomDecisionTree(val sketch : RFSketch, minNrOfSplitItems : Int, out : S
     val bestSplit = node.featureSpace.flatMap( feature => sketch.candidates(feature).map( candidate => node_feature_distribution(feature,candidate, node) ) ).maxBy( x => x.get_quality )
 
     if(!isStoppingCriterion(bestSplit)){
-      val leftNodeId : Long = ((node.nodeId + 1L) * 2) - 1
-      val rightNodeId : Long = ((node.nodeId + 1L) * 2)
+      val leftNodeId : BigInt = ((node.nodeId + 1L) * 2) - 1
+      val rightNodeId : BigInt = ((node.nodeId + 1L) * 2)
 
       val features = node.features.toList.filter( x => x != bestSplit.feature ).toArray
       val featureSpace = DecisionTreeUtils.generateFeatureSubspace(10, features.toBuffer )
 
       val baggingTables = build_bagging_table(bestSplit, node )
 
-      val node_left = new TreeNode(node.treeId, leftNodeId.toInt, features, featureSpace, -1, -1, -1, baggingTables._1 )
-      val node_right = new TreeNode(node.treeId, rightNodeId.toInt, features, featureSpace, -1, -1, -1, baggingTables._2  )
+      val node_left = new TreeNode(node.treeId, leftNodeId, features, featureSpace, -1, -1, -1, baggingTables._1 )
+      val node_right = new TreeNode(node.treeId, rightNodeId, features, featureSpace, -1, -1, -1, baggingTables._2  )
 
       val middleNode = new TreeNode(node.treeId, node.nodeId, null, null, bestSplit.feature, bestSplit.candidate, -1, null )
       addNode(middleNode)
@@ -146,7 +136,7 @@ class RandomDecisionTree(val sketch : RFSketch, minNrOfSplitItems : Int, out : S
       build_tree(node_right)
     } else {
       // majority voting
-      val label = majority_class(bestSplit, node)._2
+      val label = bestSplit.majority_label
       val finalNode = new TreeNode(node.treeId, node.nodeId, null, null, -1, -1, label, null )
       addNode(finalNode)
 
@@ -163,5 +153,11 @@ class RandomDecisionTree(val sketch : RFSketch, minNrOfSplitItems : Int, out : S
   }
 
   def addNode(node : TreeNode ) {
+    fw.append(node.toString+"\n")
+  }
+
+
+  def close {
+    fw.close()
   }
 }
