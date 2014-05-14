@@ -113,6 +113,7 @@ class RandomDecisionTree(val sketch : RFSketch, minNrOfSplitItems : Int, out : S
 
   }
 
+
   def build_tree( node : TreeNode ) {
     println("split node "+node.treeId+","+node.nodeId)
     val bestSplit = node.featureSpace.flatMap( feature => sketch.candidates(feature).map( candidate => node_feature_distribution(feature,candidate, node) ) ).maxBy( x => x.get_quality )
