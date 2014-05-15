@@ -8,7 +8,7 @@ import eu.stratosphere.api.common._
 import main.scala.tu_berlin.bigdata_sketching.algoritms._
 import main.scala.tu_berlin.bigdata_sketching.algoritms.sketches.DistrubutedSketch
 
-class RFBuilder()  extends Program with ProgramDescription with Serializable {
+class RFSketch  extends Program with ProgramDescription with Serializable {
 
   override def getDescription() = {
     "Usage: [inputPath] [outputPath] ([number_trees])"
@@ -74,10 +74,10 @@ class RFBuilder()  extends Program with ProgramDescription with Serializable {
 }
 
 
-object RunCMSketch {
+object RFSketchingphase {
   def main(args: Array[String]) {
     System.out.println("start")
-    val plan = new RFBuilder().getPlan("/home/kay/normalized_small.txt", "/home/kay/Desktop/Masterarbeit/results/stratosphere")
+    val plan = new RFSketch().getPlan("/home/kay/normalized_small.txt", "/home/kay/Desktop/Masterarbeit/results/stratosphere")
     val localExecutor = new LocalExecutor();
     localExecutor.start()
     localExecutor.executePlan(plan)

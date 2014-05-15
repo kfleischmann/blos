@@ -37,7 +37,7 @@ class RFSketchingPhase(val num_features : Int, val candidates : Int, val num_sam
   // prediction in worst case
   // the real case differs from this value. This is due to the fact
   // that invalid split candidates are filtered out
-  def n = num_samples.toDouble*num_features.toDouble*candidates.toDouble+num_samples.toDouble*num_labels
+  def n = num_samples.toDouble*num_features.toDouble*candidates.toDouble*num_labels
 
   // lets say we want 10% of the storage
   def m = -n*Math.log(p) / (Math.pow( Math.log(2),2.0)) //(0.1*n).toInt

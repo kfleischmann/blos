@@ -1,25 +1,28 @@
 package main.scala.tu_berlin.bigdata_sketching.examples.random_forest.local
 
+import java.io.FileWriter
+
 
 object RandomForest {
 
   def main(args: Array[String]) {
     val num_features = 784
     val candidates = 10
-    val num_samples = 10000
+    val num_samples = 60000
     val num_labels = 10
 
     // false positive in percentage
-    val p = 0.20
+    val p = 0.01
 
 
     // sketching phase
     val sketching = new RFSketchingPhase(num_features, candidates, num_samples, num_labels, p )
-    val sketch = sketching.build_sketch("/home/kay/normalized_small.txt")
+    val sketch = sketching.build_sketch("/home/kay/normalized_full.txt")
 
-    val rdt = new RandomDecisionTree(sketch, 10, "/home/kay/rf/rf_output_tree_10p")
+    val rdt = new RandomDecisionTree(sketch, 10, "/home/kay/rf/rf_output_tree_1p_60k")
     // initial all features allowed
     val features = List.range(0,num_features).toArray
+
 
     // now build random decision trees
     for( tree <- 0 until 1 ) {
