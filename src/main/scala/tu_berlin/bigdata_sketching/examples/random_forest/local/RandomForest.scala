@@ -7,7 +7,7 @@ object RandomForest {
 
   def main(args: Array[String]) {
     val num_features = 784
-    val candidates = 10
+    val candidates = 5
     val num_samples = 1000
     val num_labels = 10
 
@@ -23,11 +23,10 @@ object RandomForest {
     // initial all features allowed
     val features = List.range(0,num_features).toArray
 
-
     // now build random decision trees
     for( tree <- 0 until 1 ) {
       val featureSpace = DecisionTreeUtils.generateFeatureSubspace(10, features.toBuffer )
-      val baggingTable = DecisionTreeUtils.generateBaggingTable(num_samples, num_samples ).groupBy( x => x).map( x=> (x._1,x._2.size) ).toArray
+      val baggingTable = DecisionTreeUtils.generateBaggingTableFromList(num_samples, sketch.samples_labels ).groupBy( x => (x._1,x._2) ).map( x=> (x._1._1,x._2.size,x._1._2 )).toArray
 
       val root = new TreeNode(tree, 0, features, featureSpace, -1, -1, -1, baggingTable)
 
