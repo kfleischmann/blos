@@ -43,7 +43,7 @@ case class TreeNode ( treeId : BigInt,
                       // -1 if not set
                       label : Int,
                       // baggingtable
-                      baggingTable : Array[Int]
+                      baggingTable : Array[(Int,Int)] // (sampleIndex,count)
                       ) {
   override def toString = {
     treeId + "," + nodeId + "," + splitFeatureIndex + "," + splitFeatureValue + "," + label
@@ -61,15 +61,15 @@ class RandomDecisionTree(val sketch : RFSketch, minNrOfSplitItems : Int, out : S
   }
 
   def build_bagging_table(candidate : SplitCandidate, node : TreeNode ) = {
-    var left : scala.collection.mutable.Buffer[Int] = scala.collection.mutable.Buffer[Int]()
-    var right : scala.collection.mutable.Buffer[Int] = scala.collection.mutable.Buffer[Int]()
+    var left : scala.collection.mutable.Buffer[(Int,Int)] = scala.collection.mutable.Buffer[(Int,Int)]()
+    var right : scala.collection.mutable.Buffer[(Int,Int)] = scala.collection.mutable.Buffer[(Int,Int)]()
     for( sample <- node.baggingTable ) {
       for (label <- 0 until sketch.num_labels) {
-        val keyqjL = "key_"+sample+"_"+candidate.feature+"_"+candidate.candidate+"_"+label+"_L"
+        val keyqjL = "key_"+sample._1+"_"+candidate.feature+"_"+candidate.candidate+"_"+label+"_L"
         if( sketch.filter.membershipTest(new Key(keyqjL.getBytes())) ) {
           left += sample
         }
-        val keyqjR = "key_"+sample+"_"+candidate.feature+"_"+candidate.candidate+"_"+label+"_R"
+        val keyqjR = "key_"+sample._1+"_"+candidate.feature+"_"+candidate.candidate+"_"+label+"_R"
         if( sketch.filter.membershipTest(new Key(keyqjR.getBytes())) ) {
           right += sample
         }
@@ -101,21 +101,21 @@ class RandomDecisionTree(val sketch : RFSketch, minNrOfSplitItems : Int, out : S
 
     for( sample <- node.baggingTable ) {
       for (label <- 0 until sketch.num_labels) {
-        val keyqj = "key_" + sample+"_" + label
+        val keyqj = "key_" + sample._1+"_" + label
         if( sketch.filter.membershipTest(new Key(keyqj.getBytes())) ){
-          qj(label) = qj(label) + 1
+          qj(label) = qj(label) + sample._2
           numqj+=1
-          labels(label) += 1
+          labels(label) += sample._2
         }
-        val keyqjL = "key_"+sample+"_"+feature+"_"+candidate+"_"+label+"_L"
+        val keyqjL = "key_"+sample._1+"_"+feature+"_"+candidate+"_"+label+"_L"
         if( sketch.filter.membershipTest(new Key(keyqjL.getBytes())) ) {
-          qjL(label) = qjL(label)+1
-          numqjL+=1
+          qjL(label) = qjL(label)+sample._2
+          numqjL+=sample._2
         }
-        val keyqjR = "key_"+sample+"_"+feature+"_"+candidate+"_"+label+"_R"
+        val keyqjR = "key_"+sample._1+"_"+feature+"_"+candidate+"_"+label+"_R"
         if( sketch.filter.membershipTest(new Key(keyqjR.getBytes())) ) {
-          qjR(label) = qjR(label)+1
-          numqjR+=1
+          qjR(label) = qjR(label)+sample._2
+          numqjR+=sample._2
         }
       }
     }
@@ -134,40 +134,34 @@ class RandomDecisionTree(val sketch : RFSketch, minNrOfSplitItems : Int, out : S
   val pool = java.util.concurrent.Executors.newFixedThreadPool(4)
 
   def build_tree( node : TreeNode ) {
-    new NodeBuilder(node).run()
-  }
+    println("split node "+node.treeId+","+node.nodeId)
+    val bestSplit = node.featureSpace.flatMap( feature => sketch.candidates(feature).map( candidate => node_feature_distribution(feature,candidate, node) ) ).maxBy( x => x.get_quality )
 
-  case class NodeBuilder( node : TreeNode ) {
-    def run() {
-      println("split node "+node.treeId+","+node.nodeId)
-      val bestSplit = node.featureSpace.flatMap( feature => sketch.candidates(feature).map( candidate => node_feature_distribution(feature,candidate, node) ) ).maxBy( x => x.get_quality )
+    println(bestSplit)
+    if(!isStoppingCriterion(bestSplit)){
+      val leftNodeId : BigInt = ((node.nodeId + 1L) * 2) - 1
+      val rightNodeId : BigInt = ((node.nodeId + 1L) * 2)
 
-      println(bestSplit)
-      if(!isStoppingCriterion(bestSplit)){
-        val leftNodeId : BigInt = ((node.nodeId + 1L) * 2) - 1
-        val rightNodeId : BigInt = ((node.nodeId + 1L) * 2)
+      val features = node.features.toList.filter( x => x != bestSplit.feature ).toArray
+      val featureSpace = DecisionTreeUtils.generateFeatureSubspace(10, features.toBuffer )
 
-        val features = node.features.toList.filter( x => x != bestSplit.feature ).toArray
-        val featureSpace = DecisionTreeUtils.generateFeatureSubspace(10, features.toBuffer )
+      val baggingTables = build_bagging_table(bestSplit, node )
 
-        val baggingTables = build_bagging_table(bestSplit, node )
+      val node_left = new TreeNode(node.treeId, leftNodeId, features, featureSpace, -1, -1, -1, baggingTables._1 )
+      val node_right = new TreeNode(node.treeId, rightNodeId, features, featureSpace, -1, -1, -1, baggingTables._2  )
 
-        val node_left = new TreeNode(node.treeId, leftNodeId, features, featureSpace, -1, -1, -1, baggingTables._1 )
-        val node_right = new TreeNode(node.treeId, rightNodeId, features, featureSpace, -1, -1, -1, baggingTables._2  )
+      val middleNode = new TreeNode(node.treeId, node.nodeId, null, null, bestSplit.feature, bestSplit.candidate, -1, null )
+      addNode(middleNode)
 
-        val middleNode = new TreeNode(node.treeId, node.nodeId, null, null, bestSplit.feature, bestSplit.candidate, -1, null )
-        addNode(middleNode)
+      build_tree(node_left)
+      build_tree(node_right)
+    } else {
+      // majority voting
+      val label = bestSplit.majority_label
+      val finalNode = new TreeNode(node.treeId, node.nodeId, null, null, -1, -1, label, null )
+      addNode(finalNode)
 
-        build_tree(node_left)
-        build_tree(node_right)
-      } else {
-        // majority voting
-        val label = bestSplit.majority_label
-        val finalNode = new TreeNode(node.treeId, node.nodeId, null, null, -1, -1, label, null )
-        addNode(finalNode)
-
-        println( "finished node with class "+label )
-      }
+      println( "finished node with class "+label )
     }
   }
 

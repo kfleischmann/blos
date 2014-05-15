@@ -26,7 +26,7 @@ object DecisionTreeUtils {
     arr
   }
 
-  def generateBaggingTable(size : Int, maxRandomNumber : Int ) = {
+  def generateBaggingTable(size : Int, maxRandomNumber : Int ) : Array[Int] = {
     var arr : Array[Int] = Array()
     arr = Array(size)
     arr = Array.fill(size)(0)
