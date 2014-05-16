@@ -1,4 +1,4 @@
-package main.scala.tu_berlin.bigdata_sketching.examples.random_forest.local
+package main.scala.tu_berlin.bigdata_sketching.algoritms.ml.random_forest.local
 
 import main.scala.tu_berlin.bigdata_sketching.algoritms.sketches._
 import main.scala.tu_berlin.bigdata_sketching.algoritms.Histogram

@@ -1,9 +1,9 @@
-package main.scala.tu_berlin.bigdata_sketching.examples.random_forest.local
+package main.scala.tu_berlin.bigdata_sketching.examples.local
 
-import java.io.FileWriter
+import main.scala.tu_berlin.bigdata_sketching.algoritms.ml.random_forest.local.{TreeNode, DecisionTreeUtils, RandomDecisionTree, RFSketchingPhase}
 
 
-object RandomForest {
+object BuildRandomForest {
 
   def main(args: Array[String]) {
     val num_features = 784

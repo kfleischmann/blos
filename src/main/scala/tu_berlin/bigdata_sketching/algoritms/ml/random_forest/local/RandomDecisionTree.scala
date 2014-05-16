@@ -1,4 +1,4 @@
-package main.scala.tu_berlin.bigdata_sketching.examples.random_forest.local
+package main.scala.tu_berlin.bigdata_sketching.algoritms.ml.random_forest.local
 
 import org.apache.hadoop.util.bloom.Key
 import java.io.{PrintWriter, FileWriter}
