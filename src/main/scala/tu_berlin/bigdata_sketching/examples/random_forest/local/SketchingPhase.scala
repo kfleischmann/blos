@@ -56,9 +56,10 @@ case class RFSketch(val candidates : Array[List[Double]],
   def k = m/n * Math.log(2)
 
   def bloomFilterSize = m.toInt
-  def numHashfunctions = k.toInt
+  def numHashfunctions = if( k.toInt > 0 ) k.toInt else 1
 
   def newBloomFilter = {
+    println("size: "+(m/8/1024/1024/1024)+" gb")
     new BloomFilter( bloomFilterSize, numHashfunctions, Hash.MURMUR_HASH )
   }
 }

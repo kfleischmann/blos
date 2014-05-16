@@ -72,6 +72,6 @@ class RandomForestBuilder(val remoteJar : String = null,
 
 object RandomForestBuilder{
   def main(args: Array[String]) {
-    val rf = new RandomForestBuilder().eval("file:///home/kay/normalized_full_test.txt", "file:///home/kay/rf/rf_output_30p_60k/", "/home/kay/output")
+    val rf = new RandomForestBuilder().eval("file:///home/kay/normalized_test.txt", "file:///home/kay/rf/rf_output_60k_small_sketch/", "/home/kay/output")
   }
 }

@@ -7,17 +7,17 @@ object RandomForest {
 
   def main(args: Array[String]) {
     val num_features = 784
-    val candidates = 5
-    val num_samples = 60000
+    val candidates = 2
+    val num_samples = 600000
     val num_labels = 10
 
     // false positive in percentage
-    val p = 0.3
+    val p = 0.4
 
 
     // sketching phase
     val sketching = new RFSketchingPhase(num_features, candidates, num_samples, num_labels, p )
-    val sketch = sketching.build_sketch("/home/kay/normalized_full.txt")
+    val sketch = sketching.build_sketch("/home/kay/normalized_big.txt")
 
     // initial all features allowed
     val features = List.range(0,num_features).toArray
@@ -26,11 +26,11 @@ object RandomForest {
 
 
     // now build random decision trees
-    for( tree <- 0 until 10 ) {
+    for( tree <- 0 until 50 ) {
       pool.execute(
         new Runnable {
           def run {
-            val rdt = new RandomDecisionTree(sketch, 10, "/home/kay/rf/rf_output_tree_30p_60k_tree_"+tree)
+            val rdt = new RandomDecisionTree(sketch, 10, "/home/kay/rf/rf_output_60k_small_sketch/tree_"+tree)
 
             val featureSpace = DecisionTreeUtils.generateFeatureSubspace(10, features.toBuffer )
             val baggingTable = DecisionTreeUtils.generateBaggingTableFromList(num_samples, sketch.samples_labels ).groupBy( x => (x._1,x._2) ).map( x=> (x._1._1,x._2.size,x._1._2 )).toArray
@@ -43,7 +43,5 @@ object RandomForest {
           }
         })
     }//for
-    println("random forest construction finished")
-    System.exit(0)
   }
 }

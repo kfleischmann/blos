@@ -18,10 +18,9 @@ object DecisionTreeUtils {
     var arr : Array[Int] = Array()
     arr = Array(randomCount)
     arr = Array.fill(randomCount)(0)
-    for(i <- 0 until randomCount)
-    {
-      var random = new Random().nextInt(features.length);
-      arr(i)=features.remove(random);
+    val random = new Random()
+    for(i <- 0 until randomCount){
+      arr(i)=features.remove(random.nextInt(features.length));
     }
     arr
   }
