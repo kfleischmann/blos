@@ -1,4 +1,4 @@
-package main.scala.tu_berlin.bigdata_sketching.examples.random_forest.stratosphere
+package main.scala.tu_berlin.bigdata_sketching.algoritms.ml.random_forest.stratosphere
 
 import org.apache.log4j.Level
 import eu.stratosphere.api.scala._

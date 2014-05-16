@@ -1,4 +1,4 @@
-package main.scala.tu_berlin.bigdata_sketching.examples.random_forest.stratosphere
+package main.scala.tu_berlin.bigdata_sketching.algoritms.ml.random_forest.stratosphere
 
 
 import eu.stratosphere.client.LocalExecutor
@@ -11,8 +11,8 @@ import eu.stratosphere.api.scala.operators._
 
 import scala.util.matching.Regex
 import util.Random
-import main.scala.tu_berlin.bigdata_sketching.examples.random_forest.local.DecisionTreeUtils
-import main.scala.tu_berlin.bigdata_sketching.examples.random_forest.local.TreeNode
+import main.scala.tu_berlin.bigdata_sketching.algoritms.ml.random_forest.local.DecisionTreeUtils
+import main.scala.tu_berlin.bigdata_sketching.algoritms.ml.random_forest.local.TreeNode
 
 /**
  * Classifies the data set based on the random forest model.

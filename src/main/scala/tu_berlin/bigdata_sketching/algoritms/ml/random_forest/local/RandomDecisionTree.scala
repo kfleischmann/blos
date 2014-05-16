@@ -1,4 +1,4 @@
-package main.scala.tu_berlin.bigdata_sketching.examples.random_forest.local
+package main.scala.tu_berlin.bigdata_sketching.algoritms.ml.random_forest.local
 
 import org.apache.hadoop.util.bloom.Key
 import java.io.{PrintWriter, FileWriter}
@@ -43,7 +43,7 @@ case class TreeNode ( treeId : BigInt,
                       // -1 if not set
                       label : Int,
                       // baggingtable
-                      baggingTable : Array[(Int,Int)] // (sampleIndex,count)
+                      baggingTable : Array[(Int,Int,Int)] // (sampleIndex,count,label)
                       ) {
   override def toString = {
     treeId + "," + nodeId + "," + splitFeatureIndex + "," + splitFeatureValue + "," + label
@@ -61,18 +61,18 @@ class RandomDecisionTree(val sketch : RFSketch, minNrOfSplitItems : Int, out : S
   }
 
   def build_bagging_table(candidate : SplitCandidate, node : TreeNode ) = {
-    var left : scala.collection.mutable.Buffer[(Int,Int)] = scala.collection.mutable.Buffer[(Int,Int)]()
-    var right : scala.collection.mutable.Buffer[(Int,Int)] = scala.collection.mutable.Buffer[(Int,Int)]()
+    // sampleId,count,label
+    var left : scala.collection.mutable.Buffer[(Int,Int,Int)] = scala.collection.mutable.Buffer[(Int,Int,Int)]()
+    var right : scala.collection.mutable.Buffer[(Int,Int,Int)] = scala.collection.mutable.Buffer[(Int,Int,Int)]()
     for( sample <- node.baggingTable ) {
-      for (label <- 0 until sketch.num_labels) {
-        val keyqjL = "key_"+sample._1+"_"+candidate.feature+"_"+candidate.candidate+"_"+label+"_L"
-        if( sketch.filter.membershipTest(new Key(keyqjL.getBytes())) ) {
-          left += sample
-        }
-        val keyqjR = "key_"+sample._1+"_"+candidate.feature+"_"+candidate.candidate+"_"+label+"_R"
-        if( sketch.filter.membershipTest(new Key(keyqjR.getBytes())) ) {
-          right += sample
-        }
+      val label = sample._3
+      val keyqjL = "key_"+sample._1+"_"+candidate.feature+"_"+candidate.candidate+"_"+label+"_L"
+      if( sketch.get_bloom_filter(label).membershipTest(new Key(keyqjL.getBytes())) ) {
+        left += sample
+      }
+      val keyqjR = "key_"+sample._1+"_"+candidate.feature+"_"+candidate.candidate+"_"+label+"_R"
+      if( sketch.get_bloom_filter(label).membershipTest(new Key(keyqjR.getBytes())) ) {
+        right += sample
       }
     }
     (left.toArray,right.toArray)
@@ -100,23 +100,22 @@ class RandomDecisionTree(val sketch : RFSketch, minNrOfSplitItems : Int, out : S
     // k(xi>c,y|X) => ++
 
     for( sample <- node.baggingTable ) {
-      for (label <- 0 until sketch.num_labels) {
-        val keyqj = "key_" + sample._1+"_" + label
-        if( sketch.filter.membershipTest(new Key(keyqj.getBytes())) ){
-          qj(label) = qj(label) + sample._2
-          numqj+=1
-          labels(label) += sample._2
-        }
-        val keyqjL = "key_"+sample._1+"_"+feature+"_"+candidate+"_"+label+"_L"
-        if( sketch.filter.membershipTest(new Key(keyqjL.getBytes())) ) {
-          qjL(label) = qjL(label)+sample._2
-          numqjL+=sample._2
-        }
-        val keyqjR = "key_"+sample._1+"_"+feature+"_"+candidate+"_"+label+"_R"
-        if( sketch.filter.membershipTest(new Key(keyqjR.getBytes())) ) {
-          qjR(label) = qjR(label)+sample._2
-          numqjR+=sample._2
-        }
+      val label = sample._3
+      val keyqj = "key_" + sample._1+"_" + label
+      if( sketch.get_bloom_filter(label).membershipTest(new Key(keyqj.getBytes())) ){
+        qj(label) = qj(label) + sample._2
+        numqj+=1
+        labels(label) += sample._2
+      }
+      val keyqjL = "key_"+sample._1+"_"+feature+"_"+candidate+"_"+label+"_L"
+      if( sketch.get_bloom_filter(label).membershipTest(new Key(keyqjL.getBytes())) ) {
+        qjL(label) = qjL(label)+sample._2
+        numqjL+=sample._2
+      }
+      val keyqjR = "key_"+sample._1+"_"+feature+"_"+candidate+"_"+label+"_R"
+      if( sketch.get_bloom_filter(label).membershipTest(new Key(keyqjR.getBytes())) ) {
+        qjR(label) = qjR(label)+sample._2
+        numqjR+=sample._2
       }
     }
 

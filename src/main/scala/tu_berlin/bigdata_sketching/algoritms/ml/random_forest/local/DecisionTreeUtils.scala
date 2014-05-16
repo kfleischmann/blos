@@ -1,4 +1,4 @@
-package main.scala.tu_berlin.bigdata_sketching.examples.random_forest.local
+package main.scala.tu_berlin.bigdata_sketching.algoritms.ml.random_forest.local
 
 import scala.collection.mutable.Buffer
 import scala.util.Random
@@ -18,10 +18,21 @@ object DecisionTreeUtils {
     var arr : Array[Int] = Array()
     arr = Array(randomCount)
     arr = Array.fill(randomCount)(0)
-    for(i <- 0 until randomCount)
-    {
-      var random = new Random().nextInt(features.length);
-      arr(i)=features.remove(random);
+    val random = new Random()
+    for(i <- 0 until randomCount){
+      arr(i)=features.remove(random.nextInt(features.length));
+    }
+    arr
+  }
+
+  // contains the id,label
+  def generateBaggingTableFromList(size : Int, list : Array[(Int,Int)] ) : Array[(Int,Int)] = {
+    var arr : Array[(Int,Int)] = Array()
+    arr = Array((size,size))
+    arr = Array.fill(size)((0,-1))
+    val maxRandomNumber = list.size
+    for (i <- 0 until size){
+      arr(i) = list(Random.nextInt(maxRandomNumber))
     }
     arr
   }

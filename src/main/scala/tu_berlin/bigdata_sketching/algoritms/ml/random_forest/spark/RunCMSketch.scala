@@ -1,4 +1,4 @@
-package main.scala.tu_berlin.bigdata_sketching.examples.random_forest.spark
+package main.scala.tu_berlin.bigdata_sketching.algoritms.ml.random_forest.spark
 
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkContext._
