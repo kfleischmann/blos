@@ -39,7 +39,7 @@ case class Hashfunction(BIG_PRIME :  BigInt, w:Int ) extends Serializable {
   }
 }*/
 
-case class CMSketch(delta : Double, epsilon : Double, k : Int ) extends Serializable {
+class CMSketch(delta : Double, epsilon : Double, k : Int ) extends Serializable {
   val BIG_PRIME :BigInt = 9223372036854775783L
 
   // weights -> space
@@ -49,30 +49,39 @@ case class CMSketch(delta : Double, epsilon : Double, k : Int ) extends Serializ
   val d = Math.ceil( Math.log(1 / delta)).toInt
 
   var hashfunctions = generate_hashfunctions
-  var count : Array[Array[Int]] = null
-  var heap : PriorityQueue[(Int, String)] = null
-  var top_k : scala.collection.mutable.HashMap[String, (Int, String)] = null
+  var count : Array[Array[Float]] = null
+  var heap : PriorityQueue[(Float, String)] = null
+  var top_k : scala.collection.mutable.HashMap[String, (Float, String)] = null
 
   def alloc = {
-    count = Array.ofDim[Int](d, w)
-    heap = new PriorityQueue[(Int, String)]()(Ordering.by(estimate))
-    top_k = scala.collection.mutable.HashMap[String, (Int, String)]()
+    count = Array.ofDim[Float](d, w)
+    heap = new PriorityQueue[(Float, String)]()(Ordering.by(estimate))
+    top_k = scala.collection.mutable.HashMap[String, (Float, String)]()
   }
 
   def get_heap = heap
   def size = if(count == null) 0 else d*w
-  def estimate(t: (Int,String)) = -get(t._2)
+  def estimate(t: (Float,String)) = -get(t._2)
   def get_hashfunctions = hashfunctions
   def set_hashfunctions(h:java.util.ArrayList[Hashfunction]) { hashfunctions = h }
-  def update( key : String, increment : Int ) = {
+  /*def update( key : String, increment : Float ) = {
     for( row <- 0 until hashfunctions.size ){
       val col = hashfunctions.get(row).hash(Math.abs(key.hashCode)).toInt
       count(row)(col) += increment
     }
     //update_heap(key)
+  }*/
+
+  def update( key : String, increment : Float ) = {
+    for( row <- 0 until hashfunctions.size ){
+      val col = hashfunctions.get(row).hash(Math.abs(key.hashCode)).toInt
+      count(row)(col) = Math.max( increment, count(row)(col) )
+    }
+    //update_heap(key)
   }
 
-  def +( key : String, increment : Int ) = {
+
+  def +( key : String, increment : Float ) = {
     update(key,increment)
   }
 
@@ -105,7 +114,7 @@ case class CMSketch(delta : Double, epsilon : Double, k : Int ) extends Serializ
   }
 
   def get( key : String ) = {
-    var result = Int.MaxValue
+    var result = Float.MaxValue
     for( row <- 0 until hashfunctions.size ){
       val col = hashfunctions.get(row).hash(Math.abs(key.hashCode)).toInt
       result = Math.min( count(row)(col), result )

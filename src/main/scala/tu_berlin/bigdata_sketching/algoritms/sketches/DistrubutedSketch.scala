@@ -3,7 +3,7 @@ package main.scala.tu_berlin.bigdata_sketching.algoritms.sketches
 class DistrubutedSketch(delta : Double, epsilon : Double, k : Int )  extends Serializable  {
   val sketch_mask = new CMSketch( delta, epsilon, k  )
   def new_partial_sketch : CMSketch = {
-    val s = new CMSketch( delta, epsilon, k  )
+    val s = new CMSketch ( delta, epsilon, k  )
     s.set_hashfunctions( sketch_mask.get_hashfunctions )
     s
   }

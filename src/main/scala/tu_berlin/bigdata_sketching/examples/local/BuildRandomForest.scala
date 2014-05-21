@@ -34,14 +34,13 @@ object BuildRandomForest {
 
             val featureSpace = DecisionTreeUtils.generateFeatureSubspace(10, features.toBuffer )
             val baggingTable = DecisionTreeUtils.generateBaggingTableFromList(num_samples, sketch.samples_labels ).groupBy( x => (x._1,x._2) ).map( x=> (x._1._1,x._2.size,x._1._2 )).toArray
-
             val root = new TreeNode(tree, 0, features, featureSpace, -1, -1, -1, baggingTable)
 
             rdt.build_tree(root)
-
             rdt.close
           }
         })
     }//for
   }
+
 }
