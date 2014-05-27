@@ -4,7 +4,7 @@ import util.Random
 import scala.collection.mutable.PriorityQueue
 import java.security.{NoSuchAlgorithmException, MessageDigest}
 import java.math.BigInteger
-
+import scala.math._
 
 case class Hashfunction(BIG_PRIME :  BigInt, w:Int ) extends Serializable {
   def random_parameter = Math.abs(Random.nextLong())
@@ -150,4 +150,5 @@ class CMSketch(delta : Double, epsilon : Double, k : Int ) extends Serializable 
   def print {
     count.foreach({ x => println(x.mkString(" ")) })
   }
+
 }

@@ -17,11 +17,11 @@ case class RFSketch(val candidates : Array[List[Double]],
                     val p : Double ){
 
   val bloom_filters = scala.collection.mutable.Buffer[BloomFilter]()
-  for(i<-0 until num_labels){
+  for(i<-0 until num_sketches){
     bloom_filters += newBloomFilter
   }
 
-  def get_bloom_filter( label : Int ) = bloom_filters(label)
+  def get_bloom_filter( label : Int ) = bloom_filters(label%num_sketches)
 
   def write_filter(filename : String ) {
     /*println("store to file")
@@ -48,7 +48,9 @@ case class RFSketch(val candidates : Array[List[Double]],
   // prediction in worst case
   // the real case differs from this value. This is due to the fact
   // that invalid split candidates are filtered out
-  def n = num_samples.toDouble*num_features.toDouble*num_candidates.toDouble
+  def n = num_samples.toDouble * num_features.toDouble * num_candidates.toDouble * num_labels.toDouble
+
+  def num_sketches = 1 //num_labels
 
   // lets say we want 10% of the storage
   def m = -n*Math.log(p) / (Math.pow( Math.log(2),2.0)) //(0.1*n).toInt
@@ -62,6 +64,7 @@ case class RFSketch(val candidates : Array[List[Double]],
     println("size: "+(m/8/1024/1024/1024)+" gb")
     new BloomFilter( bloomFilterSize, numHashfunctions, Hash.MURMUR_HASH )
   }
+
 }
 
 class RFSketchingPhase(val num_features : Int, val candidates : Int, val num_samples : Int , val num_labels : Int, val p : Double ) {
@@ -155,59 +158,6 @@ class RFSketchingPhase(val num_features : Int, val candidates : Int, val num_sam
     })
 
     println("sketch built")
-
-
-    /*
-    println("measure quality")
-
-    var errors = 0
-    var total=0
-
-    lines =  scala.io.Source.fromFile(file).getLines
-    lines.foreach( x=>{
-      val values=x.split(" ")
-      val index=values(0).toInt
-      val label=values(1).toInt
-      val features=values.takeRight( num_features /*values.size-2*/)
-      for(f<- 0 until features.size ){
-        val candidates = histograms(f).uniform(max_bins)
-        candidates.foreach( c => {
-          total+=1
-          val value = features(f);
-          val key="key_" + index + "_"+ f +"_"+ c+"_" + label
-          if( value.toDouble <= c ) {
-            if( !bloom_filter.membershipTest(new Key(key.getBytes())) ){
-              errors+=1
-              //println(key)
-            }
-          } else {
-            if( bloom_filter.membershipTest(new Key(key.getBytes())) ){
-              errors+=1
-              //println(key)
-            }
-          }
-        })
-      }
-      // insert label info
-      val key="key_" + index +"_" + label
-      total+=1
-      if( bloom_filter.membershipTest(new Key(key.getBytes())) ){
-        errors+=1
-        //println(key)
-      }
-
-
-      if(index%1000==0){
-        println("line "+index)
-        println("accuracy: "+ (1.0-(errors.toDouble/total.toDouble)))
-      }
-    })
-
-    println("------------------------")
-    println("total: "+total)
-    println("errors: "+errors)
-    println("accuracy: "+ (1.0-(errors.toDouble/total.toDouble)))
-    */
 
     sketch
   }
