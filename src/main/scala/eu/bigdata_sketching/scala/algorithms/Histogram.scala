@@ -1,13 +1,14 @@
-package main.scala.tu_berlin.bigdata_sketching.algoritms
-
+package eu.bigdata_sketching.scala.algorithms
 
 case class Histogram(
                       feature : Integer,
-                      maxBins : Integer,
-                      var bins : scala.collection.mutable.Buffer[(Double,Int)] = scala.collection.mutable.Buffer[(Double,Int)](),
-                      var maxBinValue : Double = Double.NegativeInfinity,
-                      var minBinValue : Double = Double.PositiveInfinity
+                      maxBins : Integer
                       ) extends Serializable {
+
+  var bins : scala.collection.mutable.Buffer[(Double,Int)] = scala.collection.mutable.Buffer[(Double,Int)]()
+  var maxBinValue : Double = Double.NegativeInfinity
+  var minBinValue : Double = Double.PositiveInfinity
+
   def getBins = bins
 
   def getMax = maxBinValue

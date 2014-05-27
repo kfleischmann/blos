@@ -1,4 +1,4 @@
-package main.scala.tu_berlin.bigdata_sketching.algoritms
+package eu.bigdata_sketching.scala.algorithms
 
 /**
  * Naive implementation of the Bloom Filter to manage the membership to very large set of elements
@@ -10,7 +10,6 @@ package main.scala.tu_berlin.bigdata_sketching.algoritms
  * @see http://patricknicolas.blogspot.com
  */
 import java.security._
-import java.nio.ByteBuffer
 import java.math.BigInteger
 
 

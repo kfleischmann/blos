@@ -1,9 +1,10 @@
-package main.scala.tu_berlin.bigdata_sketching.algoritms.ml.random_forest.spark
+package eu.bigdata_sketching.scala.algorithms.ml.random_forest.spark
+
 
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkContext._
-import main.scala.tu_berlin.bigdata_sketching.algoritms.sketches.DistrubutedSketch
-import main.scala.tu_berlin.bigdata_sketching.algoritms.Histogram
+
+import eu.bigdata_sketching.scala.algorithms.{Histogram, DistrubutedSketch}
 
 object RunCMSketch {
   def test = {

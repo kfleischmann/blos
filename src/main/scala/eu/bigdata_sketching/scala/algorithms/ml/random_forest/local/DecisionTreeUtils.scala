@@ -1,4 +1,5 @@
-package main.scala.tu_berlin.bigdata_sketching.algoritms.ml.random_forest.local
+package eu.bigdata_sketching.scala.algorithms.ml.random_forest.local
+
 
 import scala.collection.mutable.Buffer
 import scala.util.Random

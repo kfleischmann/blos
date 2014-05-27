@@ -1,4 +1,5 @@
-package main.scala.tu_berlin.bigdata_sketching.algoritms.ml.random_forest.stratosphere
+package bigdata_sketching.main.scala.algorithms.ml.random_forest.stratosphere
+
 
 
 import eu.stratosphere.client.LocalExecutor
@@ -12,6 +13,7 @@ import eu.stratosphere.core.fs.FileSystem
 import eu.stratosphere.core.fs.Path
 import java.net.URI
 import eu.stratosphere.api.common.Plan
+import eu.bigdata_sketching.scala.algorithms.ml.random_forest.stratosphere.DecisionTreeEvaluator
 
 class RandomForestBuilder(val remoteJar : String = null,
                           val remoteJobManager : String = null,

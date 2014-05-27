@@ -1,11 +1,9 @@
-package main.scala.tu_berlin.bigdata_sketching.algoritms.ml.random_forest.local
+package eu.bigdata_sketching.scala.algorithms.ml.random_forest.local
 
-import main.scala.tu_berlin.bigdata_sketching.algoritms.sketches._
-import main.scala.tu_berlin.bigdata_sketching.algoritms.Histogram
 import org.apache.hadoop.util.bloom.BloomFilter
 import org.apache.hadoop.util.hash.Hash
 import org.apache.hadoop.util.bloom.Key
-import java.io._
+import eu.bigdata_sketching.scala.algorithms.Histogram
 
 
 case class RFSketch(val candidates : Array[List[Double]],
@@ -48,7 +46,8 @@ case class RFSketch(val candidates : Array[List[Double]],
   // prediction in worst case
   // the real case differs from this value. This is due to the fact
   // that invalid split candidates are filtered out
-  def n = num_samples.toDouble * num_features.toDouble * num_candidates.toDouble * num_labels.toDouble
+  //def n = (num_samples.toDouble * num_features.toDouble * num_candidates.toDouble * num_labels.toDouble * 0.5) + num_samples
+  def n = ((num_samples.toDouble * num_features.toDouble * num_candidates.toDouble * num_labels.toDouble ) + num_samples) * 0.1
 
   def num_sketches = 1 //num_labels
 
@@ -142,11 +141,12 @@ class RFSketchingPhase(val num_features : Int, val candidates : Int, val num_sam
         candidates.foreach( c => {
           val value = features(f);
           val keyL="key_" + index + "_"+ f +"_"+ c +"_" + label+"_L"
-          val keyR="key_" + index + "_"+ f +"_"+ c +"_" + label+"_R"
+          // index[s][f][c][l] =
+          //val keyR="key_" + index + "_"+ f +"_"+ c +"_" + label+"_R"
           if( value.toDouble <= c )
             sketch.get_bloom_filter(label).add(new Key(keyL.getBytes()))
-          else
-            sketch.get_bloom_filter(label).add(new Key(keyR.getBytes()))
+          /*else
+            sketch.get_bloom_filter(label).add(new Key(keyR.getBytes()))*/
         })
       }
 

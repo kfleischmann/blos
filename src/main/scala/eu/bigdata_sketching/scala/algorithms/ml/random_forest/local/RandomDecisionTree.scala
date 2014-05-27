@@ -1,4 +1,4 @@
-package main.scala.tu_berlin.bigdata_sketching.algoritms.ml.random_forest.local
+package eu.bigdata_sketching.scala.algorithms.ml.random_forest.local
 
 import org.apache.hadoop.util.bloom.Key
 import java.io.{PrintWriter, FileWriter}
@@ -69,11 +69,14 @@ class RandomDecisionTree(val sketch : RFSketch, minNrOfSplitItems : Int, out : S
       val keyqjL = "key_"+sample._1+"_"+candidate.feature+"_"+candidate.candidate+"_"+label+"_L"
       if( sketch.get_bloom_filter(label).membershipTest(new Key(keyqjL.getBytes())) ) {
         left += sample
+      } else {
+        right += sample
+
       }
-      val keyqjR = "key_"+sample._1+"_"+candidate.feature+"_"+candidate.candidate+"_"+label+"_R"
+      /*val keyqjR = "key_"+sample._1+"_"+candidate.feature+"_"+candidate.candidate+"_"+label+"_R"
       if( sketch.get_bloom_filter(label).membershipTest(new Key(keyqjR.getBytes())) ) {
         right += sample
-      }
+      }*/
     }
     (left.toArray,right.toArray)
   }
@@ -112,8 +115,9 @@ class RandomDecisionTree(val sketch : RFSketch, minNrOfSplitItems : Int, out : S
         qjL(label) = qjL(label)+sample._2
         numqjL+=sample._2
       }
-      val keyqjR = "key_"+sample._1+"_"+feature+"_"+candidate+"_"+label+"_R"
-      if( sketch.get_bloom_filter(label).membershipTest(new Key(keyqjR.getBytes())) ) {
+      //val keyqjR = "key_"+sample._1+"_"+feature+"_"+candidate+"_"+label+"_R"
+      //if( sketch.get_bloom_filter(label).membershipTest(new Key(keyqjR.getBytes())) ) {
+      else {
         qjR(label) = qjR(label)+sample._2
         numqjR+=sample._2
       }

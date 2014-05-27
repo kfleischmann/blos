@@ -1,18 +1,16 @@
-package main.scala.tu_berlin.bigdata_sketching.algoritms.ml.random_forest.stratosphere
+package eu.bigdata_sketching.scala.algorithms.ml.random_forest.stratosphere
 
 
 import eu.stratosphere.client.LocalExecutor
-import eu.stratosphere.api.common.Plan
-import eu.stratosphere.api.common.Program
-import eu.stratosphere.api.common.ProgramDescription
+
 import eu.stratosphere.api.scala._
 import eu.stratosphere.api.scala.operators._
 
 
 import scala.util.matching.Regex
 import util.Random
-import main.scala.tu_berlin.bigdata_sketching.algoritms.ml.random_forest.local.DecisionTreeUtils
-import main.scala.tu_berlin.bigdata_sketching.algoritms.ml.random_forest.local.TreeNode
+import eu.bigdata_sketching.scala.algorithms.ml.random_forest.local._
+import eu.stratosphere.api.common.{Plan, ProgramDescription, Program}
 
 /**
  * Classifies the data set based on the random forest model.
@@ -35,7 +33,7 @@ class DecisionTreeEvaluator() extends Program with ProgramDescription with Seria
    * @param outputPath Classified data, separated by a newline with the format:
    * "[data item index], [classified label], [actual label from data item]"
    */
-  override def getPlan(args: String*) = {
+  override def getPlan(args: String*) : Plan = {
     val inputPath = DecisionTreeUtils.preParseURI(args(0))
     val treePath = DecisionTreeUtils.preParseURI(args(1))
     val outputPath = DecisionTreeUtils.preParseURI(args(2))
@@ -106,6 +104,9 @@ class DecisionTreeEvaluator() extends Program with ProgramDescription with Seria
     })
 
     val sink = forestEvaluations.write(outputPath, CsvOutputFormat("\n",","))
-    new ScalaPlan(Seq(sink))
+
+    //new Plan(Seq(sink))
+    //new Plan()
+    null
   }
 }
