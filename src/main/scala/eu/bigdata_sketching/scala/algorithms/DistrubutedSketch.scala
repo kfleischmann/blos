@@ -1,5 +1,4 @@
-package bigdata_sketching.main.scala.algorithms.sketches
-
+package eu.bigdata_sketching.scala.algorithms
 
 class DistrubutedSketch(delta : Double, epsilon : Double, k : Int )  extends Serializable  {
   val sketch_mask = new CMSketch( delta, epsilon, k  )

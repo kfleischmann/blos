@@ -1,9 +1,9 @@
-package bigdata_sketching.main.scala.algorithms.ml.random_forest.local
+package eu.bigdata_sketching.scala.algorithms.ml.random_forest.local
 
 import org.apache.hadoop.util.bloom.BloomFilter
 import org.apache.hadoop.util.hash.Hash
 import org.apache.hadoop.util.bloom.Key
-import bigdata_sketching.main.scala.algorithms.Histogram
+import eu.bigdata_sketching.scala.algorithms.Histogram
 
 
 case class RFSketch(val candidates : Array[List[Double]],

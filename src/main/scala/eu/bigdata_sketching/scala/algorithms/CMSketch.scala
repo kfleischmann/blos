@@ -1,9 +1,8 @@
-package bigdata_sketching.main.scala.algorithms.sketches
+package eu.bigdata_sketching.scala.algorithms
 
 import util.Random
 import scala.collection.mutable.PriorityQueue
-import java.security.{NoSuchAlgorithmException, MessageDigest}
-import java.math.BigInteger
+import java.security.MessageDigest
 import scala.math._
 
 case class Hashfunction(BIG_PRIME :  BigInt, w:Int ) extends Serializable {

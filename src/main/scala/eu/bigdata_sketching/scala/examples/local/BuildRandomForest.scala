@@ -1,6 +1,6 @@
-package eu.bigdata_sketching.examples.local
+package eu.bigdata_sketching.scala.examples.local
 
-import  bigdata_sketching.main.scala.algorithms.ml.random_forest.local.{TreeNode, DecisionTreeUtils, RandomDecisionTree, RFSketchingPhase}
+import  eu.bigdata_sketching.scala.algorithms.ml.random_forest.local.{TreeNode, DecisionTreeUtils, RandomDecisionTree, RFSketchingPhase}
 
 
 object BuildRandomForest {

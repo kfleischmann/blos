@@ -1,4 +1,4 @@
-package bigdata_sketching.main.scala.algorithms
+package eu.bigdata_sketching.scala.algorithms
 
 /**
  * Naive implementation of the Bloom Filter to manage the membership to very large set of elements

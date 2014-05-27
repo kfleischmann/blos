@@ -1,4 +1,4 @@
-package bigdata_sketching.main.scala.algorithms
+package eu.bigdata_sketching.scala.algorithms
 
 case class Histogram(
                       feature : Integer,

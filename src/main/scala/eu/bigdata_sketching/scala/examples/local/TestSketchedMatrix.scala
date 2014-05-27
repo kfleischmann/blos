@@ -1,9 +1,9 @@
-package eu.bigdata_sketching.examples.local
+package eu.bigdata_sketching.scala.examples.local
 
 import scala.util.Random
 import breeze.linalg._
 import breeze.plot._
-import bigdata_sketching.main.scala.algorithms.sketches.CMSketch
+import eu.bigdata_sketching.scala.algorithms.CMSketch
 
 object TestSketchedMatrix {
 

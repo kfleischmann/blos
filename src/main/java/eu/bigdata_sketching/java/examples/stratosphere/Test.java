@@ -7,6 +7,8 @@ import eu.stratosphere.api.common.operators.FileDataSource;
 import eu.stratosphere.api.java.record.io.CsvOutputFormat;
 import eu.stratosphere.api.java.record.io.TextInputFormat;
 
+import eu.bigdata_sketching.scala.algorithms.BloomFilter;
+
 public class Test implements Program {
 
     @Override
@@ -22,6 +24,6 @@ public class Test implements Program {
     }
 
     public static void main(String[] args) throws Exception {
-
+        BloomFilter f = new BloomFilter(100, 10, "SHA");
     }
 }

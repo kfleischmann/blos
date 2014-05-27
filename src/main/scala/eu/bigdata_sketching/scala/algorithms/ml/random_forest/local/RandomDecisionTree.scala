@@ -1,4 +1,4 @@
-package bigdata_sketching.main.scala.algorithms.ml.random_forest.local
+package eu.bigdata_sketching.scala.algorithms.ml.random_forest.local
 
 import org.apache.hadoop.util.bloom.Key
 import java.io.{PrintWriter, FileWriter}
