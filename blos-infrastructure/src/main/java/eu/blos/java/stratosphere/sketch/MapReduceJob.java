@@ -1,6 +1,5 @@
 package eu.blos.java.stratosphere.sketch;
 
-import eu.blos.scala.algorithms.sketches.CMSketch;
 import eu.stratosphere.api.common.Plan;
 import eu.stratosphere.api.common.Program;
 import eu.stratosphere.api.common.ProgramDescription;
@@ -14,41 +13,37 @@ import eu.stratosphere.api.java.record.operators.MapOperator;
 import eu.stratosphere.api.java.record.operators.ReduceOperator;
 import eu.stratosphere.client.LocalExecutor;
 import eu.stratosphere.configuration.Configuration;
+import eu.stratosphere.types.IntValue;
 import eu.stratosphere.types.Record;
+import eu.stratosphere.types.StringValue;
 import eu.stratosphere.util.Collector;
+
+
 import java.io.Serializable;
 import java.util.Iterator;
 
-import eu.blos.scala.algorithms.sketches.DistrubutedCMSketch;
 
-
-public class SketchBuilder implements Program, ProgramDescription, Serializable {
-
-    public static DistrubutedCMSketch distributedSketch = new DistrubutedCMSketch(0.1, 0.1, 10 );;
+public class MapReduceJob implements Program, ProgramDescription, Serializable {
 
     public static class PartialSketch extends MapFunction implements Serializable {
-
-        private CMSketch sketch = null;
-
         private Collector<Record> collector = null;
 
         public void open(Configuration parameters) throws Exception {
             super.open(parameters);
-            sketch = distributedSketch.new_partial_sketch();
-            sketch.alloc();
         }
+
 
         public void close() throws Exception {
             Record r = new Record();
-            r.setField(0, sketch);
+            r.setField(0, new StringValue("some text"));
+
             collector.collect(r);
+
 
             super.close();
         }
-
         public void map(Record record, Collector<Record> out) {
-            if(collector==null) collector = out;
-            sketch.update("hallo", 1 );
+            collector = out;
         }
     }
 
@@ -57,24 +52,16 @@ public class SketchBuilder implements Program, ProgramDescription, Serializable 
 
         public void reduce( Iterator<Record> records, Collector<Record> out) {
             Record element = null;
-            CMSketch global_sketch = null;
-            if (records.hasNext()) {
-                global_sketch = records.next().getField(0, CMSketch.class);
+            int sum = 0;
 
-                while (records.hasNext()) {
-                    element = records.next();
-                    CMSketch sketch = element.getField(0, CMSketch.class);
+            while (records.hasNext()) {
+                element = records.next();
+                String cnt = element.getField(0, StringValue.class).getValue();
+                sum += 1;
+            }
 
-                    sketch.print();
-
-                    System.out.println("merge");
-                    global_sketch.mergeWith( sketch );
-                }//while
-
-                global_sketch.print();
-            }//if
-
-            out.collect( new Record( global_sketch ) );
+            Record r = new Record(new StringValue("test"), new IntValue(sum) );
+            out.collect(r);
         }
     }
 
@@ -84,7 +71,7 @@ public class SketchBuilder implements Program, ProgramDescription, Serializable 
         String dataInput = (args.length > 1 ? args[0] : "");
         String output    = (args.length > 2 ? args[1] : "");
 
-        FileDataSource source = new FileDataSource(new TextInputFormat(), dataInput );
+        FileDataSource source = new FileDataSource(new TextInputFormat(), "file:///home/kay/normalized_small.txt");
 
         // Operations on the data set go here
         // ...
@@ -93,7 +80,7 @@ public class SketchBuilder implements Program, ProgramDescription, Serializable 
                 .name("local sketches")
                 .build();
 
-        sketcher.setDegreeOfParallelism(5);
+        sketcher.setDegreeOfParallelism(10);
 
 
         ReduceOperator merger = ReduceOperator.builder( MergeSketch.class )
@@ -102,26 +89,26 @@ public class SketchBuilder implements Program, ProgramDescription, Serializable 
                 .build();
 
 
-        FileDataSink sink = new FileDataSink( new CsvOutputFormat(), output, merger );
+        FileDataSink sink = new FileDataSink( new CsvOutputFormat(), "file:///home/kay/output", merger );
 
         CsvOutputFormat.configureRecordFormat(sink)
                 .recordDelimiter('\n')
                 .fieldDelimiter(' ')
-                .field(CMSketch.class, 0);
+                .field(StringValue.class, 0)
+                .field(IntValue.class, 1);
 
         return new Plan(sink);
     }
 
 
     public static void main(String[] args) throws Exception {
-        String inputPath = "file:///home/kay/normalized_small.txt";
-        String outputPath=  "file:///home/kay/output";
+        String inputPath = "";
+        String outputPath="";
 
         LocalExecutor executor = new LocalExecutor();
         executor.start();
 
-
-        executor.executePlan( new SketchBuilder().getPlan(inputPath, outputPath) );
+        executor.executePlan( new MapReduceJob().getPlan(inputPath, outputPath) );
 
         //System.out.println("runtime:  " + runtime);
         executor.stop();

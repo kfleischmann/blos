@@ -3,6 +3,9 @@ package eu.blos.scala.algorithms.sketches
 import util.Random
 import scala.collection.mutable.PriorityQueue
 import scala.math._
+import java.io.{DataInput, DataOutput}
+import eu.stratosphere.types.Value;
+
 
 case class Hashfunction(BIG_PRIME :  BigInt, w:Int ) extends Serializable {
   def random_parameter = Math.abs(Random.nextLong())
@@ -14,16 +17,67 @@ case class Hashfunction(BIG_PRIME :  BigInt, w:Int ) extends Serializable {
   }
 }
 
-class CMSketch(delta : Double, epsilon : Double, k : Int ) extends Serializable {
+class CMSketch extends Value {
+  var delta : Double = 0.0
+  var epsilon : Double = 0.0
+  var k : Int = 0
+
+  def this( delta: Double, epsilon : Double, k : Int ) {
+    this()
+    this.delta = delta
+    this.epsilon = epsilon
+    this.k = k
+
+    this w = Math.ceil( Math.exp(1) / epsilon ).toInt
+
+    // number of hash functions
+    this.d = Math.ceil( Math.log(1 / delta)).toInt
+
+    hashfunctions = generate_hashfunctions
+  }
+
+  def write( dataOutput : DataOutput ) {
+    dataOutput.writeDouble(delta)
+    dataOutput.writeDouble(epsilon)
+    dataOutput.writeInt(k)
+
+    dataOutput.writeInt(w)
+    dataOutput.writeInt(d)
+
+    for( x <- 0 until d){
+      for( y <- 0 until w ) {
+        dataOutput.writeFloat( count(x)(y) )
+      }//for
+    }//for
+
+  }
+
+  def read( dataInput : DataInput ) {
+    delta = dataInput.readDouble();
+    epsilon = dataInput.readDouble();
+    k = dataInput.readInt();
+
+    w=dataInput.readInt()
+    d=dataInput.readInt()
+
+    alloc
+
+    for( x <- 0 until d){
+      for( y <- 0 until w ) {
+        count(x)(y) = dataInput.readFloat()
+      }//for
+    }//for
+  }
+
   val BIG_PRIME :BigInt = 9223372036854775783L
 
   // weights -> space
-  val w = Math.ceil( Math.exp(1) / epsilon ).toInt
+  var w : Int = 0
 
   // number of hash functions
-  val d = Math.ceil( Math.log(1 / delta)).toInt
+  var d : Int = 0
 
-  var hashfunctions = generate_hashfunctions
+  var hashfunctions : java.util.ArrayList[Hashfunction] = null
   var count : Array[Array[Float]] = null
   var heap : PriorityQueue[(Float, String)] = null
   var top_k : scala.collection.mutable.HashMap[String, (Float, String)] = null
@@ -50,7 +104,7 @@ class CMSketch(delta : Double, epsilon : Double, k : Int ) extends Serializable 
   def update( key : String, increment : Float ) = {
     for( row <- 0 until hashfunctions.size ){
       val col = hashfunctions.get(row).hash(Math.abs(key.hashCode)).toInt
-      count(row)(col) = Math.max( increment, count(row)(col) )
+      count(row)(col) += increment //, count(row)(col)
     }
     //update_heap(key)
   }
@@ -99,6 +153,7 @@ class CMSketch(delta : Double, epsilon : Double, k : Int ) extends Serializable 
 
   def generate_hashfunctions = {
     val hf = new java.util.ArrayList[Hashfunction]()
+
     for ( x <- 0 until d ){
       hf.add( new Hashfunction(BIG_PRIME, w.toInt) )
     }
@@ -112,8 +167,9 @@ class CMSketch(delta : Double, epsilon : Double, k : Int ) extends Serializable 
       }//for
     }//for
     // okay i am not sure to be completly correct do find the overall top
-    heap.foreach( { x => update_heap(x._2)} )
-    s.heap.foreach( { x => update_heap(x._2)} )
+    // disable heap feature
+    //heap.foreach( { x => update_heap(x._2)} )
+    //s.heap.foreach( { x => update_heap(x._2)} )
   }
 
   override def toString = {
