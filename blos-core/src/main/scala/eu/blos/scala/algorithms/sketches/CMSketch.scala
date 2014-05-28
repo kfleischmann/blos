@@ -7,13 +7,13 @@ import java.io.{DataInput, DataOutput}
 import eu.stratosphere.types.Value;
 
 
-case class Hashfunction(BIG_PRIME :  BigInt, w:Int ) extends Serializable {
-  def random_parameter = Math.abs(Random.nextLong())
-  val a :BigInt = random_parameter
-  val b :BigInt = random_parameter
-
+case class Hashfunction(var BIG_PRIME :  Long,
+                        var w:Int,
+                        var a : Long = Math.abs(Random.nextLong()),
+                        var b : Long = Math.abs(Random.nextLong()) ) extends Serializable {
   def hash( x: Long ) = {
-    (a*x+b) % BIG_PRIME % w
+    val big_a : BigInt = a
+    big_a*x+b % BIG_PRIME % w
   }
 }
 
@@ -40,7 +40,6 @@ class CMSketch extends Value {
     dataOutput.writeDouble(delta)
     dataOutput.writeDouble(epsilon)
     dataOutput.writeInt(k)
-
     dataOutput.writeInt(w)
     dataOutput.writeInt(d)
 
@@ -50,13 +49,16 @@ class CMSketch extends Value {
       }//for
     }//for
 
+    for ( x <- 0 until d ){
+      dataOutput.writeLong( hashfunctions.get(x).a )
+      dataOutput.writeLong( hashfunctions.get(x).b )
+    }
   }
 
   def read( dataInput : DataInput ) {
     delta = dataInput.readDouble();
     epsilon = dataInput.readDouble();
-    k = dataInput.readInt();
-
+    k=dataInput.readInt();
     w=dataInput.readInt()
     d=dataInput.readInt()
 
@@ -67,9 +69,16 @@ class CMSketch extends Value {
         count(x)(y) = dataInput.readFloat()
       }//for
     }//for
+
+    hashfunctions = new java.util.ArrayList[Hashfunction]()
+    for ( x <- 0 until d ){
+      val a = dataInput.readLong()
+      val b = dataInput.readLong()
+      hashfunctions.add( new Hashfunction(BIG_PRIME, w, a, b ) )
+    }
   }
 
-  val BIG_PRIME :BigInt = 9223372036854775783L
+  val BIG_PRIME : Long = 9223372036854775783L
 
   // weights -> space
   var w : Int = 0

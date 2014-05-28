@@ -4,11 +4,11 @@ import eu.blos.scala.algorithms.sketches.CMSketch;
 import eu.stratosphere.api.common.Plan;
 import eu.stratosphere.api.common.Program;
 import eu.stratosphere.api.common.ProgramDescription;
+import eu.stratosphere.api.common.io.FileOutputFormat;
 import eu.stratosphere.api.common.operators.FileDataSink;
 import eu.stratosphere.api.common.operators.FileDataSource;
 import eu.stratosphere.api.java.record.functions.MapFunction;
 import eu.stratosphere.api.java.record.functions.ReduceFunction;
-import eu.stratosphere.api.java.record.io.CsvOutputFormat;
 import eu.stratosphere.api.java.record.io.TextInputFormat;
 import eu.stratosphere.api.java.record.operators.MapOperator;
 import eu.stratosphere.api.java.record.operators.ReduceOperator;
@@ -16,21 +16,62 @@ import eu.stratosphere.client.LocalExecutor;
 import eu.stratosphere.configuration.Configuration;
 import eu.stratosphere.types.Record;
 import eu.stratosphere.util.Collector;
+
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.Iterator;
-
 import eu.blos.scala.algorithms.sketches.DistrubutedCMSketch;
 
 
 public class SketchBuilder implements Program, ProgramDescription, Serializable {
 
-    public static DistrubutedCMSketch distributedSketch = new DistrubutedCMSketch(0.1, 0.1, 10 );;
+    public static DistrubutedCMSketch distributedSketch = new DistrubutedCMSketch(0.1, 0.2, 10 );
+
+    private Sketcher sketcher = null;
+
+    public SketchBuilder( Sketcher sketcher ){
+        this.sketcher = sketcher;
+    }
+
+    public interface Sketcher extends Serializable {
+        public void update( CMSketch s, Record tuple );
+    }
+
+    public class SketchOutputFormat extends FileOutputFormat<Record> {
+        private static final long serialVersionUID = 1L;
+        private DataOutputStream dataOutputStream;
+
+        @Override
+        public void open(int i) throws IOException {
+            super.open(i);
+            dataOutputStream = new DataOutputStream(stream);
+        }
+
+        @Override
+        public void writeRecord(Record record) throws IOException {
+            CMSketch sketch = record.getField(0, CMSketch.class);
+            sketch.write( dataOutputStream ) ;
+        }
+
+        @Override
+        public void close() throws IOException {
+            super.close();
+        }
+    }
+
 
     public static class PartialSketch extends MapFunction implements Serializable {
 
         private CMSketch sketch = null;
 
         private Collector<Record> collector = null;
+
+        private Sketcher sketcher = null ;
+
+        public PartialSketch( Sketcher sketcher ){
+            this.sketcher = sketcher;
+        }
 
         public void open(Configuration parameters) throws Exception {
             super.open(parameters);
@@ -42,13 +83,12 @@ public class SketchBuilder implements Program, ProgramDescription, Serializable 
             Record r = new Record();
             r.setField(0, sketch);
             collector.collect(r);
-
             super.close();
         }
 
         public void map(Record record, Collector<Record> out) {
             if(collector==null) collector = out;
-            sketch.update("hallo", 1 );
+            sketcher.update( sketch, record );
         }
     }
 
@@ -64,14 +104,8 @@ public class SketchBuilder implements Program, ProgramDescription, Serializable 
                 while (records.hasNext()) {
                     element = records.next();
                     CMSketch sketch = element.getField(0, CMSketch.class);
-
-                    sketch.print();
-
-                    System.out.println("merge");
-                    global_sketch.mergeWith( sketch );
+                    global_sketch.mergeWith(sketch);
                 }//while
-
-                global_sketch.print();
             }//if
 
             out.collect( new Record( global_sketch ) );
@@ -81,19 +115,20 @@ public class SketchBuilder implements Program, ProgramDescription, Serializable 
     @Override
     public Plan getPlan(String... args) {
 
-        String dataInput = (args.length > 1 ? args[0] : "");
-        String output    = (args.length > 2 ? args[1] : "");
+        String dataInput = (args.length > 0 ? args[0] : "");
+        String output    = (args.length > 1 ? args[1] : "");
 
         FileDataSource source = new FileDataSource(new TextInputFormat(), dataInput );
 
         // Operations on the data set go here
+
         // ...
-        MapOperator sketcher = MapOperator.builder(new PartialSketch())
+        MapOperator sketcher = MapOperator.builder(new PartialSketch( this.sketcher ))
                 .input(source)
                 .name("local sketches")
                 .build();
 
-        sketcher.setDegreeOfParallelism(5);
+        sketcher.setDegreeOfParallelism(1);
 
 
         ReduceOperator merger = ReduceOperator.builder( MergeSketch.class )
@@ -102,12 +137,7 @@ public class SketchBuilder implements Program, ProgramDescription, Serializable 
                 .build();
 
 
-        FileDataSink sink = new FileDataSink( new CsvOutputFormat(), output, merger );
-
-        CsvOutputFormat.configureRecordFormat(sink)
-                .recordDelimiter('\n')
-                .fieldDelimiter(' ')
-                .field(CMSketch.class, 0);
+        FileDataSink sink = new FileDataSink( new SketchOutputFormat(), output, merger );
 
         return new Plan(sink);
     }
@@ -121,9 +151,13 @@ public class SketchBuilder implements Program, ProgramDescription, Serializable 
         executor.start();
 
 
-        executor.executePlan( new SketchBuilder().getPlan(inputPath, outputPath) );
+        executor.executePlan( new SketchBuilder( new Sketcher(){
+            @Override
+            public void update(CMSketch s, Record tuple) {
 
-        //System.out.println("runtime:  " + runtime);
+            }
+        }).getPlan(inputPath, outputPath) );
+
         executor.stop();
     }
 
