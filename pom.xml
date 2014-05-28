@@ -27,21 +27,5 @@
             <version>0.5.2</version>
         </dependency>
 
-        <dependency>
-            <groupId>eu.stratosphere</groupId>
-            <artifactId>stratosphere-java</artifactId>
-            <version>0.4</version>
-        </dependency>
-        <dependency>
-            <groupId>eu.stratosphere</groupId>
-            <artifactId>stratosphere-clients</artifactId>
-            <version>0.4</version>
-        </dependency>
-        <dependency>
-            <groupId>eu.stratosphere</groupId>
-            <artifactId>stratosphere-scala</artifactId>
-            <version>0.4</version>
-        </dependency>
-
-    </dependencies>
+      </dependencies>
 </project>
