@@ -1,5 +1,7 @@
 package eu.blos.scala.algorithms
 
+import eu.blos.java.api.common.Sketch
+
 case class Histogram(
                       feature : Integer,
                       maxBins : Integer

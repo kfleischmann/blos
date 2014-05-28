@@ -190,4 +190,10 @@ class CMSketch extends Sketch {
   def print {
     count.foreach({ x => println(x.mkString(" ")) })
   }
+
+  def clone_mask : Sketch = {
+    val s = new CMSketch ( delta, epsilon, k  )
+    s.set_hashfunctions( get_hashfunctions )
+    s
+  }
 }

@@ -4,13 +4,14 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class DistributedSketchSet implements DistributedSketch {
-    private Map<String, Sketch> sketches = new HashMap<String, Sketch>();
+    private SketchSet sketchset = null; //new SketchSet();
 
-    public DistributedSketchSet() {
+    public DistributedSketchSet( SketchSet set ) {
+        this.sketchset = set;
     }
 
     @Override
     public Sketch new_partial_sketch() {
-        return null;
+        return sketchset.clone_mask();
     }
 }

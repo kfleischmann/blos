@@ -1,8 +1,6 @@
 package eu.blos.java.ml.random_forest;
 
-import eu.blos.java.api.common.DistributedSketch;
-import eu.blos.java.api.common.Sketch;
-import eu.blos.java.api.common.Sketcher;
+import eu.blos.java.api.common.*;
 import eu.blos.java.stratosphere.sketch.SketchBuilder;
 import eu.blos.scala.algorithms.sketches.CMSketch;
 import eu.blos.scala.algorithms.sketches.DistributedCMSketch;
@@ -52,7 +50,10 @@ public class RFSketching {
         String inputPath = "file:///home/kay/normalized_small.txt";
         String outputPath=  "file:///home/kay/output";
 
-        DistributedSketch distributedSketch = new DistributedCMSketch(0.1, 0.1, 10 );
+        CMSketch cm1 = new CMSketch(0.1, 0.1, 10 );
+        CMSketch cm2 = new CMSketch(0.002, 0.002, 10 );
+
+        DistributedSketch distributedSketch = new DistributedSketchSet( new SketchSet(cm1, cm2) );
 
         LocalExecutor executor = new LocalExecutor();
         executor.start();
@@ -64,11 +65,11 @@ public class RFSketching {
                 String[] line = tuple.getField(0, StringValue.class).getValue().split(" ");
 
 
-                CMSketch cmSketch = (CMSketch) s;
+                /*CMSketch cmSketch = (CMSketch) s;
 
                 for ( String l: line ) {
                     cmSketch.update( l, 1);
-                }
+                }*/
 
 
             }
