@@ -1,7 +1,7 @@
 package eu.blos.java.api.common;
 
-public class Sketcher<Sketch> {
+import java.io.Serializable;
 
-    public void processData( DataTuple tuple ){
-    }
+public interface Sketcher<T> extends Serializable {
+    public void update( Sketch s, T tuple );
 }

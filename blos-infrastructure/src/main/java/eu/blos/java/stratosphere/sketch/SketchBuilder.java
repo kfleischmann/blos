@@ -1,7 +1,8 @@
 package eu.blos.java.stratosphere.sketch;
 
 import eu.blos.java.api.common.Sketch;
-import eu.blos.scala.algorithms.sketches.CMSketch;
+import eu.blos.java.api.common.Sketcher;
+//import eu.blos.scala.algorithms.sketches.CMSketch;
 import eu.stratosphere.api.common.Plan;
 import eu.stratosphere.api.common.Program;
 import eu.stratosphere.api.common.ProgramDescription;
@@ -13,35 +14,42 @@ import eu.stratosphere.api.java.record.functions.ReduceFunction;
 import eu.stratosphere.api.java.record.io.TextInputFormat;
 import eu.stratosphere.api.java.record.operators.MapOperator;
 import eu.stratosphere.api.java.record.operators.ReduceOperator;
-import eu.stratosphere.client.LocalExecutor;
 import eu.stratosphere.configuration.Configuration;
 import eu.stratosphere.types.Record;
-import eu.stratosphere.types.StringValue;
-import eu.stratosphere.types.Value;
 import eu.stratosphere.util.Collector;
-
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Iterator;
 import eu.blos.java.api.common.DistributedSketcher;
-import eu.blos.scala.algorithms.sketches.DistributedCMSketcher;
 
 
-public class SketchBuilder implements Program, ProgramDescription, Serializable {
+public class SketchBuilder<T> implements Program, ProgramDescription, Serializable {
 
-    public static DistributedSketcher distributedSketcher = new DistributedCMSketcher(0.1, 0.1, 10 );
+    /**
+     * context for the sketch (e.g. hash functions) for local allocation
+     * very important to allow a merging phase after the skeching phase
+     */
+    public DistributedSketcher distributedSketcher = null ;
 
-    private Sketcher sketcher = null;
+    /**
+     * actual code that do the skeching
+     */
+    private Sketcher<Record> sketcher = null;
 
-    public SketchBuilder( Sketcher sketcher ){
+    private Class<? extends eu.stratosphere.types.Value> sketchType;
+
+    public SketchBuilder(   Class<? extends eu.stratosphere.types.Value> type,
+                            Sketcher<Record> sketcher,
+                            DistributedSketcher ds ){
         this.sketcher = sketcher;
+        this.distributedSketcher = ds;
+        this.sketchType = type;
     }
 
-    public interface Sketcher extends Serializable {
-        public void update( Sketch s, Record tuple );
-    }
-
+    /**
+     * write the sketch on disk
+     */
     public class SketchOutputFormat extends FileOutputFormat<Record> {
         private static final long serialVersionUID = 1L;
         private DataOutputStream dataOutputStream;
@@ -54,7 +62,8 @@ public class SketchBuilder implements Program, ProgramDescription, Serializable 
 
         @Override
         public void writeRecord(Record record) throws IOException {
-            CMSketch sketch = record.getField(0, CMSketch.class);
+            Sketch sketch = (Sketch)record.getField(0, sketchType);
+
             sketch.write( dataOutputStream ) ;
         }
 
@@ -64,7 +73,9 @@ public class SketchBuilder implements Program, ProgramDescription, Serializable 
         }
     }
 
-
+    /**
+     * construct the partial sketch during a mapping phase
+     */
     public static class PartialSketch extends MapFunction implements Serializable {
 
         private Sketch sketch = null;
@@ -73,8 +84,11 @@ public class SketchBuilder implements Program, ProgramDescription, Serializable 
 
         private Sketcher sketcher = null ;
 
-        public PartialSketch( Sketcher sketcher ){
+        private DistributedSketcher distributedSketcher = null;
+
+        public PartialSketch( Sketcher sketcher, DistributedSketcher ds ){
             this.sketcher = sketcher;
+            this.distributedSketcher = ds;
         }
 
         public void open(Configuration parameters) throws Exception {
@@ -98,18 +112,26 @@ public class SketchBuilder implements Program, ProgramDescription, Serializable 
         }
     }
 
-
+    /**
+     * merge partial sketches into one
+     */
     public static class MergeSketch extends ReduceFunction implements Serializable {
+        private Class<? extends eu.stratosphere.types.Value> sketchType;
+
+        public MergeSketch(Class<? extends eu.stratosphere.types.Value> type){
+            this.sketchType = type;
+        }
 
         public void reduce( Iterator<Record> records, Collector<Record> out) {
             Record element = null;
-            CMSketch global_sketch = null;
+            Sketch global_sketch = null;
             if (records.hasNext()) {
-                global_sketch = records.next().getField(0, CMSketch.class);
+                global_sketch = (Sketch)records.next().getField(0, sketchType );
 
                 while (records.hasNext()) {
                     element = records.next();
-                    CMSketch sketch = element.getField(0, CMSketch.class);
+                    Sketch sketch = (Sketch)element.getField(0, sketchType );
+
                     global_sketch.mergeWith(sketch);
                 }//while
             }//if
@@ -127,14 +149,12 @@ public class SketchBuilder implements Program, ProgramDescription, Serializable 
         FileDataSource source = new FileDataSource(new TextInputFormat(), dataInput );
 
         // Operations on the data set go here
-
-        // ...
-        MapOperator sketcher = MapOperator.builder(new PartialSketch( this.sketcher ))
+        MapOperator sketcher = MapOperator.builder(new PartialSketch( this.sketcher, distributedSketcher ))
                 .input(source)
                 .name("local sketches")
                 .build();
 
-        ReduceOperator merger = ReduceOperator.builder( MergeSketch.class )
+        ReduceOperator merger = ReduceOperator.builder( new MergeSketch(sketchType) )
                 .input(sketcher)
                 .name("merge sketches")
                 .build();
@@ -143,32 +163,6 @@ public class SketchBuilder implements Program, ProgramDescription, Serializable 
         FileDataSink sink = new FileDataSink( new SketchOutputFormat(), output, merger );
 
         return new Plan(sink);
-    }
-
-
-    public static void main(String[] args) throws Exception {
-        String inputPath = "file:///home/kay/normalized_small.txt";
-        String outputPath=  "file:///home/kay/output";
-
-        LocalExecutor executor = new LocalExecutor();
-        executor.start();
-
-
-        executor.executePlan( new SketchBuilder( new Sketcher(){
-            @Override
-            public void update(Sketch s, Record tuple) {
-
-                /* do the sketching here */
-                String[] line = tuple.getField(0, StringValue.class).getValue().split(" ");
-
-
-                CMSketch cmSketch = (CMSketch)s;
-
-                cmSketch.update("hallo", 123 );
-            }
-        }).getPlan(inputPath, outputPath) );
-
-        executor.stop();
     }
 
     @Override

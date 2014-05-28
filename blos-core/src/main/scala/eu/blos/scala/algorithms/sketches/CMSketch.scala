@@ -168,10 +168,11 @@ class CMSketch extends Sketch {
     hf
   }
 
-  def mergeWith( s : CMSketch ) = {
+  def mergeWith( s : Sketch ) = {
+    val cms : CMSketch = s.asInstanceOf[CMSketch];
     for( x <- 0 until d){
       for( y <- 0 until w ) {
-        count(x)(y) += s.count(x)(y)
+        count(x)(y) += cms.count(x)(y)
       }//for
     }//for
     // okay i am not sure to be completly correct do find the overall top
