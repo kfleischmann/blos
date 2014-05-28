@@ -1,8 +1,8 @@
 package eu.blos.scala.algorithms.sketches
 
-import eu.blos.java.api.common.{Sketch, DistributedSketcher}
+import eu.blos.java.api.common.{Sketch, DistributedSketch}
 
-class DistributedCMSketcher(delta : Double, epsilon : Double, k : Int )  extends Serializable with DistributedSketcher  {
+class DistributedCMSketch(delta : Double, epsilon : Double, k : Int )  extends Serializable with DistributedSketch  {
 
   val sketch_mask = new CMSketch( delta, epsilon, k  )
 

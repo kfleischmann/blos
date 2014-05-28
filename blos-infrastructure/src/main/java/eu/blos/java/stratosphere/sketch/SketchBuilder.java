@@ -2,7 +2,6 @@ package eu.blos.java.stratosphere.sketch;
 
 import eu.blos.java.api.common.Sketch;
 import eu.blos.java.api.common.Sketcher;
-//import eu.blos.scala.algorithms.sketches.CMSketch;
 import eu.stratosphere.api.common.Plan;
 import eu.stratosphere.api.common.Program;
 import eu.stratosphere.api.common.ProgramDescription;
@@ -21,16 +20,16 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Iterator;
-import eu.blos.java.api.common.DistributedSketcher;
+import eu.blos.java.api.common.DistributedSketch;
 
 
-public class SketchBuilder<T> implements Program, ProgramDescription, Serializable {
+public class SketchBuilder implements Program, ProgramDescription, Serializable {
 
     /**
      * context for the sketch (e.g. hash functions) for local allocation
      * very important to allow a merging phase after the skeching phase
      */
-    public DistributedSketcher distributedSketcher = null ;
+    public DistributedSketch distributedSketch = null ;
 
     /**
      * actual code that do the skeching
@@ -41,9 +40,9 @@ public class SketchBuilder<T> implements Program, ProgramDescription, Serializab
 
     public SketchBuilder(   Class<? extends eu.stratosphere.types.Value> type,
                             Sketcher<Record> sketcher,
-                            DistributedSketcher ds ){
+                            DistributedSketch ds ){
         this.sketcher = sketcher;
-        this.distributedSketcher = ds;
+        this.distributedSketch = ds;
         this.sketchType = type;
     }
 
@@ -84,25 +83,28 @@ public class SketchBuilder<T> implements Program, ProgramDescription, Serializab
 
         private Sketcher sketcher = null ;
 
-        private DistributedSketcher distributedSketcher = null;
+        private DistributedSketch distributedSketch = null;
 
-        public PartialSketch( Sketcher sketcher, DistributedSketcher ds ){
+        public PartialSketch( Sketcher sketcher, DistributedSketch ds ){
             this.sketcher = sketcher;
-            this.distributedSketcher = ds;
+            this.distributedSketch = ds;
         }
 
         public void open(Configuration parameters) throws Exception {
             super.open(parameters);
 
-            sketch = distributedSketcher.new_partial_sketch();
+            sketch = distributedSketch.new_partial_sketch();
 
             sketch.alloc();
         }
 
         public void close() throws Exception {
             Record r = new Record();
+
             r.setField(0, sketch);
+
             collector.collect(r);
+
             super.close();
         }
 
@@ -149,10 +151,12 @@ public class SketchBuilder<T> implements Program, ProgramDescription, Serializab
         FileDataSource source = new FileDataSource(new TextInputFormat(), dataInput );
 
         // Operations on the data set go here
-        MapOperator sketcher = MapOperator.builder(new PartialSketch( this.sketcher, distributedSketcher ))
+        MapOperator sketcher = MapOperator.builder(new PartialSketch( this.sketcher, distributedSketch))
                 .input(source)
                 .name("local sketches")
                 .build();
+
+        sketcher.setDegreeOfParallelism(5);
 
         ReduceOperator merger = ReduceOperator.builder( new MergeSketch(sketchType) )
                 .input(sketcher)

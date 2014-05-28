@@ -5,7 +5,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 /**
- * organize mutiple sketches
+ * organize multiple sketches
  */
 public class SketchSet implements Sketch {
 
@@ -16,7 +16,7 @@ public class SketchSet implements Sketch {
 
     @Override
     public void mergeWith(Sketch s) {
-
+        SketchSet set = (SketchSet)s;
     }
 
     @Override
