@@ -1,5 +1,7 @@
 package eu.blos.java.api.common;
 
-public interface Sketch {
+import eu.stratosphere.types.Value;
 
+public interface Sketch extends Value {
+    public void alloc();
 }

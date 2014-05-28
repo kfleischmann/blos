@@ -1,5 +1,6 @@
 package eu.blos.java.stratosphere.sketch;
 
+import eu.blos.java.api.common.Sketch;
 import eu.blos.scala.algorithms.sketches.CMSketch;
 import eu.stratosphere.api.common.Plan;
 import eu.stratosphere.api.common.Program;
@@ -15,18 +16,21 @@ import eu.stratosphere.api.java.record.operators.ReduceOperator;
 import eu.stratosphere.client.LocalExecutor;
 import eu.stratosphere.configuration.Configuration;
 import eu.stratosphere.types.Record;
+import eu.stratosphere.types.StringValue;
+import eu.stratosphere.types.Value;
 import eu.stratosphere.util.Collector;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Iterator;
-import eu.blos.scala.algorithms.sketches.DistrubutedCMSketch;
+import eu.blos.java.api.common.DistributedSketcher;
+import eu.blos.scala.algorithms.sketches.DistributedCMSketcher;
 
 
 public class SketchBuilder implements Program, ProgramDescription, Serializable {
 
-    public static DistrubutedCMSketch distributedSketch = new DistrubutedCMSketch(0.1, 0.2, 10 );
+    public static DistributedSketcher distributedSketcher = new DistributedCMSketcher(0.1, 0.1, 10 );
 
     private Sketcher sketcher = null;
 
@@ -35,7 +39,7 @@ public class SketchBuilder implements Program, ProgramDescription, Serializable 
     }
 
     public interface Sketcher extends Serializable {
-        public void update( CMSketch s, Record tuple );
+        public void update( Sketch s, Record tuple );
     }
 
     public class SketchOutputFormat extends FileOutputFormat<Record> {
@@ -63,7 +67,7 @@ public class SketchBuilder implements Program, ProgramDescription, Serializable 
 
     public static class PartialSketch extends MapFunction implements Serializable {
 
-        private CMSketch sketch = null;
+        private Sketch sketch = null;
 
         private Collector<Record> collector = null;
 
@@ -75,7 +79,9 @@ public class SketchBuilder implements Program, ProgramDescription, Serializable 
 
         public void open(Configuration parameters) throws Exception {
             super.open(parameters);
-            sketch = distributedSketch.new_partial_sketch();
+
+            sketch = distributedSketcher.new_partial_sketch();
+
             sketch.alloc();
         }
 
@@ -128,9 +134,6 @@ public class SketchBuilder implements Program, ProgramDescription, Serializable 
                 .name("local sketches")
                 .build();
 
-        sketcher.setDegreeOfParallelism(1);
-
-
         ReduceOperator merger = ReduceOperator.builder( MergeSketch.class )
                 .input(sketcher)
                 .name("merge sketches")
@@ -153,8 +156,15 @@ public class SketchBuilder implements Program, ProgramDescription, Serializable 
 
         executor.executePlan( new SketchBuilder( new Sketcher(){
             @Override
-            public void update(CMSketch s, Record tuple) {
+            public void update(Sketch s, Record tuple) {
 
+                /* do the sketching here */
+                String[] line = tuple.getField(0, StringValue.class).getValue().split(" ");
+
+
+                CMSketch cmSketch = (CMSketch)s;
+
+                cmSketch.update("hallo", 123 );
             }
         }).getPlan(inputPath, outputPath) );
 

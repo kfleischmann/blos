@@ -4,7 +4,8 @@ import util.Random
 import scala.collection.mutable.PriorityQueue
 import scala.math._
 import java.io.{DataInput, DataOutput}
-import eu.stratosphere.types.Value;
+import eu.blos.java.api.common.Sketch
+;
 
 
 case class Hashfunction(var BIG_PRIME :  Long,
@@ -17,7 +18,7 @@ case class Hashfunction(var BIG_PRIME :  Long,
   }
 }
 
-class CMSketch extends Value {
+class CMSketch extends Sketch {
   var delta : Double = 0.0
   var epsilon : Double = 0.0
   var k : Int = 0
