@@ -4,17 +4,15 @@ import util.Random
 import scala.collection.mutable.PriorityQueue
 import scala.math._
 import java.io.{DataInput, DataOutput}
-import eu.blos.java.api.common.Sketch
-;
+import eu.blos.java.api.common.Sketch;
 
 
-case class Hashfunction(var BIG_PRIME :  Long,
+case class Hashfunction(var BIG_PRIME :  BigInt,
                         var w:Int,
-                        var a : Long = Math.abs(Random.nextLong()),
-                        var b : Long = Math.abs(Random.nextLong()) ) extends Serializable {
+                        var a : BigInt = Math.abs(Random.nextLong()),
+                        var b : BigInt = Math.abs(Random.nextLong()) ) extends Serializable {
   def hash( x: Long ) = {
-    val big_a : BigInt = a
-    big_a*x+b % BIG_PRIME % w
+    (a*x+b) % BIG_PRIME % w
   }
 }
 
@@ -51,8 +49,8 @@ class CMSketch extends Sketch {
     }//for
 
     for ( x <- 0 until d ){
-      dataOutput.writeLong( hashfunctions.get(x).a )
-      dataOutput.writeLong( hashfunctions.get(x).b )
+      dataOutput.writeLong( hashfunctions.get(x).a.toLong )
+      dataOutput.writeLong( hashfunctions.get(x).b.toLong )
     }
   }
 
