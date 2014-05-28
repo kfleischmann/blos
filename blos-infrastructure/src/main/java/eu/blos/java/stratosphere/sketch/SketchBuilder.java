@@ -10,6 +10,7 @@ import eu.stratosphere.api.java.record.functions.ReduceFunction;
 import eu.stratosphere.api.java.record.io.CsvOutputFormat;
 import eu.stratosphere.api.java.record.io.TextInputFormat;
 import eu.stratosphere.api.java.record.operators.MapOperator;
+import eu.stratosphere.api.java.record.operators.ReduceOperator;
 import eu.stratosphere.client.LocalExecutor;
 import eu.stratosphere.configuration.Configuration;
 import eu.stratosphere.types.IntValue;
@@ -23,16 +24,16 @@ import java.util.Iterator;
 
 public class SketchBuilder implements Program, ProgramDescription, Serializable {
 
-    class PartialSketch extends MapFunction implements Serializable {
+    public static class PartialSketch extends MapFunction implements Serializable {
         private Collector<Record> collector = null;
 
         public void open(Configuration parameters) throws Exception {
             super.open(parameters);
         }
+
+
         public void close() throws Exception {
             Record r = new Record();
-
-            //IntValue val = r.getField(3, IntValue.class);
             r.setField(0, new StringValue("some text"));
 
             collector.collect(r);
@@ -46,18 +47,20 @@ public class SketchBuilder implements Program, ProgramDescription, Serializable 
     }
 
 
-    class MergeSketch extends ReduceFunction implements Serializable {
+    public static class MergeSketch extends ReduceFunction implements Serializable {
+
         public void reduce( Iterator<Record> records, Collector<Record> out) {
             Record element = null;
             int sum = 0;
+
             while (records.hasNext()) {
                 element = records.next();
-                int cnt = element.getField(1, IntValue.class).getValue();
-                sum += cnt;
+                String cnt = element.getField(0, StringValue.class).getValue();
+                sum += 1;
             }
 
-            element.setField(1, new IntValue(sum));
-            out.collect(element);
+            Record r = new Record(new StringValue("test"), new IntValue(sum) );
+            out.collect(r);
         }
     }
 
@@ -71,16 +74,27 @@ public class SketchBuilder implements Program, ProgramDescription, Serializable 
 
         // Operations on the data set go here
         // ...
-        MapOperator mapper = MapOperator.builder(new PartialSketch())
-                .input(source).build();
+        MapOperator sketcher = MapOperator.builder(new PartialSketch())
+                .input(source)
+                .name("local sketches")
+                .build();
+
+        sketcher.setDegreeOfParallelism(10);
 
 
-        FileDataSink sink = new FileDataSink( new CsvOutputFormat(), "file:///home/kay/output", mapper );
+        ReduceOperator merger = ReduceOperator.builder( MergeSketch.class )
+                .input(sketcher)
+                .name("merge sketches")
+                .build();
+
+
+        FileDataSink sink = new FileDataSink( new CsvOutputFormat(), "file:///home/kay/output", merger );
 
         CsvOutputFormat.configureRecordFormat(sink)
                 .recordDelimiter('\n')
                 .fieldDelimiter(' ')
-                .field(StringValue.class, 0);
+                .field(StringValue.class, 0)
+                .field(IntValue.class, 1);
 
         return new Plan(sink);
     }
@@ -97,7 +111,6 @@ public class SketchBuilder implements Program, ProgramDescription, Serializable 
 
         //System.out.println("runtime:  " + runtime);
         executor.stop();
-
     }
 
     @Override
