@@ -127,16 +127,23 @@ public class SketchBuilder implements Program, ProgramDescription, Serializable 
         public void reduce( Iterator<Record> records, Collector<Record> out) {
             Record element = null;
             Sketch global_sketch = null;
+            Sketch sketch = null;
             if (records.hasNext()) {
-                global_sketch = (Sketch)records.next().getField(0, sketchType );
+                 sketch = ((Sketch)records.next().getField(0, sketchType ));
+
+                global_sketch = sketch.clone_mask();
+                global_sketch.alloc();
+
+                global_sketch.mergeWith( sketch );
 
                 while (records.hasNext()) {
                     element = records.next();
-                    Sketch sketch = (Sketch)element.getField(0, sketchType );
-
+                    sketch = (Sketch)element.getField(0, sketchType );
                     global_sketch.mergeWith(sketch);
                 }//while
             }//if
+
+            global_sketch.print();
 
             out.collect( new Record( global_sketch ) );
         }
@@ -156,7 +163,7 @@ public class SketchBuilder implements Program, ProgramDescription, Serializable 
                 .name("local sketches")
                 .build();
 
-        sketcher.setDegreeOfParallelism(5);
+        sketcher.setDegreeOfParallelism(10);
 
         ReduceOperator merger = ReduceOperator.builder( new MergeSketch(sketchType) )
                 .input(sketcher)
