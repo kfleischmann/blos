@@ -2,6 +2,7 @@ package eu.blos.java.ml.random_forest;
 
 import eu.blos.java.api.common.*;
 import eu.blos.java.stratosphere.sketch.SketchBuilder;
+import eu.blos.scala.algorithms.DistributedHistogramSketch;
 import eu.blos.scala.algorithms.sketches.CMSketch;
 import eu.blos.scala.algorithms.sketches.DistributedCMSketch;
 import eu.stratosphere.client.LocalExecutor;
@@ -51,13 +52,17 @@ public class RFSketching {
         String outputPath=  "file:///home/kay/output";
 
         CMSketch cm1 = new CMSketch(0.1, 0.1, 10 );
-        CMSketch cm2 = new CMSketch(0.2, 0.2, 10 );
+
+        /*CMSketch cm2 = new CMSketch(0.2, 0.2, 10 );
         CMSketch cm3 = new CMSketch(0.2, 0.02, 10 );
         CMSketch cm4 = new CMSketch(0.2, 0.002, 10 );
-        CMSketch cm5 = new CMSketch(0.2, 0.0002, 10 );
+        CMSketch cm5 = new CMSketch(0.2, 0.0002, 10 );*/
 
-        //DistributedSketch distributedSketch = new DistributedSketchSet( new SketchSet(cm1) );
-        DistributedSketch distributedSketch = new DistributedSketchSet( new SketchSet(cm1, cm2, cm3, cm4, cm5) );
+        DistributedHistogramSketch dh = new DistributedHistogramSketch(10, 10 );
+
+
+        DistributedSketch distributedSketch = new DistributedSketchSet( new SketchSet(cm1, dh) );
+        //DistributedSketch distributedSketch = new DistributedSketchSet( new SketchSet(cm1, cm2, cm3, cm4, cm5) );
 
         LocalExecutor executor = new LocalExecutor();
         executor.start();
@@ -73,6 +78,7 @@ public class RFSketching {
 
 
                 ((CMSketch)set.getSketches().get( 0)).update("lala", 1 );
+
                 /*CMSketch cmSketch = (CMSketch) s;
 
                 for ( String l: line ) {

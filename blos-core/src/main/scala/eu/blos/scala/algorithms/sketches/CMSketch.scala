@@ -16,7 +16,7 @@ case class Hashfunction(var BIG_PRIME :  BigInt,
   }
 }
 
-class CMSketch extends Sketch {
+class CMSketch extends Sketch[CMSketch] {
   var delta : Double = 0.0
   var epsilon : Double = 0.0
   var k : Int = 0
@@ -168,8 +168,8 @@ class CMSketch extends Sketch {
     hf
   }
 
-  def mergeWith( s : Sketch ) = {
-    val cms : CMSketch = s.asInstanceOf[CMSketch];
+  def mergeWith( cms : CMSketch ) = {
+    //val cms : CMSketch = s.asInstanceOf[CMSketch];
     for( x <- 0 until d){
       for( y <- 0 until w ) {
         count(x)(y) += cms.count(x)(y)
@@ -193,7 +193,7 @@ class CMSketch extends Sketch {
     //count.foreach({ x => println(x.mkString(" ")) })
   }
 
-  def clone_mask : Sketch = {
+  def clone_mask : CMSketch = {
     val s = new CMSketch ( delta, epsilon, k  )
     s.set_hashfunctions( get_hashfunctions )
     s

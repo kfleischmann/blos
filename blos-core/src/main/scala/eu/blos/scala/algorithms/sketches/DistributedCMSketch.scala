@@ -6,7 +6,7 @@ class DistributedCMSketch(delta : Double, epsilon : Double, k : Int )  extends S
 
   val sketch_mask = new CMSketch( delta, epsilon, k  )
 
-  def new_partial_sketch : Sketch = {
+  def new_partial_sketch : CMSketch = {
     sketch_mask.clone_mask
   }
 }

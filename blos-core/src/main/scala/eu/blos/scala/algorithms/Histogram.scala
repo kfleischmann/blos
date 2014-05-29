@@ -1,11 +1,51 @@
 package eu.blos.scala.algorithms
 
 import eu.blos.java.api.common.Sketch
+import java.io.{DataInput, DataOutput}
 
-case class Histogram(
-                      feature : Integer,
-                      maxBins : Integer
-                      ) extends Serializable {
+
+class DistributedHistogramSketch() extends Histogram with Sketch[DistributedHistogramSketch]{
+  def this(  feature : Integer, maxBins : Integer ) {
+    this()
+  }
+
+  override def alloc {
+    // nothing todo
+  }
+
+  override def write( dataOutput : DataOutput ) {
+    dataOutput.writeInt(bins.size)
+    dataOutput.writeInt(feature)
+    dataOutput.writeInt(maxBins)
+    for(i<- 0 until bins.size){
+      dataOutput.writeDouble(bins(i)._1 )
+      dataOutput.writeInt(bins(i)._2 )
+    }
+  }
+
+  override def read( dataInput : DataInput ) {
+    val bin_size = dataInput.readInt()
+    feature = dataInput.readInt()
+    maxBins = dataInput.readInt()
+    for(i<- 0 until bin_size ){
+      val b1= dataInput.readDouble()
+      val b2= dataInput.readInt()
+
+      bins += ( (b1,b2) )
+    }
+  }
+
+  override def mergeWith( h : DistributedHistogramSketch ) {
+    for(i<-0 until h.bins.length) update(h.bins(i)._1, h.bins(i)._2 )
+  }
+
+  override def clone_mask : DistributedHistogramSketch = {
+    new DistributedHistogramSketch( feature, maxBins )
+  }
+}
+
+class Histogram(  var feature : Integer = 0,
+                  var maxBins : Integer = 0 ) extends Serializable {
 
   var bins : scala.collection.mutable.Buffer[(Double,Int)] = scala.collection.mutable.Buffer[(Double,Int)]()
   var maxBinValue : Double = Double.NegativeInfinity
@@ -17,6 +57,7 @@ case class Histogram(
   def getMin = minBinValue
   def getNormalSum = bins.map(_._2).sum
   def getNormalSum( x : Double) = bins.filter(d=>d._1 > x).map(_._2).sum
+
 
   //TODO: Bug fix
   def uniform( Bnew : Integer ) = {
@@ -72,7 +113,6 @@ case class Histogram(
       s
     }
   }
-
   def merge(h:Histogram) = {
     val h2 = new Histogram(feature,maxBins)
     for(i<-0 until bins.length) h2.update(bins(i)._1, bins(i)._2)
@@ -90,7 +130,7 @@ case class Histogram(
     this
   }
   def update ( p : Double, c : Int ) : this.type = {
-    var bin = bins.zipWithIndex.find(pm => pm._1._1 == p)
+    val bin = bins.zipWithIndex.find(pm => pm._1._1 == p)
     if( bin != None )
       bins(bin.head._2) = (bin.head._1._1,bin.head._1._2+c)
     else{
