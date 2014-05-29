@@ -6,4 +6,5 @@ public interface Sketch extends Value {
     public void alloc();
     public void mergeWith(Sketch s);
     public Sketch clone_mask();
+    public void print();
 }

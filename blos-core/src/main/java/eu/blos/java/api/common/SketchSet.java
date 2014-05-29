@@ -12,9 +12,21 @@ import java.util.List;
 public class SketchSet implements Sketch {
     private List<Sketch> sketches = new ArrayList<Sketch>();
 
+    public SketchSet(){
+        // no information about next sketch types
+        // i have to take it implcitly
+        sketches=DistributedSketchSet.sketchset_mask.getSketches();
+    }
+
     public SketchSet( Sketch ... sketches ){
         for( Sketch s : sketches ){
-            this.sketches.add(s);
+            this.sketches.add(s.clone_mask());
+        }
+    }
+
+    public SketchSet( List<Sketch> sketches ){
+        for( Sketch s : sketches ){
+            this.sketches.add(s.clone_mask());
         }
     }
 
@@ -27,7 +39,7 @@ public class SketchSet implements Sketch {
     public void alloc() {
         for( Sketch s : this.sketches ){
             s.alloc();
-        }
+        }//for
     }
 
     @Override
@@ -42,11 +54,15 @@ public class SketchSet implements Sketch {
 
     @Override
     public Sketch clone_mask() {
-        SketchSet set = new SketchSet();
-        for(int i=0; i < getSketches().size(); i++ ){
-            set.getSketches().add( getSketches().get(i).clone_mask()  );
-        }
+        SketchSet set = new SketchSet( getSketches() );
         return set;
+    }
+
+    @Override
+    public void print() {
+        for(int i=0; i < getSketches().size(); i++ ){
+            getSketches().get(i).print();
+        }//for
     }
 
     @Override

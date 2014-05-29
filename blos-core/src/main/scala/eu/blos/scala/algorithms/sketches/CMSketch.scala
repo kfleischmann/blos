@@ -175,6 +175,7 @@ class CMSketch extends Sketch {
         count(x)(y) += cms.count(x)(y)
       }//for
     }//for
+
     // okay i am not sure to be completly correct do find the overall top
     // disable heap feature
     //heap.foreach( { x => update_heap(x._2)} )
@@ -188,7 +189,8 @@ class CMSketch extends Sketch {
   }
 
   def print {
-    count.foreach({ x => println(x.mkString(" ")) })
+    System.out.println(toString)
+    //count.foreach({ x => println(x.mkString(" ")) })
   }
 
   def clone_mask : Sketch = {
