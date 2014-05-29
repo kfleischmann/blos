@@ -163,8 +163,6 @@ public class SketchBuilder implements Program, ProgramDescription, Serializable 
                 .name("local sketches")
                 .build();
 
-        sketcher.setDegreeOfParallelism(10);
-
         ReduceOperator merger = ReduceOperator.builder( new MergeSketch(sketchType) )
                 .input(sketcher)
                 .name("merge sketches")
