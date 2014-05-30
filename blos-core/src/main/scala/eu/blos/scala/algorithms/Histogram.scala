@@ -4,9 +4,13 @@ import eu.blos.java.api.common.Sketch
 import java.io.{DataInput, DataOutput}
 
 
-class DistributedHistogramSketch() extends Histogram with Sketch[DistributedHistogramSketch]{
+class HistogramSketch() extends Histogram with Sketch[HistogramSketch]{
+  private final val serialVersionUID: Long = 1L
+
   def this(  feature : Integer, maxBins : Integer ) {
     this()
+    this.feature = feature;
+    this.maxBins = maxBins;
   }
 
   override def alloc {
@@ -14,6 +18,7 @@ class DistributedHistogramSketch() extends Histogram with Sketch[DistributedHist
   }
 
   override def write( dataOutput : DataOutput ) {
+    System.out.println( "write hashcode:"+this.hashCode() )
     dataOutput.writeInt(bins.size)
     dataOutput.writeInt(feature)
     dataOutput.writeInt(maxBins)
@@ -24,40 +29,43 @@ class DistributedHistogramSketch() extends Histogram with Sketch[DistributedHist
   }
 
   override def read( dataInput : DataInput ) {
+    System.out.println( "read hashcode:"+this.hashCode() )
     val bin_size = dataInput.readInt()
+    System.out.println("size: "+bin_size)
     feature = dataInput.readInt()
     maxBins = dataInput.readInt()
     for(i<- 0 until bin_size ){
       val b1= dataInput.readDouble()
       val b2= dataInput.readInt()
-
-      bins += ( (b1,b2) )
+      bins. += ( (b1,b2) )
     }
   }
 
-  override def mergeWith( h : DistributedHistogramSketch ) {
-    for(i<-0 until h.bins.length) update(h.bins(i)._1, h.bins(i)._2 )
+  override def mergeWith( h : HistogramSketch ) {
+    System.out.println("mergeWith histogram");
+    System.out.println("histogram-size: "+h.bins.length )
+    for(i<-0 until h.bins.length) {
+      update(h.bins(i)._1, h.bins(i)._2 )
+    }
   }
 
-  override def clone_mask : DistributedHistogramSketch = {
-    new DistributedHistogramSketch( feature, maxBins )
+  override def clone_mask : HistogramSketch = {
+    new HistogramSketch( feature, maxBins )
   }
 }
 
 class Histogram(  var feature : Integer = 0,
-                  var maxBins : Integer = 0 ) extends Serializable {
+                  var maxBins : Integer = 0 ) {
 
-  var bins : scala.collection.mutable.Buffer[(Double,Int)] = scala.collection.mutable.Buffer[(Double,Int)]()
-  var maxBinValue : Double = Double.NegativeInfinity
-  var minBinValue : Double = Double.PositiveInfinity
+  protected var bins : scala.collection.mutable.Buffer[(Double,Int)] = scala.collection.mutable.Buffer[(Double,Int)]()
+  protected var maxBinValue : Double = Double.NegativeInfinity
+  protected var minBinValue : Double = Double.PositiveInfinity
 
   def getBins = bins
-
   def getMax = maxBinValue
   def getMin = minBinValue
   def getNormalSum = bins.map(_._2).sum
   def getNormalSum( x : Double) = bins.filter(d=>d._1 > x).map(_._2).sum
-
 
   //TODO: Bug fix
   def uniform( Bnew : Integer ) = {
@@ -113,6 +121,7 @@ class Histogram(  var feature : Integer = 0,
       s
     }
   }
+
   def merge(h:Histogram) = {
     val h2 = new Histogram(feature,maxBins)
     for(i<-0 until bins.length) h2.update(bins(i)._1, bins(i)._2)
@@ -129,6 +138,7 @@ class Histogram(  var feature : Integer = 0,
     update(p,1)
     this
   }
+
   def update ( p : Double, c : Int ) : this.type = {
     val bin = bins.zipWithIndex.find(pm => pm._1._1 == p)
     if( bin != None )
@@ -143,9 +153,11 @@ class Histogram(  var feature : Integer = 0,
     }
     this
   }
+
   private def sort {
     bins=bins.sortWith( (e1, e2) => e1._1 <= e2._1 )
   }
+
   private def compress_one {
     // only compress if the numer of elements exeeds
     // the maximum bins allowed
@@ -156,6 +168,7 @@ class Histogram(  var feature : Integer = 0,
       bins(q) = ( (qi._1*qi._2 + qi1._1*qi1._2)/(qi._2+qi1._2), qi._2+qi1._2)
     }
   }
+
   override def toString = {
     feature+";"+maxBins+";"+bins.map(x=>""+x._1+" "+x._2).mkString(",")
   }
@@ -180,6 +193,7 @@ class Histogram(  var feature : Integer = 0,
     }//for
   }
 }
+
 object Histogram extends Serializable {
   def fromString(str:String) = {
     val values = str.split(";")

@@ -25,6 +25,8 @@ import eu.blos.java.api.common.DistributedSketch;
 
 public class SketchBuilder implements Program, ProgramDescription, Serializable {
 
+    static final long serialVersionUID = 1L;
+
     /**
      * context for the sketch (e.g. hash functions) for local allocation
      * very important to allow a merging phase after the skeching phase
@@ -36,9 +38,9 @@ public class SketchBuilder implements Program, ProgramDescription, Serializable 
      */
     private Sketcher<Record> sketcher = null;
 
-    private Class<? extends eu.stratosphere.types.Value> sketchType;
+    private Class<? extends Sketch> sketchType;
 
-    public SketchBuilder(   Class<? extends eu.stratosphere.types.Value> type,
+    public SketchBuilder(   Class<? extends Sketch> type,
                             Sketcher<Record> sketcher,
                             DistributedSketch ds ){
         this.sketcher = sketcher;
@@ -118,34 +120,62 @@ public class SketchBuilder implements Program, ProgramDescription, Serializable 
      * merge partial sketches into one
      */
     public static class MergeSketch extends ReduceFunction implements Serializable {
-        private Class<? extends eu.stratosphere.types.Value> sketchType;
+        private Class<? extends Sketch> sketchType;
 
-        public MergeSketch(Class<? extends eu.stratosphere.types.Value> type){
+        public MergeSketch(Class<? extends Sketch> type){
             this.sketchType = type;
         }
 
-        public void reduce( Iterator<Record> records, Collector<Record> out) {
+        public void reduce( Iterator<Record> records, Collector<Record> out) throws Exception {
+            Sketch global_sketch = null;
+            Record element = null;
+            while (records.hasNext()) {
+                element = records.next();
+                Sketch sketch = (Sketch)sketchType.newInstance();
+
+                element.getFieldInto(0, sketch);
+
+                // prepare global sketch
+                if(global_sketch == null ) {
+                    global_sketch = sketch.clone_mask();
+                    global_sketch.alloc();
+                }
+
+                sketch.print();
+
+                //global_sketch.mergeWith(sketch);
+
+            }
+            /*
             Record element = null;
             Sketch global_sketch = null;
             Sketch sketch = null;
             if (records.hasNext()) {
+
                  sketch = ((Sketch)records.next().getField(0, sketchType ));
+
 
                 global_sketch = sketch.clone_mask();
                 global_sketch.alloc();
 
-                global_sketch.mergeWith( sketch );
+                //global_sketch.mergeWith( sketch );
+
+                sketch.print();
 
                 while (records.hasNext()) {
                     element = records.next();
                     sketch = (Sketch)element.getField(0, sketchType );
-                    global_sketch.mergeWith(sketch);
+
+                    sketch.print();
+
+                    //global_sketch.mergeWith(sketch);
                 }//while
             }//if
 
-            global_sketch.print();
+            //global_sketch.print();
 
             out.collect( new Record( global_sketch ) );
+            */
         }
     }
 
@@ -162,6 +192,8 @@ public class SketchBuilder implements Program, ProgramDescription, Serializable 
                 .input(source)
                 .name("local sketches")
                 .build();
+
+        sketcher.setDegreeOfParallelism(3);
 
         ReduceOperator merger = ReduceOperator.builder( new MergeSketch(sketchType) )
                 .input(sketcher)
