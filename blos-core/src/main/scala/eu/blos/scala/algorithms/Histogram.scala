@@ -1,23 +1,25 @@
 package eu.blos.scala.algorithms
 
-import eu.blos.java.api.common.Sketch
 import java.io.{DataInput, DataOutput}
+import eu.blos.java.api.common.PDD
 
 
-class HistogramSketch() extends Histogram with Sketch[HistogramSketch]{
+class HistogramPDD() extends Histogram with PDD[HistogramPDD]{
   private final val serialVersionUID: Long = 1L
 
   def this(  feature : Integer, maxBins : Integer ) {
     this()
     this.feature = feature;
     this.maxBins = maxBins;
+    System.out.println( "init HistogramPDD() hashcode:"+this.hashCode() )
+
   }
 
   override def alloc {
     // nothing todo
   }
 
-  override def write( dataOutput : DataOutput ) {
+  def write( dataOutput : DataOutput ) {
     System.out.println( "write hashcode:"+this.hashCode() )
     dataOutput.writeInt(bins.size)
     dataOutput.writeInt(feature)
@@ -28,7 +30,7 @@ class HistogramSketch() extends Histogram with Sketch[HistogramSketch]{
     }
   }
 
-  override def read( dataInput : DataInput ) {
+  def read( dataInput : DataInput ) {
     System.out.println( "read hashcode:"+this.hashCode() )
     val bin_size = dataInput.readInt()
     System.out.println("size: "+bin_size)
@@ -41,16 +43,12 @@ class HistogramSketch() extends Histogram with Sketch[HistogramSketch]{
     }
   }
 
-  override def mergeWith( h : HistogramSketch ) {
+  override def mergeWith( h : HistogramPDD ) {
     System.out.println("mergeWith histogram");
     System.out.println("histogram-size: "+h.bins.length )
     for(i<-0 until h.bins.length) {
       update(h.bins(i)._1, h.bins(i)._2 )
     }
-  }
-
-  override def clone_mask : HistogramSketch = {
-    new HistogramSketch( feature, maxBins )
   }
 }
 
