@@ -39,7 +39,6 @@ public class MapReduceJob implements Program, ProgramDescription, Serializable {
 
             collector.collect(r);
 
-
             super.close();
         }
         public void map(Record record, Collector<Record> out) {
@@ -80,7 +79,7 @@ public class MapReduceJob implements Program, ProgramDescription, Serializable {
                 .name("local sketches")
                 .build();
 
-        sketcher.setDegreeOfParallelism(10);
+        sketcher.setDegreeOfParallelism(4);
 
 
         ReduceOperator merger = ReduceOperator.builder( MergeSketch.class )

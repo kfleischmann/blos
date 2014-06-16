@@ -1,18 +1,36 @@
 package eu.blos.scala.algorithms
 
-import eu.blos.java.api.common.Sketch
+import java.io.{DataInput, DataOutput}
+import eu.blos.java.api.common.PDD
 
-case class Histogram(
-                      feature : Integer,
-                      maxBins : Integer
-                      ) extends Serializable {
 
-  var bins : scala.collection.mutable.Buffer[(Double,Int)] = scala.collection.mutable.Buffer[(Double,Int)]()
-  var maxBinValue : Double = Double.NegativeInfinity
-  var minBinValue : Double = Double.PositiveInfinity
+class PDDHistogram( feature : Int , maxBins : Int ) extends Histogram with PDD[PDDHistogram]{
+  private final val serialVersionUID: Long = 1L
+
+  def this() = this(1,1)
+
+  override def alloc {
+    // nothing todo
+  }
+
+  override def mergeWith( h : PDDHistogram ) {
+    System.out.println("mergeWith histogram");
+    System.out.println("histogram-size: "+h.bins.length )
+    for(i<-0 until h.bins.length) {
+      update(h.bins(i)._1, h.bins(i)._2 )
+    }
+  }
+}
+
+class Histogram( feature : Int , maxBins : Int ) {
+
+  def this() = this(1,1)
+
+  protected var bins : scala.collection.mutable.Buffer[(Double,Int)] = scala.collection.mutable.Buffer[(Double,Int)]()
+  protected var maxBinValue : Double = Double.NegativeInfinity
+  protected var minBinValue : Double = Double.PositiveInfinity
 
   def getBins = bins
-
   def getMax = maxBinValue
   def getMin = minBinValue
   def getNormalSum = bins.map(_._2).sum
@@ -89,8 +107,9 @@ case class Histogram(
     update(p,1)
     this
   }
+
   def update ( p : Double, c : Int ) : this.type = {
-    var bin = bins.zipWithIndex.find(pm => pm._1._1 == p)
+    val bin = bins.zipWithIndex.find(pm => pm._1._1 == p)
     if( bin != None )
       bins(bin.head._2) = (bin.head._1._1,bin.head._1._2+c)
     else{
@@ -103,9 +122,11 @@ case class Histogram(
     }
     this
   }
+
   private def sort {
     bins=bins.sortWith( (e1, e2) => e1._1 <= e2._1 )
   }
+
   private def compress_one {
     // only compress if the numer of elements exeeds
     // the maximum bins allowed
@@ -116,6 +137,7 @@ case class Histogram(
       bins(q) = ( (qi._1*qi._2 + qi1._1*qi1._2)/(qi._2+qi1._2), qi._2+qi1._2)
     }
   }
+
   override def toString = {
     feature+";"+maxBins+";"+bins.map(x=>""+x._1+" "+x._2).mkString(",")
   }
@@ -140,6 +162,7 @@ case class Histogram(
     }//for
   }
 }
+
 object Histogram extends Serializable {
   def fromString(str:String) = {
     val values = str.split(";")

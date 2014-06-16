@@ -1,106 +1,63 @@
 package eu.blos.scala.algorithms.sketches
 
 import util.Random
-import scala.collection.mutable.PriorityQueue
 import scala.math._
-import java.io.{DataInput, DataOutput}
-import eu.blos.java.api.common.Sketch;
+import eu.blos.java.api.common.PDD
+import scala.Serializable
+;
 
 
-case class Hashfunction(var BIG_PRIME :  BigInt,
+case class Hashfunction(var BIG_PRIME :  Long,
                         var w:Int,
-                        var a : BigInt = Math.abs(Random.nextLong()),
-                        var b : BigInt = Math.abs(Random.nextLong()) ) extends Serializable {
+                        var a : Long = Math.abs(Random.nextLong()),
+                        var b : Long = Math.abs(Random.nextLong()) ) extends Serializable {
+  def this() = this(0,0,0,0)
   def hash( x: Long ) = {
-    (a*x+b) % BIG_PRIME % w
+    (BigInt(a)*x+b) % BIG_PRIME % w
   }
 }
 
-class CMSketch extends Sketch {
-  var delta : Double = 0.0
-  var epsilon : Double = 0.0
-  var k : Int = 0
 
-  def this( delta: Double, epsilon : Double, k : Int ) {
-    this()
-    this.delta = delta
-    this.epsilon = epsilon
-    this.k = k
+class PDDCMSketch(delta: Double, epsilon: Double, k: Int) extends CMSketch(delta: Double, epsilon: Double, k: Int) with PDD[PDDCMSketch] {
 
-    this w = Math.ceil( Math.exp(1) / epsilon ).toInt
+  def this() = this(1, 1, 1)
 
-    // number of hash functions
-    this.d = Math.ceil( Math.log(1 / delta)).toInt
-
-    hashfunctions = generate_hashfunctions
+  def mergeWith( cms : PDDCMSketch ) = {
+    this.mergeWith(cms)
   }
+}
 
-  def write( dataOutput : DataOutput ) {
-    dataOutput.writeDouble(delta)
-    dataOutput.writeDouble(epsilon)
-    dataOutput.writeInt(k)
-    dataOutput.writeInt(w)
-    dataOutput.writeInt(d)
 
-    for( x <- 0 until d){
-      for( y <- 0 until w ) {
-        dataOutput.writeFloat( count(x)(y) )
-      }//for
-    }//for
+class CMSketch(delta: Double, epsilon: Double, k: Int) {
 
-    for ( x <- 0 until d ){
-      dataOutput.writeLong( hashfunctions.get(x).a.toLong )
-      dataOutput.writeLong( hashfunctions.get(x).b.toLong )
-    }
-  }
-
-  def read( dataInput : DataInput ) {
-    delta = dataInput.readDouble();
-    epsilon = dataInput.readDouble();
-    k=dataInput.readInt();
-    w=dataInput.readInt()
-    d=dataInput.readInt()
-
-    alloc
-
-    for( x <- 0 until d){
-      for( y <- 0 until w ) {
-        count(x)(y) = dataInput.readFloat()
-      }//for
-    }//for
-
-    hashfunctions = new java.util.ArrayList[Hashfunction]()
-    for ( x <- 0 until d ){
-      val a = dataInput.readLong()
-      val b = dataInput.readLong()
-      hashfunctions.add( new Hashfunction(BIG_PRIME, w, a, b ) )
-    }
-  }
+  def this() = this(1,1,1)
 
   val BIG_PRIME : Long = 9223372036854775783L
 
   // weights -> space
-  var w : Int = 0
+  var w = Math.ceil(Math.exp(1) / epsilon).toInt
 
   // number of hash functions
-  var d : Int = 0
+  var d = Math.ceil(Math.log(1 / delta)).toInt
 
-  var hashfunctions : java.util.ArrayList[Hashfunction] = null
+  var hashfunctions : java.util.ArrayList[Hashfunction] = generate_hashfunctions
+
   var count : Array[Array[Float]] = null
-  var heap : PriorityQueue[(Float, String)] = null
-  var top_k : scala.collection.mutable.HashMap[String, (Float, String)] = null
+  //var heap : PriorityQueue[(Float, String)] = null
+  //var top_k : scala.collection.mutable.HashMap[String, (Float, String)] = null
 
   def alloc = {
     count = Array.ofDim[Float](d, w)
-    heap = new PriorityQueue[(Float, String)]()(Ordering.by(estimate))
-    top_k = scala.collection.mutable.HashMap[String, (Float, String)]()
+    //heap = new PriorityQueue[(Float, String)]()(Ordering.by(estimate))
+    //top_k = scala.collection.mutable.HashMap[String, (Float, String)]()
   }
 
-  def get_heap = heap
+  //def get_heap = heap
   def size = if(count == null) 0 else d*w
   def estimate(t: (Float,String)) = -get(t._2)
   def get_hashfunctions = hashfunctions
   def set_hashfunctions(h:java.util.ArrayList[Hashfunction]) { hashfunctions = h }
+
   /*def update( key : String, increment : Float ) = {
     for( row <- 0 until hashfunctions.size ){
       val col = hashfunctions.get(row).hash(Math.abs(key.hashCode)).toInt
@@ -122,6 +79,7 @@ class CMSketch extends Sketch {
     update(key,increment)
   }
 
+  /*
   def update_heap( key : String ) = {
     val estimate = get(key)
 
@@ -148,7 +106,7 @@ class CMSketch extends Sketch {
         }
       }
     }
-  }
+  }*/
 
   def get( key : String ) = {
     var result = Float.MaxValue
@@ -168,8 +126,8 @@ class CMSketch extends Sketch {
     hf
   }
 
-  def mergeWith( s : Sketch ) = {
-    val cms : CMSketch = s.asInstanceOf[CMSketch];
+  def mergeWith( cms : CMSketch ) = {
+    //val cms : CMPDD = s.asInstanceOf[CMPDD];
     for( x <- 0 until d){
       for( y <- 0 until w ) {
         count(x)(y) += cms.count(x)(y)
@@ -191,11 +149,5 @@ class CMSketch extends Sketch {
   def print {
     System.out.println(toString)
     //count.foreach({ x => println(x.mkString(" ")) })
-  }
-
-  def clone_mask : Sketch = {
-    val s = new CMSketch ( delta, epsilon, k  )
-    s.set_hashfunctions( get_hashfunctions )
-    s
   }
 }
