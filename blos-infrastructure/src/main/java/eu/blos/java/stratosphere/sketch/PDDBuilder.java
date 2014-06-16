@@ -1,22 +1,28 @@
 package eu.blos.java.stratosphere.sketch;
 
 import eu.blos.java.api.common.PDD;
+import eu.blos.java.api.common.PDDSet;
 import eu.blos.java.api.common.Sketcher;
 import eu.blos.scala.algorithms.sketches.PDDCMSketch;
 import eu.stratosphere.api.common.Plan;
 import eu.stratosphere.api.common.Program;
 import eu.stratosphere.api.common.ProgramDescription;
+import eu.stratosphere.api.common.io.BinaryOutputFormat;
 import eu.stratosphere.api.common.io.FileOutputFormat;
 import eu.stratosphere.api.common.operators.FileDataSink;
 import eu.stratosphere.api.common.operators.FileDataSource;
 import eu.stratosphere.api.java.record.functions.MapFunction;
 import eu.stratosphere.api.java.record.functions.ReduceFunction;
+import eu.stratosphere.api.java.record.io.CsvOutputFormat;
 import eu.stratosphere.api.java.record.io.TextInputFormat;
 import eu.stratosphere.api.java.record.operators.MapOperator;
 import eu.stratosphere.api.java.record.operators.ReduceOperator;
+import eu.stratosphere.api.scala.operators.BinarySerializedInputFormat;
 import eu.stratosphere.configuration.Configuration;
 import eu.stratosphere.core.memory.DataOutputView;
+import eu.stratosphere.types.IntValue;
 import eu.stratosphere.types.Record;
+import eu.stratosphere.types.StringValue;
 import eu.stratosphere.types.Value;
 import eu.stratosphere.util.Collector;
 import java.io.DataOutputStream;
@@ -48,13 +54,14 @@ public class PDDBuilder implements Program, ProgramDescription, Serializable {
      * construct the partial PDD during a mapping phase
      */
 
-    public static class PartialPDD extends MapFunction implements Serializable {
+    public static class PDDCarrier extends MapFunction implements Serializable {
 
         private Collector<Record> collector = null;
 
-        private PDDCMSketch cmsketch = new PDDCMSketch(0.001, 0.001, 2);
+        private PDDSet set;
 
-        public PartialPDD(){
+        public PDDCarrier(PDDSet set){
+            this.set = set;
         }
 
         public void open(Configuration parameters) throws Exception {
@@ -62,19 +69,14 @@ public class PDDBuilder implements Program, ProgramDescription, Serializable {
 
             System.out.println("open mapper");
 
+            set.alloc();
             // allocate
         }
 
         public void close() throws Exception {
             Record r = new Record();
-
-            //r.setField();
-
-            Value v;
-            //r.write();
-
+            r.setField(0, set );
             collector.collect(r);
-
             super.close();
         }
 
@@ -82,6 +84,7 @@ public class PDDBuilder implements Program, ProgramDescription, Serializable {
         public void map(Record record, Collector<Record> out) {
             if(collector==null) collector = out;
 
+            System.out.println("map");
             // execute
         }
     }
@@ -89,44 +92,35 @@ public class PDDBuilder implements Program, ProgramDescription, Serializable {
     /**
      * merge partial sketches into one
      */
+    public static class PDDCombiner extends ReduceFunction implements Serializable {
 
-    /*
-    public static class MergeSketch extends ReduceFunction implements Serializable {
-        private Class<? extends PDD> sketchType;
-
-        public MergeSketch(Class<? extends PDD> type){
-            this.sketchType = type;
+        public PDDCombiner(){
         }
 
         public void reduce( Iterator<Record> records, Collector<Record> out) throws Exception {
-            PDD global_PDD = null;
+            System.out.println("reduce!");
+
+            PDDSet global_PDD = null;
             Record element = null;
+
             while (records.hasNext()) {
                 element = records.next();
-                PDD PDD = (PDD)sketchType.newInstance();
-                System.out.println("hascode: new instance "+ PDD.hashCode() );
 
-                DataOutputView d
-                element.serialize()
-
-                element.getFieldInto(0, PDD);
+                PDDSet pddset = PDDSet.class.newInstance();
+                element.getFieldInto(0, pddset );
 
                 // prepare global PDD
                 if(global_PDD == null ) {
-                    global_PDD = PDD.clone_mask();
-                    global_PDD.alloc();
+                    global_PDD = pddset;
+                } else {
+                    global_PDD.mergeWith(pddset);
                 }
-
-                //PDD.print();
-
-                global_PDD.mergeWith(PDD);
-
             }
 
             //global_PDD.print();
-
-            out.collect( new Record(global_PDD) );
-    }*/
+            out.collect(new Record(new StringValue("test")));
+        }
+    }
 
 
     @Override
@@ -135,28 +129,38 @@ public class PDDBuilder implements Program, ProgramDescription, Serializable {
         String dataInput = (args.length > 0 ? args[0] : "");
         String output    = (args.length > 1 ? args[1] : "");
 
+        PDDCMSketch pdd1 = new PDDCMSketch(0.0000001, 0.000001, 10 );
+        PDDCMSketch pdd2 = new PDDCMSketch(0.0000001, 0.000001, 10 );
+
+        PDDSet set = new PDDSet(pdd1, pdd2 );
+
+
         FileDataSource source = new FileDataSource(new TextInputFormat(), dataInput );
 
         // Operations on the data set go here
-        MapOperator sketcher = MapOperator.builder(new PartialPDD())
+        MapOperator pddBuilder = MapOperator.builder(new PDDCarrier(set))
                 .input(source)
                 .name("local sketches")
                 .build();
 
-        /*
+        pddBuilder.setDegreeOfParallelism(5);
 
-        sketcher.setDegreeOfParallelism(3);
 
-        ReduceOperator merger = ReduceOperator.builder( new MergeSketch(sketchType) )
-                .input(sketcher)
+        ReduceOperator pddCombiner = ReduceOperator.builder( new PDDCombiner() )
+                .input(pddBuilder)
                 .name("merge sketches")
                 .build();
 
 
-        FileDataSink sink = new FileDataSink( new SketchOutputFormat(), output, merger );
+        FileDataSink sink = new FileDataSink( new CsvOutputFormat(), output, pddCombiner );
 
-        return new Plan(sink);*/
-        return null;
+        CsvOutputFormat.configureRecordFormat(sink)
+                .recordDelimiter('\n')
+                .fieldDelimiter(' ')
+                .field(StringValue.class, 0);
+
+
+        return new Plan(sink);
     }
 
     @Override

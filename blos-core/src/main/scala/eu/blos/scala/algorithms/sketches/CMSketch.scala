@@ -27,28 +27,9 @@ class PDDCMSketch(delta: Double, epsilon: Double, k: Int) extends CMSketch(delta
 
   def this() = this(1, 1, 1)
 
-  override def clone = {
-    val pdd = new PDDCMSketch(delta, epsilon, k )
-    pdd.set_hashfunctions( this.get_hashfunctions )
-    pdd
-  }
-
-  @transient val kryo: Kryo = new Kryo
-
-  def write(dataOutput: DataOutput) {
-    val dout : OutputStream = dataOutput.asInstanceOf[java.io.DataOutputStream];
-    val output: Output = new Output(dout )
-    kryo.writeClassAndObject(output,this)
-  }
-
-  def read(dataInput: DataInput) {
-    val din : InputStream = dataInput.asInstanceOf[java.io.InputStream];
-    val input: Input = new Input(din)
-    
-  }
-
   def mergeWith( cms : PDDCMSketch ) = {
-    new PDDCMSketch(delta, epsilon, k )
+    this.mergeWith(cms)
+    //new PDDCMSketch(delta, epsilon, k )
   }
 }
 
@@ -66,6 +47,7 @@ class CMSketch(delta: Double, epsilon: Double, k: Int) {
   var d = Math.ceil(Math.log(1 / delta)).toInt
 
   var hashfunctions : java.util.ArrayList[Hashfunction] = generate_hashfunctions
+
   var count : Array[Array[Float]] = null
   //var heap : PriorityQueue[(Float, String)] = null
   //var top_k : scala.collection.mutable.HashMap[String, (Float, String)] = null

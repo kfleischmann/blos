@@ -1,10 +1,25 @@
 package eu.blos.java.ml.random_forest;
 
+import eu.blos.java.stratosphere.sketch.PDDBuilder;
+import eu.stratosphere.api.common.Plan;
+import eu.stratosphere.client.LocalExecutor;
+
 public class RFSketching {
 
 
     public static void main(String[] args) throws Exception {
-        mutipleSketches();
+        String inputPath = "file:///home/kay/normalized_small.txt";
+        String outputPath=  "file:///home/kay/output";
+
+        LocalExecutor executor = new LocalExecutor();
+        executor.start();
+
+        Plan p = new PDDBuilder().getPlan(inputPath, outputPath );
+
+        executor.executePlan( p );
+
+
+        //mutipleSketches();
     }
 
     /*
