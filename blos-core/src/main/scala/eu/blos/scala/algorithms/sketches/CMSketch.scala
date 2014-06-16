@@ -1,13 +1,8 @@
 package eu.blos.scala.algorithms.sketches
 
 import util.Random
-import scala.collection.mutable.PriorityQueue
 import scala.math._
-import java.io._
 import eu.blos.java.api.common.PDD
-import com.esotericsoftware.kryo.Kryo
-import com.esotericsoftware.kryo.io.{Input, Output}
-import eu.blos.scala.algorithms.sketches.Hashfunction
 import scala.Serializable
 ;
 
@@ -29,7 +24,6 @@ class PDDCMSketch(delta: Double, epsilon: Double, k: Int) extends CMSketch(delta
 
   def mergeWith( cms : PDDCMSketch ) = {
     this.mergeWith(cms)
-    //new PDDCMSketch(delta, epsilon, k )
   }
 }
 

@@ -4,46 +4,16 @@ import java.io.{DataInput, DataOutput}
 import eu.blos.java.api.common.PDD
 
 
-class HistogramPDD() extends Histogram with PDD[HistogramPDD]{
+class PDDHistogram( feature : Int , maxBins : Int ) extends Histogram with PDD[PDDHistogram]{
   private final val serialVersionUID: Long = 1L
 
-  def this(  feature : Integer, maxBins : Integer ) {
-    this()
-    this.feature = feature;
-    this.maxBins = maxBins;
-    System.out.println( "init HistogramPDD() hashcode:"+this.hashCode() )
-
-  }
+  def this() = this(1,1)
 
   override def alloc {
     // nothing todo
   }
 
-  def write( dataOutput : DataOutput ) {
-    System.out.println( "write hashcode:"+this.hashCode() )
-    dataOutput.writeInt(bins.size)
-    dataOutput.writeInt(feature)
-    dataOutput.writeInt(maxBins)
-    for(i<- 0 until bins.size){
-      dataOutput.writeDouble(bins(i)._1 )
-      dataOutput.writeInt(bins(i)._2 )
-    }
-  }
-
-  def read( dataInput : DataInput ) {
-    System.out.println( "read hashcode:"+this.hashCode() )
-    val bin_size = dataInput.readInt()
-    System.out.println("size: "+bin_size)
-    feature = dataInput.readInt()
-    maxBins = dataInput.readInt()
-    for(i<- 0 until bin_size ){
-      val b1= dataInput.readDouble()
-      val b2= dataInput.readInt()
-      bins. += ( (b1,b2) )
-    }
-  }
-
-  override def mergeWith( h : HistogramPDD ) {
+  override def mergeWith( h : PDDHistogram ) {
     System.out.println("mergeWith histogram");
     System.out.println("histogram-size: "+h.bins.length )
     for(i<-0 until h.bins.length) {
@@ -52,8 +22,9 @@ class HistogramPDD() extends Histogram with PDD[HistogramPDD]{
   }
 }
 
-class Histogram(  var feature : Integer = 0,
-                  var maxBins : Integer = 0 ) {
+class Histogram( feature : Int , maxBins : Int ) {
+
+  def this() = this(1,1)
 
   protected var bins : scala.collection.mutable.Buffer[(Double,Int)] = scala.collection.mutable.Buffer[(Double,Int)]()
   protected var maxBinValue : Double = Double.NegativeInfinity

@@ -67,48 +67,20 @@ public class PDDSet implements PDD, Value {
     @Override
     public void write(DataOutput dataOutput) throws IOException {
         Kryo kryo = new Kryo();
-        // write number of pdd's
-        //dataOutput.writeInt(getPDDs().size() );
-
         OutputStream dout = DataOutputOutputStream.constructOutputStream(dataOutput);
-
         Output output = new Output(dout);
-
         kryo.writeClassAndObject(output, getPDDs() );
-
         output.close();
     }
 
     @Override
     public void read(DataInput dataInput) throws IOException {
-        System.out.println("read");
-
         Kryo kryo = new Kryo();
-
         InputStream din = DataInputInputStream.constructInputStream(dataInput);
         Input input = new Input(din);
-
-
         Object o = kryo.readObject(input, getPDDs().getClass() );
-
         PDDs = (List<PDD>)o;
-
         input.close();
-
-        //String v = kryo.readObject(input, String.class );
-
-        /*
-        System.out.println("numPDD:"+numPDDs);
-
-        for(int i=0; i < numPDDs; i++ ) {
-            Object o = kryo.readClassAndObject(input);
-            if( o instanceof PDD )  {
-                PDDs.add( (PDD)o );
-            } else {
-                new IOException("error while reading PDDSet: no PDD ");
-            }
-        }//for
-        */
     }
 
 }

@@ -3,6 +3,7 @@ package eu.blos.java.stratosphere.sketch;
 import eu.blos.java.api.common.PDD;
 import eu.blos.java.api.common.PDDSet;
 import eu.blos.java.api.common.Sketcher;
+import eu.blos.scala.algorithms.PDDHistogram;
 import eu.blos.scala.algorithms.sketches.PDDCMSketch;
 import eu.stratosphere.api.common.Plan;
 import eu.stratosphere.api.common.Program;
@@ -132,7 +133,9 @@ public class PDDBuilder implements Program, ProgramDescription, Serializable {
         PDDCMSketch pdd1 = new PDDCMSketch(0.0000001, 0.000001, 10 );
         PDDCMSketch pdd2 = new PDDCMSketch(0.0000001, 0.000001, 10 );
 
-        PDDSet set = new PDDSet(pdd1, pdd2 );
+        PDDHistogram pddh = new PDDHistogram(10, 10);
+
+        PDDSet set = new PDDSet(pdd1, pdd2, pddh );
 
 
         FileDataSource source = new FileDataSource(new TextInputFormat(), dataInput );
