@@ -23,7 +23,8 @@ class PDDCMSketch(delta: Double, epsilon: Double, k: Int) extends CMSketch(delta
   def this() = this(1, 1, 1)
 
   def mergeWith( cms : PDDCMSketch ) = {
-    this.mergeWith(cms)
+    System.out.println("merge PDD Sketches")
+    this.mergeWith(cms.asInstanceOf[CMSketch])
   }
 }
 

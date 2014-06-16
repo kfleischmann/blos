@@ -99,12 +99,11 @@ public class PDDBuilder implements Program, ProgramDescription, Serializable {
         }
 
         public void reduce( Iterator<Record> records, Collector<Record> out) throws Exception {
-            System.out.println("reduce!");
-
             PDDSet global_PDD = null;
             Record element = null;
 
             while (records.hasNext()) {
+
                 element = records.next();
 
                 PDDSet pddset = PDDSet.class.newInstance();

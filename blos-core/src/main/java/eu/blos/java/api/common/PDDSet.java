@@ -13,7 +13,6 @@ import java.util.List;
 
 /**
  * organize multiple PDDs (Partitioned Distributed Dataset's)
- *
  */
 public class PDDSet implements PDD, Value {
     private List<PDD> PDDs = new ArrayList<PDD>();
@@ -46,8 +45,11 @@ public class PDDSet implements PDD, Value {
 
     @Override
     public void mergeWith(PDD s) {
+        System.out.println("mergeWith");
         PDDSet set = (PDDSet)s;
         assert set.getPDDs().size() == getPDDs().size();
+
+        System.out.println( "set-size:"+set.getPDDs().size() );
 
         for(int i=0; i < set.getPDDs().size(); i++ ){
             getPDDs().get(i).mergeWith( set.getPDDs().get(i) );
@@ -61,9 +63,6 @@ public class PDDSet implements PDD, Value {
         }//for
     }
 
-
-
-
     @Override
     public void write(DataOutput dataOutput) throws IOException {
         Kryo kryo = new Kryo();
@@ -75,11 +74,13 @@ public class PDDSet implements PDD, Value {
 
     @Override
     public void read(DataInput dataInput) throws IOException {
+        System.out.println("read");
         Kryo kryo = new Kryo();
         InputStream din = DataInputInputStream.constructInputStream(dataInput);
         Input input = new Input(din);
-        Object o = kryo.readObject(input, getPDDs().getClass() );
+        Object o = kryo.readClassAndObject(input ); // getPDDs().getClass()
         PDDs = (List<PDD>)o;
+        System.out.println("read -> " + PDDs.size() );
         input.close();
     }
 
