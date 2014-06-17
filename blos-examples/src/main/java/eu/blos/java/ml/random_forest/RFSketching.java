@@ -13,14 +13,8 @@ public class RFSketching {
 
     public static void main(String[] args) throws Exception {
 
-        PDDCMSketch pdd1 = new PDDCMSketch();
-        PDDCMSketch pdd2 = new PDDCMSketch();
-
-        pdd1.delta_$eq(0.001);
-        pdd1.epsilon_$eq(0.001);
-
-        pdd2.delta_$eq(0.001);
-        pdd2.epsilon_$eq(0.001);
+        PDDCMSketch pdd1 = new PDDCMSketch(0.001, 0.004);
+        PDDCMSketch pdd2 = new PDDCMSketch(0.001, 0.004);
 
         //PDDHistogram pddh = new PDDHistogram(10, 10);
 

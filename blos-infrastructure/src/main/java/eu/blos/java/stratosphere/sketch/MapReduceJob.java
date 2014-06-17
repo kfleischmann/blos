@@ -1,10 +1,7 @@
 package eu.blos.java.stratosphere.sketch;
 
 import eu.blos.java.algorithms.sketches.PDDCMSketch;
-import eu.blos.java.algorithms.sketches.PDDTest;
-import eu.blos.java.api.common.PDD;
 import eu.blos.java.api.common.PDDSet;
-import eu.blos.scala.algorithms.sketches.CMSketch;
 import eu.stratosphere.api.common.Plan;
 import eu.stratosphere.api.common.Program;
 import eu.stratosphere.api.common.ProgramDescription;
@@ -91,11 +88,7 @@ public class MapReduceJob implements Program, ProgramDescription, Serializable {
         FileDataSource source = new FileDataSource(new TextInputFormat(), "file:///home/kay/normalized_small.txt");
 
         PDDSet set= new PDDSet();
-        //CMSketch pdd1 = new CMSketch();
-        PDDCMSketch pdd2 = new PDDCMSketch();
-
-        pdd2.lala_$eq(3);
-        pdd2.epsilon_$eq(9.0);
+        PDDCMSketch pdd2 = new PDDCMSketch(0.001, 0.005);
 
 
         set.getPDDs().add(pdd2);

@@ -14,8 +14,8 @@ import java.io.FileOutputStream;
 public class KryoTest {
     public static void main(String[] argrs ) throws Exception {
 
-        PDDCMSketch pdd1 = new PDDCMSketch();
-        PDDCMSketch pdd2 = new PDDCMSketch();
+        PDDCMSketch pdd1 = new PDDCMSketch(0.001, 0.004);
+        PDDCMSketch pdd2 = new PDDCMSketch(0.001, 0.004);
 
         PDDSet set = new PDDSet(pdd1, pdd2 );
 

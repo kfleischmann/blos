@@ -126,11 +126,7 @@ public class PDDBuilder implements Program, ProgramDescription, Serializable {
                 } else {
                     global_PDD.mergeWith(pddset);
                 }
-
-                System.out.println("merge");
             }
-
-            global_PDD.print();
 
             out.collect(new Record(new StringValue("test")));
         }

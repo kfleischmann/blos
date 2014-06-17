@@ -17,28 +17,17 @@ case class Hashfunction(var BIG_PRIME :  Long,
   }
 }
 
-
-/*class PDDCMSketch extends CMSketch with PDD[PDDCMSketch] {
-
-  def mergeWith( cms : PDDCMSketch ) = {
-    System.out.println("merge PDD Sketches")
-    this.mergeWith(cms.asInstanceOf[CMSketch])
-  }
-}*/
-
-
 class CMSketch(   var delta: Double,
                   var epsilon: Double,
                   var k: Int,
-                  val BIG_PRIME : Long,
                   var hashfunctions : Option[java.util.ArrayList[Hashfunction]]
                 ) {
 
   def this() = {
-    this(1,1,1, 9223372036854775783L, None )
+    this(1,1,1, None )
   }
 
-  var lala : Int = 0
+  val BIG_PRIME : Long = 9223372036854775783L;
 
   def w = Math.ceil(Math.exp(1) /epsilon).toInt
   def d = Math.ceil(Math.log(1 / delta)).toInt
