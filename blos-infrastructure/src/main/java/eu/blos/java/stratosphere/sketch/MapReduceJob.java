@@ -31,9 +31,6 @@ public class MapReduceJob implements Program, ProgramDescription, Serializable {
         private Collector<Record> collector = null;
 
         public PartialSketch(PDDSet t ){
-            System.out.println("new Partial Sketch:");
-            /*System.out.println("lala=" + t.lala());
-            System.out.println("lala=" + t.epsilon());*/
             PDDCMSketch d = (PDDCMSketch)t.getPDDs().get(0);
 
             System.out.println("delta=" + d.delta());

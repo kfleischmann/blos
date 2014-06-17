@@ -1,15 +1,10 @@
 package eu.blos.java.stratosphere.sketch;
 
-import eu.blos.java.api.common.PDD;
 import eu.blos.java.api.common.PDDSet;
 import eu.blos.java.api.common.Sketcher;
-import eu.blos.scala.algorithms.PDDHistogram;
-import eu.blos.java.algorithms.sketches.PDDCMSketch;
 import eu.stratosphere.api.common.Plan;
 import eu.stratosphere.api.common.Program;
 import eu.stratosphere.api.common.ProgramDescription;
-import eu.stratosphere.api.common.io.BinaryOutputFormat;
-import eu.stratosphere.api.common.io.FileOutputFormat;
 import eu.stratosphere.api.common.operators.FileDataSink;
 import eu.stratosphere.api.common.operators.FileDataSource;
 import eu.stratosphere.api.java.record.functions.MapFunction;
@@ -18,16 +13,10 @@ import eu.stratosphere.api.java.record.io.CsvOutputFormat;
 import eu.stratosphere.api.java.record.io.TextInputFormat;
 import eu.stratosphere.api.java.record.operators.MapOperator;
 import eu.stratosphere.api.java.record.operators.ReduceOperator;
-import eu.stratosphere.api.scala.operators.BinarySerializedInputFormat;
 import eu.stratosphere.configuration.Configuration;
-import eu.stratosphere.core.memory.DataOutputView;
-import eu.stratosphere.types.IntValue;
 import eu.stratosphere.types.Record;
 import eu.stratosphere.types.StringValue;
-import eu.stratosphere.types.Value;
 import eu.stratosphere.util.Collector;
-import java.io.DataOutputStream;
-import java.io.IOException;
 import java.io.Serializable;
 import java.util.Iterator;
 

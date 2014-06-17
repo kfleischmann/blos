@@ -41,7 +41,6 @@ class CMSketch(   var delta: Double,
   //var top_k : scala.collection.mutable.HashMap[String, (Float, String)] = null
 
   def alloc = {
-    System.out.println("alloc cms");
     count = Array.ofDim[Float](d, w)
     //heap = new PriorityQueue[(Float, String)]()(Ordering.by(estimate))
     //top_k = scala.collection.mutable.HashMap[String, (Float, String)]()
