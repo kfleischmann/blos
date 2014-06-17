@@ -14,8 +14,10 @@ import java.util.List;
 /**
  * organize multiple PDDs (Partitioned Distributed Dataset's)
  */
-public class PDDSet implements PDD, Value {
+public class PDDSet implements PDD, Value, Serializable {
     private List<PDD> PDDs = new ArrayList<PDD>();
+
+    private boolean allocated = false;
 
     public PDDSet(){
     }
@@ -36,11 +38,16 @@ public class PDDSet implements PDD, Value {
         return PDDs;
     }
 
+    public boolean isAllocated(){ return allocated; }
+
     @Override
     public void alloc() {
-        for( PDD s : this.PDDs){
-            s.alloc();
-        }//for
+        if(!allocated) {
+            for (PDD s : this.PDDs) {
+                s.alloc();
+            }//for
+            allocated=true;
+        }
     }
 
     @Override
@@ -65,11 +72,16 @@ public class PDDSet implements PDD, Value {
 
     @Override
     public void write(DataOutput dataOutput) throws IOException {
+        System.out.println("write");
+
         Kryo kryo = new Kryo();
         OutputStream dout = DataOutputOutputStream.constructOutputStream(dataOutput);
         Output output = new Output(dout);
-        kryo.writeClassAndObject(output, getPDDs() );
+        kryo.writeClassAndObject(output, this);
         output.close();
+
+        System.out.println("isAllocated: "+isAllocated() );
+        System.out.println("total:"+output.total() );
     }
 
     @Override
@@ -79,7 +91,7 @@ public class PDDSet implements PDD, Value {
         InputStream din = DataInputInputStream.constructInputStream(dataInput);
         Input input = new Input(din);
         Object o = kryo.readClassAndObject(input ); // getPDDs().getClass()
-        PDDs = (List<PDD>)o;
+        this.PDDs = ((PDDSet)o).getPDDs();
         System.out.println("read -> " + PDDs.size() );
         input.close();
     }

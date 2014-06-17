@@ -6,7 +6,7 @@ import com.esotericsoftware.kryo.io.Output;
 
 import eu.blos.java.api.common.PDDSet;
 import eu.blos.scala.algorithms.sketches.CMSketch;
-import eu.blos.scala.algorithms.sketches.PDDCMSketch;
+import eu.blos.java.algorithms.sketches.PDDCMSketch;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -14,10 +14,8 @@ import java.io.FileOutputStream;
 public class KryoTest {
     public static void main(String[] argrs ) throws Exception {
 
-        CMSketch pdd = new CMSketch(0.0000001, 0.000001, 10 );
-
-        PDDCMSketch pdd1 = new PDDCMSketch(0.0000001, 0.000001, 10 );
-        PDDCMSketch pdd2 = new PDDCMSketch(0.0000001, 0.000001, 10 );
+        PDDCMSketch pdd1 = new PDDCMSketch();
+        PDDCMSketch pdd2 = new PDDCMSketch();
 
         PDDSet set = new PDDSet(pdd1, pdd2 );
 
@@ -36,6 +34,7 @@ public class KryoTest {
         kryo.writeClassAndObject(output, set);
         output.close();
 
+        System.out.println("total:"+output.total() );
 
         Input input = new Input(new FileInputStream("/home/kay/file.bin"));
 
@@ -43,6 +42,8 @@ public class KryoTest {
 
         if (object instanceof PDDSet) {
             System.out.println("joo");
+            PDDSet s = (PDDSet)object;
+            //s.print();
         }
         input.close();
     }

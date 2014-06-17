@@ -22,7 +22,7 @@ class PDDHistogram( feature : Int , maxBins : Int ) extends Histogram with PDD[P
   }
 }
 
-class Histogram( feature : Int , maxBins : Int ) {
+case class Histogram( feature : Int , maxBins : Int ) {
 
   def this() = this(1,1)
 

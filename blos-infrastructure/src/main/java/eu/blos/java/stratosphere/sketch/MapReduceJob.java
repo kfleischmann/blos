@@ -1,5 +1,10 @@
 package eu.blos.java.stratosphere.sketch;
 
+import eu.blos.java.algorithms.sketches.PDDCMSketch;
+import eu.blos.java.algorithms.sketches.PDDTest;
+import eu.blos.java.api.common.PDD;
+import eu.blos.java.api.common.PDDSet;
+import eu.blos.scala.algorithms.sketches.CMSketch;
 import eu.stratosphere.api.common.Plan;
 import eu.stratosphere.api.common.Program;
 import eu.stratosphere.api.common.ProgramDescription;
@@ -28,8 +33,19 @@ public class MapReduceJob implements Program, ProgramDescription, Serializable {
     public static class PartialSketch extends MapFunction implements Serializable {
         private Collector<Record> collector = null;
 
+        public PartialSketch(PDDSet t ){
+            System.out.println("new Partial Sketch:");
+            /*System.out.println("lala=" + t.lala());
+            System.out.println("lala=" + t.epsilon());*/
+            PDDCMSketch d = (PDDCMSketch)t.getPDDs().get(0);
+
+            System.out.println("delta=" + d.delta());
+            System.out.println("epsilon=" + d.epsilon());
+        }
+
         public void open(Configuration parameters) throws Exception {
             super.open(parameters);
+
         }
 
 
@@ -42,7 +58,8 @@ public class MapReduceJob implements Program, ProgramDescription, Serializable {
             super.close();
         }
         public void map(Record record, Collector<Record> out) {
-            collector = out;
+            if(collector == null ) collector = out;
+            //System.out.println ("map");
         }
     }
 
@@ -57,6 +74,7 @@ public class MapReduceJob implements Program, ProgramDescription, Serializable {
                 element = records.next();
                 String cnt = element.getField(0, StringValue.class).getValue();
                 sum += 1;
+                System.out.println("text: "+cnt);
             }
 
             Record r = new Record(new StringValue("test"), new IntValue(sum) );
@@ -72,14 +90,24 @@ public class MapReduceJob implements Program, ProgramDescription, Serializable {
 
         FileDataSource source = new FileDataSource(new TextInputFormat(), "file:///home/kay/normalized_small.txt");
 
+        PDDSet set= new PDDSet();
+        //CMSketch pdd1 = new CMSketch();
+        PDDCMSketch pdd2 = new PDDCMSketch();
+
+        pdd2.lala_$eq(3);
+        pdd2.epsilon_$eq(9.0);
+
+
+        set.getPDDs().add(pdd2);
+
         // Operations on the data set go here
         // ...
-        MapOperator sketcher = MapOperator.builder(new PartialSketch())
+        MapOperator sketcher = MapOperator.builder( new PartialSketch(set) )
                 .input(source)
                 .name("local sketches")
                 .build();
 
-        sketcher.setDegreeOfParallelism(4);
+        sketcher.setDegreeOfParallelism(5);
 
 
         ReduceOperator merger = ReduceOperator.builder( MergeSketch.class )

@@ -1,6 +1,10 @@
 package eu.blos.java.ml.random_forest;
 
+import eu.blos.java.api.common.PDDSet;
+import eu.blos.java.api.common.Sketcher;
 import eu.blos.java.stratosphere.sketch.PDDBuilder;
+import eu.blos.scala.algorithms.PDDHistogram;
+import eu.blos.java.algorithms.sketches.PDDCMSketch;
 import eu.stratosphere.api.common.Plan;
 import eu.stratosphere.client.LocalExecutor;
 
@@ -8,13 +12,36 @@ public class RFSketching {
 
 
     public static void main(String[] args) throws Exception {
+
+        PDDCMSketch pdd1 = new PDDCMSketch();
+        PDDCMSketch pdd2 = new PDDCMSketch();
+
+        pdd1.delta_$eq(0.001);
+        pdd1.epsilon_$eq(0.001);
+
+        pdd2.delta_$eq(0.001);
+        pdd2.epsilon_$eq(0.001);
+
+        //PDDHistogram pddh = new PDDHistogram(10, 10);
+
+        PDDSet set = new PDDSet();
+
+        set.getPDDs().add(pdd1);
+        set.getPDDs().add(pdd2);
+
+
         String inputPath = "file:///home/kay/normalized_small.txt";
         String outputPath=  "file:///home/kay/output";
 
         LocalExecutor executor = new LocalExecutor();
         executor.start();
 
-        Plan p = new PDDBuilder().getPlan(inputPath, outputPath );
+        Plan p = new PDDBuilder(set, new Sketcher() {
+            @Override
+            public void update(PDDSet s, Object tuple) {
+
+            }
+        }).getPlan(inputPath, outputPath );
 
         executor.executePlan( p );
 

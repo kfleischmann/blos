@@ -18,36 +18,41 @@ case class Hashfunction(var BIG_PRIME :  Long,
 }
 
 
-class PDDCMSketch(delta: Double, epsilon: Double, k: Int) extends CMSketch(delta: Double, epsilon: Double, k: Int) with PDD[PDDCMSketch] {
-
-  def this() = this(1, 1, 1)
+/*class PDDCMSketch extends CMSketch with PDD[PDDCMSketch] {
 
   def mergeWith( cms : PDDCMSketch ) = {
     System.out.println("merge PDD Sketches")
     this.mergeWith(cms.asInstanceOf[CMSketch])
   }
-}
+}*/
 
 
-class CMSketch(delta: Double, epsilon: Double, k: Int) {
+class CMSketch(   var delta: Double,
+                  var epsilon: Double,
+                  var k: Int,
+                  val BIG_PRIME : Long,
+                  var hashfunctions : Option[java.util.ArrayList[Hashfunction]]
+                ) {
 
-  def this() = this(1,1,1)
+  def this() = {
+    this(1,1,1, 9223372036854775783L, None )
+  }
 
-  val BIG_PRIME : Long = 9223372036854775783L
+  var lala : Int = 0
+
+  def w = Math.ceil(Math.exp(1) /epsilon).toInt
+  def d = Math.ceil(Math.log(1 / delta)).toInt
 
   // weights -> space
-  var w = Math.ceil(Math.exp(1) / epsilon).toInt
 
   // number of hash functions
-  var d = Math.ceil(Math.log(1 / delta)).toInt
-
-  var hashfunctions : java.util.ArrayList[Hashfunction] = generate_hashfunctions
 
   var count : Array[Array[Float]] = null
   //var heap : PriorityQueue[(Float, String)] = null
   //var top_k : scala.collection.mutable.HashMap[String, (Float, String)] = null
 
   def alloc = {
+    System.out.println("alloc cms");
     count = Array.ofDim[Float](d, w)
     //heap = new PriorityQueue[(Float, String)]()(Ordering.by(estimate))
     //top_k = scala.collection.mutable.HashMap[String, (Float, String)]()
@@ -56,8 +61,8 @@ class CMSketch(delta: Double, epsilon: Double, k: Int) {
   //def get_heap = heap
   def size = if(count == null) 0 else d*w
   def estimate(t: (Float,String)) = -get(t._2)
-  def get_hashfunctions = hashfunctions
-  def set_hashfunctions(h:java.util.ArrayList[Hashfunction]) { hashfunctions = h }
+  def get_hashfunctions = hashfunctions.get
+  //def set_hashfunctions(h:Option[java.util.ArrayList[Hashfunction]]) { hashfunctions = h }
 
   /*def update( key : String, increment : Float ) = {
     for( row <- 0 until hashfunctions.size ){
@@ -68,8 +73,8 @@ class CMSketch(delta: Double, epsilon: Double, k: Int) {
   }*/
 
   def update( key : String, increment : Float ) = {
-    for( row <- 0 until hashfunctions.size ){
-      val col = hashfunctions.get(row).hash(Math.abs(key.hashCode)).toInt
+    for( row <- 0 until get_hashfunctions.size ){
+      val col = get_hashfunctions.get(row).hash(Math.abs(key.hashCode)).toInt
       count(row)(col) += increment //, count(row)(col)
     }
     //update_heap(key)
@@ -111,8 +116,8 @@ class CMSketch(delta: Double, epsilon: Double, k: Int) {
 
   def get( key : String ) = {
     var result = Float.MaxValue
-    for( row <- 0 until hashfunctions.size ){
-      val col = hashfunctions.get(row).hash(Math.abs(key.hashCode)).toInt
+    for( row <- 0 until get_hashfunctions.size ){
+      val col = get_hashfunctions.get(row).hash(Math.abs(key.hashCode)).toInt
       result = Math.min( count(row)(col), result )
     }
     result
