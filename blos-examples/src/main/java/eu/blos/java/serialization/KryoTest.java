@@ -14,16 +14,21 @@ import java.io.FileOutputStream;
 public class KryoTest {
     public static void main(String[] argrs ) throws Exception {
 
-        PDDCMSketch pdd1 = new PDDCMSketch(0.001, 0.004);
-        PDDCMSketch pdd2 = new PDDCMSketch(0.001, 0.004);
+        PDDCMSketch pdd1 = new PDDCMSketch(0.1, 0.1);
+        PDDCMSketch pdd2 = new PDDCMSketch(0.1, 0.1);
 
         PDDSet set = new PDDSet(pdd1, pdd2 );
 
-
-        //PDDCMSketch pdd2 = pdd.clone();
-
         set.alloc();
 
+
+
+        System.out.println( pdd1.get_hashfunctions().size() );
+        pdd1.update("test", 1 );
+        pdd1.print();
+
+
+        //PDDCMSketch pdd2 = pdd.clone();
         //pdd2.alloc();
 
         Kryo kryo = new Kryo();

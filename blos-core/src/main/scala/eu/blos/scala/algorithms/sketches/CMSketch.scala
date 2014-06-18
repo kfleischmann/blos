@@ -18,16 +18,18 @@ case class Hashfunction(var BIG_PRIME :  Long,
 }
 
 class CMSketch(   var delta: Double,
-                  var epsilon: Double,
-                  var k: Int,
-                  var hashfunctions : Option[java.util.ArrayList[Hashfunction]]
+                  var epsilon: Double
+                  //var k: Int,
+                  //var hashfunctions : Option[java.util.ArrayList[Hashfunction]]
                 ) {
 
   def this() = {
-    this(1,1,1, None )
+    this(1,1/*,1, None*/ )
   }
 
-  val BIG_PRIME : Long = 9223372036854775783L;
+  var hashfunctions = generate_hashfunctions
+
+  val BIG_PRIME : Long = 9223372036854775783L
 
   def w = Math.ceil(Math.exp(1) /epsilon).toInt
   def d = Math.ceil(Math.log(1 / delta)).toInt
@@ -49,7 +51,7 @@ class CMSketch(   var delta: Double,
   //def get_heap = heap
   def size = if(count == null) 0 else d*w
   def estimate(t: (Float,String)) = -get(t._2)
-  def get_hashfunctions = hashfunctions.get
+  def get_hashfunctions = hashfunctions
   //def set_hashfunctions(h:Option[java.util.ArrayList[Hashfunction]]) { hashfunctions = h }
 
   /*def update( key : String, increment : Float ) = {
@@ -113,7 +115,6 @@ class CMSketch(   var delta: Double,
 
   def generate_hashfunctions = {
     val hf = new java.util.ArrayList[Hashfunction]()
-
     for ( x <- 0 until d ){
       hf.add( new Hashfunction(BIG_PRIME, w.toInt) )
     }

@@ -5,6 +5,8 @@ import eu.blos.java.api.common.Sketcher;
 import eu.stratosphere.api.common.Plan;
 import eu.stratosphere.api.common.Program;
 import eu.stratosphere.api.common.ProgramDescription;
+import eu.stratosphere.api.common.io.FileOutputFormat;
+import eu.stratosphere.api.common.io.SerializedOutputFormat;
 import eu.stratosphere.api.common.operators.FileDataSink;
 import eu.stratosphere.api.common.operators.FileDataSource;
 import eu.stratosphere.api.java.record.functions.MapFunction;
@@ -17,6 +19,10 @@ import eu.stratosphere.configuration.Configuration;
 import eu.stratosphere.types.Record;
 import eu.stratosphere.types.StringValue;
 import eu.stratosphere.util.Collector;
+
+import java.io.DataOutput;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.Iterator;
 
@@ -24,6 +30,16 @@ import java.util.Iterator;
 public class PDDBuilder implements Program, ProgramDescription, Serializable {
 
     static final long serialVersionUID = 1L;
+
+    public class PDDOutputFormat extends FileOutputFormat<Record> {
+
+        @Override
+        public void writeRecord(Record record) throws IOException {
+            PDDSet pddset = new PDDSet();
+            record.getFieldInto(0, pddset);
+            pddset.write( new DataOutputStream(stream) );
+        }
+    }
 
     /**
      * context for the PDD (e.g. hash functions) for local allocation
@@ -117,7 +133,9 @@ public class PDDBuilder implements Program, ProgramDescription, Serializable {
                 }
             }
 
-            out.collect(new Record(new StringValue("test")));
+            //global_PDD.print();
+
+            out.collect(new Record(global_PDD));
         }
     }
 
@@ -136,7 +154,7 @@ public class PDDBuilder implements Program, ProgramDescription, Serializable {
                 .name("local sketches")
                 .build();
 
-        //pddBuilder.setDegreeOfParallelism(5);
+        pddBuilder.setDegreeOfParallelism(1);
 
 
         ReduceOperator pddCombiner = ReduceOperator.builder( new PDDCombiner() )
@@ -145,12 +163,12 @@ public class PDDBuilder implements Program, ProgramDescription, Serializable {
                 .build();
 
 
-        FileDataSink sink = new FileDataSink( new CsvOutputFormat(), output, pddCombiner );
+        FileDataSink sink = new FileDataSink( new SerializedOutputFormat(), output, pddCombiner );
 
-        CsvOutputFormat.configureRecordFormat(sink)
+        /*CsvOutputFormat.configureRecordFormat(sink)
                 .recordDelimiter('\n')
                 .fieldDelimiter(' ')
-                .field(StringValue.class, 0);
+                .field(StringValue.class, 0);*/
 
 
         return new Plan(sink);

@@ -11,6 +11,7 @@ public class PDDCMSketch extends CMSketch implements PDD<PDDCMSketch> {
         super();
         delta_$eq(delta);
         epsilon_$eq(epsilon);
+        hashfunctions_$eq( generate_hashfunctions() );
     }
 
     @Override
