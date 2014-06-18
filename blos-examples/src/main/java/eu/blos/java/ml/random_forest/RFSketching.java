@@ -38,8 +38,8 @@ public class RFSketching {
                 PDDCMSketch cm = (PDDCMSketch)set.getPDDs().get(0);
 
                 String line = tuple.getField(0, StringValue.class ).getValue();
-                
-                cm.update(line, 1);
+
+                cm.update("test", 1);
 
 
             }
