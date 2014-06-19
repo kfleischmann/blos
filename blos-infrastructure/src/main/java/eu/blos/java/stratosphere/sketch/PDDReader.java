@@ -65,11 +65,6 @@ public class PDDReader  implements Program, ProgramDescription, Serializable {
 
         FileDataSink sink = new FileDataSink( new SerializedOutputFormat(), output, reader );
 
-        /*CsvOutputFormat.configureRecordFormat(sink)
-                .recordDelimiter('\n')
-                .fieldDelimiter(' ')
-                .field(StringValue.class, 0);*/
-
 
         return new Plan(sink);
     }
