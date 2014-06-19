@@ -2,7 +2,6 @@ package eu.blos.java.stratosphere.sketch;
 
 import eu.blos.java.algorithms.sketches.PDDCMSketch;
 import eu.blos.java.api.common.PDDSet;
-import eu.blos.java.api.common.Sketcher;
 import eu.stratosphere.api.common.Plan;
 import eu.stratosphere.api.common.Program;
 import eu.stratosphere.api.common.ProgramDescription;
@@ -11,9 +10,7 @@ import eu.stratosphere.api.common.io.SerializedOutputFormat;
 import eu.stratosphere.api.common.operators.FileDataSink;
 import eu.stratosphere.api.common.operators.FileDataSource;
 import eu.stratosphere.api.java.record.functions.MapFunction;
-import eu.stratosphere.api.java.record.io.TextInputFormat;
 import eu.stratosphere.api.java.record.operators.MapOperator;
-import eu.stratosphere.api.java.record.operators.ReduceOperator;
 import eu.stratosphere.configuration.Configuration;
 import eu.stratosphere.types.Record;
 import eu.stratosphere.util.Collector;
@@ -44,8 +41,6 @@ public class PDDReader  implements Program, ProgramDescription, Serializable {
             pddset.print();
 
             PDDCMSketch cm = (PDDCMSketch)pddset.getPDDs().get(0);
-
-
 
             System.out.println("MAP!: "+cm.get("test"));
         }
