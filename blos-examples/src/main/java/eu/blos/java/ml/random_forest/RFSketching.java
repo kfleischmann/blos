@@ -20,10 +20,6 @@ public class RFSketching {
         PDDCMSketch pdd1 = new PDDCMSketch(0.000001, 0.00004);
         PDDCMSketch pdd2 = new PDDCMSketch(0.000001, 0.00004);
 
-        //PDDHistogram pddh = new PDDHistogram(10, 10);
-
-        // PDDSetBuilder.fillMemory( PDDCMSketch.class, PDDCMSketch.class, PDDCMSketch.class );
-
         PDDSet set = new PDDSet();
 
         set.getPDDs().add(pdd1);

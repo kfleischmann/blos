@@ -9,6 +9,15 @@
 
     <name>BigData Sketching</name>
 
+    <repositories>
+        <repository>
+            <id>snapshots-repo</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+            <releases><enabled>false</enabled></releases>
+            <snapshots><enabled>true</enabled></snapshots>
+        </repository>
+    </repositories>
+
     <dependencies>
         <dependency>
             <groupId>junit</groupId>
@@ -31,6 +40,12 @@
             <groupId>com.esotericsoftware.kryo</groupId>
             <artifactId>kryo</artifactId>
             <version>2.24.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>eu.stratosphere</groupId>
+            <artifactId>stratosphere-clients</artifactId>
+            <version>0.6-SNAPSHOT</version>
         </dependency>
 
       </dependencies>

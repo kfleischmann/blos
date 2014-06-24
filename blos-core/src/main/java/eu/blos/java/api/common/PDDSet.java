@@ -1,20 +1,12 @@
 package eu.blos.java.api.common;
 
-import com.esotericsoftware.kryo.Kryo;
-import com.esotericsoftware.kryo.io.Input;
-import com.esotericsoftware.kryo.io.Output;
-import eu.blos.java.api.io.DataInputInputStream;
-import eu.blos.java.api.io.DataOutputOutputStream;
-import eu.stratosphere.types.Value;
-
-import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * organize multiple PDDs (Partitioned Distributed Dataset's)
  */
-public class PDDSet implements PDD, Value, Serializable {
+public class PDDSet implements PDD {
     private List<PDD> PDDs = new ArrayList<PDD>();
 
     private boolean allocated = false;
@@ -65,24 +57,5 @@ public class PDDSet implements PDD, Value, Serializable {
         for(int i=0; i < getPDDs().size(); i++ ){
             getPDDs().get(i).print();
         }//for
-    }
-
-    @Override
-    public void write(DataOutput dataOutput) throws IOException {
-        Kryo kryo = new Kryo();
-        OutputStream dout = DataOutputOutputStream.constructOutputStream(dataOutput);
-        Output output = new Output(dout);
-        kryo.writeClassAndObject(output, this);
-        output.close();
-    }
-
-    @Override
-    public void read(DataInput dataInput) throws IOException {
-        Kryo kryo = new Kryo();
-        InputStream din = DataInputInputStream.constructInputStream(dataInput);
-        Input input = new Input(din);
-        Object o = kryo.readClassAndObject(input ); // getPDDs().getClass()
-        this.PDDs = ((PDDSet)o).getPDDs();
-        input.close();
     }
 }

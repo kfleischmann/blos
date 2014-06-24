@@ -7,9 +7,9 @@ import eu.stratosphere.api.common.Program;
 import eu.stratosphere.api.common.ProgramDescription;
 import eu.stratosphere.api.common.io.SerializedInputFormat;
 import eu.stratosphere.api.common.io.SerializedOutputFormat;
-import eu.stratosphere.api.common.operators.FileDataSink;
-import eu.stratosphere.api.common.operators.FileDataSource;
 import eu.stratosphere.api.java.record.functions.MapFunction;
+import eu.stratosphere.api.java.record.operators.FileDataSink;
+import eu.stratosphere.api.java.record.operators.FileDataSource;
 import eu.stratosphere.api.java.record.operators.MapOperator;
 import eu.stratosphere.configuration.Configuration;
 import eu.stratosphere.types.Record;
@@ -36,7 +36,7 @@ public class PDDReader  implements Program, ProgramDescription, Serializable {
         public void map(Record record, Collector<Record> out) throws IllegalAccessException, InstantiationException {
 
             PDDSet pddset = PDDSet.class.newInstance();
-            record.getFieldInto(0, pddset);
+            //record.getFieldInto(0, pddset);
 
             pddset.print();
 
@@ -50,6 +50,7 @@ public class PDDReader  implements Program, ProgramDescription, Serializable {
     @Override
     public Plan getPlan(String... args) {
 
+        /*
         String dataInput = (args.length > 0 ? args[0] : "");
         String output    = (args.length > 1 ? args[1] : "");
 
@@ -64,9 +65,9 @@ public class PDDReader  implements Program, ProgramDescription, Serializable {
 
 
         FileDataSink sink = new FileDataSink( new SerializedOutputFormat(), output, reader );
-
-
         return new Plan(sink);
+        */
+        return null;
     }
 
     @Override

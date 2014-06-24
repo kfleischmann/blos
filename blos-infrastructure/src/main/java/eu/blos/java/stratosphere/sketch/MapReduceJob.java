@@ -5,12 +5,12 @@ import eu.blos.java.api.common.PDDSet;
 import eu.stratosphere.api.common.Plan;
 import eu.stratosphere.api.common.Program;
 import eu.stratosphere.api.common.ProgramDescription;
-import eu.stratosphere.api.common.operators.FileDataSink;
-import eu.stratosphere.api.common.operators.FileDataSource;
 import eu.stratosphere.api.java.record.functions.MapFunction;
 import eu.stratosphere.api.java.record.functions.ReduceFunction;
 import eu.stratosphere.api.java.record.io.CsvOutputFormat;
 import eu.stratosphere.api.java.record.io.TextInputFormat;
+import eu.stratosphere.api.java.record.operators.FileDataSink;
+import eu.stratosphere.api.java.record.operators.FileDataSource;
 import eu.stratosphere.api.java.record.operators.MapOperator;
 import eu.stratosphere.api.java.record.operators.ReduceOperator;
 import eu.stratosphere.client.LocalExecutor;
@@ -97,7 +97,7 @@ public class MapReduceJob implements Program, ProgramDescription, Serializable {
                 .name("local sketches")
                 .build();
 
-        sketcher.setDegreeOfParallelism(5);
+        //sketcher.setDegreeOfParallelism(5);
 
 
         ReduceOperator merger = ReduceOperator.builder( MergeSketch.class )

@@ -7,12 +7,12 @@ import eu.stratosphere.api.common.Program;
 import eu.stratosphere.api.common.ProgramDescription;
 import eu.stratosphere.api.common.io.FileOutputFormat;
 import eu.stratosphere.api.common.io.SerializedOutputFormat;
-import eu.stratosphere.api.common.operators.FileDataSink;
-import eu.stratosphere.api.common.operators.FileDataSource;
 import eu.stratosphere.api.java.record.functions.MapFunction;
 import eu.stratosphere.api.java.record.functions.ReduceFunction;
 import eu.stratosphere.api.java.record.io.CsvOutputFormat;
 import eu.stratosphere.api.java.record.io.TextInputFormat;
+import eu.stratosphere.api.java.record.operators.FileDataSink;
+import eu.stratosphere.api.java.record.operators.FileDataSource;
 import eu.stratosphere.api.java.record.operators.MapOperator;
 import eu.stratosphere.api.java.record.operators.ReduceOperator;
 import eu.stratosphere.configuration.Configuration;
@@ -20,9 +20,6 @@ import eu.stratosphere.types.Record;
 import eu.stratosphere.types.StringValue;
 import eu.stratosphere.util.Collector;
 
-import java.io.DataOutput;
-import java.io.DataOutputStream;
-import java.io.IOException;
 import java.io.Serializable;
 import java.util.Iterator;
 
@@ -30,16 +27,6 @@ import java.util.Iterator;
 public class PDDBuilder implements Program, ProgramDescription, Serializable {
 
     static final long serialVersionUID = 1L;
-
-    public class PDDOutputFormat extends FileOutputFormat<Record> {
-
-        @Override
-        public void writeRecord(Record record) throws IOException {
-            PDDSet pddset = new PDDSet();
-            record.getFieldInto(0, pddset);
-            pddset.write( new DataOutputStream(stream) );
-        }
-    }
 
     /**
      * context for the PDD (e.g. hash functions) for local allocation
@@ -91,7 +78,7 @@ public class PDDBuilder implements Program, ProgramDescription, Serializable {
 
             if(ActiveMapper == 0 ) {
                 Record r = new Record();
-                r.setField(0, set);
+                //r.setField(0, set);
                 collector.collect(r);
             }
 
@@ -123,7 +110,7 @@ public class PDDBuilder implements Program, ProgramDescription, Serializable {
                 element = records.next();
 
                 PDDSet pddset = PDDSet.class.newInstance();
-                element.getFieldInto(0, pddset);
+                //element.getFieldInto(0, pddset);
 
                 // prepare global PDD
                 if (global_PDD == null) {
@@ -135,7 +122,7 @@ public class PDDBuilder implements Program, ProgramDescription, Serializable {
 
             //global_PDD.print();
 
-            out.collect(new Record(global_PDD));
+            //out.collect(new Record(global_PDD));
         }
     }
 
@@ -154,7 +141,7 @@ public class PDDBuilder implements Program, ProgramDescription, Serializable {
                 .name("local sketches")
                 .build();
 
-        pddBuilder.setDegreeOfParallelism(1);
+        pddBuilder.setDegreeOfParallelism(2);
 
 
         ReduceOperator pddCombiner = ReduceOperator.builder( new PDDCombiner() )
@@ -163,12 +150,12 @@ public class PDDBuilder implements Program, ProgramDescription, Serializable {
                 .build();
 
 
-        FileDataSink sink = new FileDataSink( new SerializedOutputFormat(), output, pddCombiner );
+        FileDataSink sink = new FileDataSink( new CsvOutputFormat(), output, pddCombiner );
 
-        /*CsvOutputFormat.configureRecordFormat(sink)
+        CsvOutputFormat.configureRecordFormat(sink)
                 .recordDelimiter('\n')
                 .fieldDelimiter(' ')
-                .field(StringValue.class, 0);*/
+                .field(StringValue.class, 0);
 
 
         return new Plan(sink);
