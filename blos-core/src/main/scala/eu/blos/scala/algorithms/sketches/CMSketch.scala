@@ -4,11 +4,12 @@ import util.Random
 import scala.math._
 import eu.blos.java.api.common.PDD
 import scala.Serializable
+import pl.edu.icm.jlargearrays.FloatLargeArray
 ;
 
 
 case class Hashfunction(var BIG_PRIME :  Long,
-                        var w:Int,
+                        var w:Long,
                         var a : Long = Math.abs(Random.nextLong()),
                         var b : Long = Math.abs(Random.nextLong()) ) extends Serializable {
   def this() = this(0,0,0,0)
@@ -31,19 +32,24 @@ class CMSketch(   var delta: Double,
 
   val BIG_PRIME : Long = 9223372036854775783L
 
-  def w = Math.ceil(Math.exp(1) /epsilon).toInt
-  def d = Math.ceil(Math.log(1 / delta)).toInt
+  def w = Math.ceil(Math.exp(1) /epsilon).toLong
+  def d = Math.ceil(Math.log(1 / delta)).toLong
 
   // weights -> space
 
   // number of hash functions
 
-  var count : Array[Array[Float]] = null
+  var count : FloatLargeArray = null; // a = new FloatLargeArray(w*d); = null
   //var heap : PriorityQueue[(Float, String)] = null
   //var top_k : scala.collection.mutable.HashMap[String, (Float, String)] = null
 
   def alloc = {
-    count = Array.ofDim[Float](d, w)
+    System.out.println(w)
+    System.out.println(d)
+
+
+    //count = Array.ofDim[Float](d, w)
+    count = new FloatLargeArray(w*d)
     //heap = new PriorityQueue[(Float, String)]()(Ordering.by(estimate))
     //top_k = scala.collection.mutable.HashMap[String, (Float, String)]()
   }
@@ -62,14 +68,21 @@ class CMSketch(   var delta: Double,
     //update_heap(key)
   }*/
 
+  def array_get(row : Long ,col : Long ) : Float = {
+    count.get(row*w+col)
+  }
+
+  def array_set(row : Long ,col : Long, value : Float ) {
+    count.set(row * w + col, value )
+  }
+
   def update( key : String, increment : Float ) = {
     for( row <- 0 until get_hashfunctions.size ){
       val col = get_hashfunctions.get(row).hash(Math.abs(key.hashCode)).toInt
-      count(row)(col) += increment //, count(row)(col)
+      array_set(row,col, array_get(row,col)+increment ) //, count(row)(col)
     }
     //update_heap(key)
   }
-
 
   def +( key : String, increment : Float ) = {
     update(key,increment)
@@ -107,26 +120,31 @@ class CMSketch(   var delta: Double,
   def get( key : String ) = {
     var result = Float.MaxValue
     for( row <- 0 until get_hashfunctions.size ){
-      val col = get_hashfunctions.get(row).hash(Math.abs(key.hashCode)).toInt
-      result = Math.min( count(row)(col), result )
+      val col = get_hashfunctions.get(row).hash(Math.abs(key.hashCode)).toLong
+      result = Math.min( array_get(row, col), result )
     }
     result
   }
 
   def generate_hashfunctions = {
     val hf = new java.util.ArrayList[Hashfunction]()
-    for ( x <- 0 until d ){
-      hf.add( new Hashfunction(BIG_PRIME, w.toInt) )
+    for ( x <- 0 until d.toInt ){
+      hf.add( new Hashfunction(BIG_PRIME, w.toLong) )
     }
     hf
   }
 
   def mergeWith( cms : CMSketch ) = {
     //val cms : CMPDD = s.asInstanceOf[CMPDD];
-    for( x <- 0 until d){
-      for( y <- 0 until w ) {
-        count(x)(y) += cms.count(x)(y)
+    var x : Long = 0
+    var y : Long = 0
+    while(x<w){
+      y = 0
+      while( (y>=d)) {
+        array_set(x, y, array_get(x,y)+ cms.array_get(x, y))
+        y += 1
       }//for
+      x += 1
     }//for
 
     // okay i am not sure to be completly correct do find the overall top
@@ -137,7 +155,7 @@ class CMSketch(   var delta: Double,
 
   override def toString = {
     var out : String = ""+d+","+w+"\n"
-    out = out + count.map( x => x.mkString(" ") ).mkString("\n")
+    //out = out + count.map( x => x.mkString(" ") ).mkString("\n")
     out
   }
 

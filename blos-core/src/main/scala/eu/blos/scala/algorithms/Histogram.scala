@@ -12,6 +12,9 @@ class PDDHistogram( feature : Int , maxBins : Int ) extends Histogram with PDD[P
   override def alloc {
     // nothing todo
   }
+  override def memory_size = {
+    -1
+  }
 
   override def mergeWith( h : PDDHistogram ) {
     System.out.println("mergeWith histogram");

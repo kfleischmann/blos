@@ -22,6 +22,12 @@ public interface PDD<T extends PDD> extends Serializable {
     public void mergeWith(T s);
 
     /**
+     * receive the memory size needed for this sketch
+     * @return
+     */
+    public long memory_size();
+
+    /**
      * no usage any more
      */
     //public T clone_mask();

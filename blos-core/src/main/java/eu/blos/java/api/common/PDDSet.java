@@ -53,6 +53,11 @@ public class PDDSet implements PDD {
     }
 
     @Override
+    public long memory_size() {
+        return 0;
+    }
+
+    @Override
     public void print() {
         for(int i=0; i < getPDDs().size(); i++ ){
             getPDDs().get(i).print();

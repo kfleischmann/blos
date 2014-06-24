@@ -11,11 +11,18 @@ public class PDDCMSketch extends CMSketch implements PDD<PDDCMSketch> {
         super();
         delta_$eq(delta);
         epsilon_$eq(epsilon);
-        hashfunctions_$eq( generate_hashfunctions() );
+        hashfunctions_$eq(generate_hashfunctions());
     }
+
 
     @Override
     public void mergeWith(PDDCMSketch s) {
         super.mergeWith( s );
+    }
+
+    @Override
+    public long memory_size() {
+        return this.w() * 4;
+        //return this.count().length * this.count()[0].length*4;
     }
 }
