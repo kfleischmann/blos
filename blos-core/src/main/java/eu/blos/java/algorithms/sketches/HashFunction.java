@@ -1,9 +1,10 @@
 package eu.blos.java.algorithms.sketches;
 
+import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.Random;
 
-public class HashFunction {
+public class HashFunction implements Serializable {
 
 	public static HashFunction[] generateHashfunctions(int number, long w ){
 		HashFunction[] h = new HashFunction[number];
