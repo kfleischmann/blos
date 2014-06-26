@@ -21,7 +21,7 @@ case class Hashfunction(var BIG_PRIME :  Long,
 class CMSketch(   var delta: Double,
                   var epsilon: Double
                   //var k: Int,
-                  //var hashfunctions : Option[java.util.ArrayList[Hashfunction]]
+                  //var hashfunctions : Option[java.util.ArrayList[HashFunction]]
                 ) {
 
   def this() = {
@@ -58,7 +58,7 @@ class CMSketch(   var delta: Double,
   def size = if(count == null) 0 else d*w
   def estimate(t: (Float,String)) = -get(t._2)
   def get_hashfunctions = hashfunctions
-  //def set_hashfunctions(h:Option[java.util.ArrayList[Hashfunction]]) { hashfunctions = h }
+  //def set_hashfunctions(h:Option[java.util.ArrayList[HashFunction]]) { hashfunctions = h }
 
   /*def update( key : String, increment : Float ) = {
     for( row <- 0 until hashfunctions.size ){

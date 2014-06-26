@@ -1,25 +1,22 @@
 package eu.blos.java.stratosphere.sketch;
 
-import eu.blos.java.algorithms.sketches.PDDCMSketch;
 import eu.blos.java.api.common.PDDSet;
 import eu.stratosphere.api.common.Plan;
 import eu.stratosphere.api.common.Program;
 import eu.stratosphere.api.common.ProgramDescription;
-import eu.stratosphere.api.java.record.functions.MapFunction;
+import eu.stratosphere.api.java.record.functions.MapPartitionFunction;
 import eu.stratosphere.api.java.record.functions.ReduceFunction;
 import eu.stratosphere.api.java.record.io.CsvOutputFormat;
 import eu.stratosphere.api.java.record.io.TextInputFormat;
 import eu.stratosphere.api.java.record.operators.FileDataSink;
 import eu.stratosphere.api.java.record.operators.FileDataSource;
-import eu.stratosphere.api.java.record.operators.MapOperator;
+import eu.stratosphere.api.java.record.operators.MapPartitionOperator;
 import eu.stratosphere.api.java.record.operators.ReduceOperator;
 import eu.stratosphere.client.LocalExecutor;
-import eu.stratosphere.configuration.Configuration;
 import eu.stratosphere.types.IntValue;
 import eu.stratosphere.types.Record;
 import eu.stratosphere.types.StringValue;
 import eu.stratosphere.util.Collector;
-
 
 import java.io.Serializable;
 import java.util.Iterator;
@@ -27,39 +24,21 @@ import java.util.Iterator;
 
 public class MapReduceJob implements Program, ProgramDescription, Serializable {
 
-    public static class PartialSketch extends MapFunction implements Serializable {
-        private Collector<Record> collector = null;
+    public static class PartialSketch extends MapPartitionFunction implements Serializable {
+		public static PDDSet set = null;
 
         public PartialSketch(PDDSet t ){
-            PDDCMSketch d = (PDDCMSketch)t.getPDDs().get(0);
-
-            System.out.println("delta=" + d.delta());
-            System.out.println("epsilon=" + d.epsilon());
+			this.set = t;
         }
 
-        public void open(Configuration parameters) throws Exception {
-            super.open(parameters);
-
-        }
-
-
-        public void close() throws Exception {
-            Record r = new Record();
-            r.setField(0, new StringValue("some text"));
-
-            collector.collect(r);
-
-            super.close();
-        }
-        public void map(Record record, Collector<Record> out) {
-            if(collector == null ) collector = out;
-            //System.out.println ("map");
-        }
-    }
+		@Override
+		public void mapPartition(Iterator<Record> recordIterator, Collector<Record> recordCollector) throws Exception {
+			this.set.alloc();
+		}
+	}
 
 
-    public static class MergeSketch extends ReduceFunction implements Serializable {
-
+    public static class MergeSketch extends ReduceFunction implements Serializable  {
         public void reduce( Iterator<Record> records, Collector<Record> out) {
             Record element = null;
             int sum = 0;
@@ -84,15 +63,10 @@ public class MapReduceJob implements Program, ProgramDescription, Serializable {
 
         FileDataSource source = new FileDataSource(new TextInputFormat(), "file:///home/kay/normalized_small.txt");
 
-        PDDSet set= new PDDSet();
-        PDDCMSketch pdd2 = new PDDCMSketch(0.001, 0.005);
-
-
-        set.getPDDs().add(pdd2);
 
         // Operations on the data set go here
         // ...
-        MapOperator sketcher = MapOperator.builder( new PartialSketch(set) )
+        MapPartitionOperator sketcher = MapPartitionOperator.builder( new PartialSketch(null) )
                 .input(source)
                 .name("local sketches")
                 .build();
@@ -106,7 +80,7 @@ public class MapReduceJob implements Program, ProgramDescription, Serializable {
                 .build();
 
 
-        FileDataSink sink = new FileDataSink( new CsvOutputFormat(), "file:///home/kay/output", merger );
+        FileDataSink sink = new FileDataSink( new CsvOutputFormat(), "file:///home/kay/output3", merger );
 
         CsvOutputFormat.configureRecordFormat(sink)
                 .recordDelimiter('\n')

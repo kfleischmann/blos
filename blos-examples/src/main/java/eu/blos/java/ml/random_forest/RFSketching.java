@@ -1,51 +1,71 @@
 package eu.blos.java.ml.random_forest;
 
-import eu.blos.java.api.common.PDDSet;
-import eu.blos.java.api.common.Sketcher;
-import eu.blos.java.stratosphere.sketch.PDDBuilder;
-import eu.blos.scala.algorithms.PDDHistogram;
-import eu.blos.java.algorithms.sketches.PDDCMSketch;
-import eu.stratosphere.api.common.Plan;
-import eu.stratosphere.client.LocalExecutor;
-import eu.stratosphere.types.Record;
-import eu.stratosphere.types.StringValue;
-import java.lang.instrument.Instrumentation;
+import eu.blos.java.algorithms.sketches.HashFunction;
+import eu.stratosphere.api.java.DataSet;
+import eu.stratosphere.api.java.ExecutionEnvironment;
+import eu.stratosphere.api.java.functions.FlatMapFunction;
+import eu.stratosphere.api.java.functions.MapPartitionFunction;
+import eu.stratosphere.api.java.tuple.Tuple4;
+import eu.stratosphere.util.Collector;
+
+import java.util.Iterator;
 
 
 public class RFSketching {
-
+	public static boolean fileOutput =  false;
 
     public static void main(String[] args) throws Exception {
 
-        PDDCMSketch pdd1 = new PDDCMSketch(0.000001, 0.00004);
-        PDDCMSketch pdd2 = new PDDCMSketch(0.000001, 0.00004);
-
-        PDDSet set = new PDDSet();
-
-        set.getPDDs().add(pdd1);
-        set.getPDDs().add(pdd2);
-
-
-        String inputPath = "file:///home/kay/normalized_small.txt";
+        String inputPath = "file:///home/kay/datasets/mnist/normalized_small.txt";
         String outputPath=  "file:///home/kay/output";
 
-        LocalExecutor executor = new LocalExecutor();
-        executor.start();
+		// set up the execution environment
+		final ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
 
-        Plan p = new PDDBuilder(set, new Sketcher<Record>() {
-            @Override
-            public void update(PDDSet set, Record tuple) {
-                PDDCMSketch cm = (PDDCMSketch)set.getPDDs().get(0);
+		final HashFunction[] hashfunctions = HashFunction.generateHashfunctions(5, 1000000 );
 
-                String line = tuple.getField(0, StringValue.class ).getValue();
-                String[] fields = line.split(" ");
 
-                //cm.update( fields[0], 1);
-            }
-        }).getPlan(inputPath, outputPath );
+		// get input data
+		DataSet<String> text = env.readTextFile(inputPath);
 
-        executor.executePlan( p );
+		DataSet<Tuple4<String, Long, Integer, Integer>> hashed =
+				// split up the lines in pairs (2-tuples) containing: (word,1)
+				text.flatMap( new SketchBuilder(hashfunctions) );
 
-    }
 
+		// emit result
+		if(fileOutput) {
+			hashed.writeAsCsv(outputPath, "\n", " ");
+		} else {
+			hashed.print();
+		}
+
+		// execute program
+		env.execute("WordCount Example");
+
+	}
+
+	// *************************************************************************
+	//     USER FUNCTIONS
+	// *************************************************************************
+
+	public static final class SketchBuilder extends FlatMapFunction<String, Tuple4<String, Long, Integer, Integer>> {
+		public static HashFunction[] hashfunctions;
+		public SketchBuilder( HashFunction[] hf ){
+			hashfunctions = hf;
+		}
+		@Override
+		public void flatMap(String value, Collector<Tuple4<String, Long, Integer, Integer>> out) {
+			// normalize and split the line
+			String[] values = value.toLowerCase().split("\\W+");
+
+			for(int d=0; d < hashfunctions.length; d++ ){
+				HashFunction hf = hashfunctions[d];
+
+				String key = values[0]+"-splitcandidate";
+
+				out.collect(new Tuple4<String, Long, Integer, Integer>(key, hf.hash((long)key.hashCode()), d, 1));
+			}//for
+		}
+	}
 }

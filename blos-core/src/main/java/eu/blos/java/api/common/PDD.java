@@ -1,14 +1,10 @@
 package eu.blos.java.api.common;
 
-import eu.stratosphere.types.Value;
-
-import java.io.Serializable;
-
 /**
  * Partitioned Distributed Dataset (PDD)
  * @param <T>
  */
-public interface PDD<T extends PDD> extends Serializable {
+public interface PDD<T extends PDD> {
 
     /**
      * this method is called if this pdd was distributed to the nodes

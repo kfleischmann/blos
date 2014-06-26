@@ -1,168 +1,96 @@
 package eu.blos.java.stratosphere.sketch;
 
-import eu.blos.java.api.common.PDDSet;
-import eu.blos.java.api.common.Sketcher;
-import eu.stratosphere.api.common.Plan;
-import eu.stratosphere.api.common.Program;
-import eu.stratosphere.api.common.ProgramDescription;
-import eu.stratosphere.api.common.io.FileOutputFormat;
-import eu.stratosphere.api.common.io.SerializedOutputFormat;
-import eu.stratosphere.api.java.record.functions.MapFunction;
-import eu.stratosphere.api.java.record.functions.ReduceFunction;
-import eu.stratosphere.api.java.record.io.CsvOutputFormat;
-import eu.stratosphere.api.java.record.io.TextInputFormat;
-import eu.stratosphere.api.java.record.operators.FileDataSink;
-import eu.stratosphere.api.java.record.operators.FileDataSource;
-import eu.stratosphere.api.java.record.operators.MapOperator;
-import eu.stratosphere.api.java.record.operators.ReduceOperator;
-import eu.stratosphere.configuration.Configuration;
-import eu.stratosphere.types.Record;
-import eu.stratosphere.types.StringValue;
+import eu.stratosphere.api.java.DataSet;
+import eu.stratosphere.api.java.ExecutionEnvironment;
+import eu.stratosphere.api.java.functions.MapPartitionFunction;
+import eu.stratosphere.api.java.tuple.Tuple2;
 import eu.stratosphere.util.Collector;
 
-import java.io.Serializable;
 import java.util.Iterator;
 
+@SuppressWarnings("serial")
+public class PDDBuilder {
 
-public class PDDBuilder implements Program, ProgramDescription, Serializable {
+	// *************************************************************************
+	//     PROGRAM
+	// *************************************************************************
 
-    static final long serialVersionUID = 1L;
+	public static void main(String[] args) throws Exception {
 
-    /**
-     * context for the PDD (e.g. hash functions) for local allocation
-     * very important to allow a merging phase after the skeching phase
-     */
-    private PDDSet set;
+		if(!parseParameters(args)) {
+			return;
+		}
 
-    /**
-     * actual code that do the skeching
-     */
-    private Sketcher sketcher;
+		// set up the execution environment
+		final ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
 
+		// get input data
+		DataSet<String> text = env.readTextFile(args[1]);
 
-    public PDDBuilder(PDDSet set, Sketcher sketcher ){
-        this.set = set;
-        this.sketcher = sketcher;
-    }
+		DataSet<Tuple2<String, Integer>> counts =
+				// split up the lines in pairs (2-tuples) containing: (word,1)
+				text.mapPartition(new SketchBuilder())
+						//.reduce( new SketchMerger)
+						// group by the tuple field "0" and sum up tuple field "1"
+						.groupBy(0)
+						.sum(1);
 
+		// emit result
+		if(fileOutput) {
+			counts.writeAsCsv(outputPath, "\n", " ");
+		} else {
+			counts.print();
+		}
 
-    /**
-     * construct the partial PDD during a mapping phase
-     */
+		// execute program
+		env.execute("WordCount Example");
+	}
 
-    public static class PDDCarrier extends MapFunction implements Serializable {
+	// *************************************************************************
+	//     USER FUNCTIONS
+	// *************************************************************************
 
-        public Collector<Record> collector = null;
+	public static final class SketchBuilder extends MapPartitionFunction<String, Tuple2<String, Integer>> {
+		@Override
+		public void mapPartition(Iterator<String> records, Collector<Tuple2<String, Integer>> out) throws Exception {
+			while(records.hasNext()){
+				// normalize and split the line
+				String[] tokens = records.next().toLowerCase().split("\\W+");
+				// emit the pairs
+				for (String token : tokens) {
+					if (token.length() > 0) {
+						out.collect(new Tuple2<String, Integer>(token, 1));
+					}
+				}
+			}
+		}
+	}
 
-        public static PDDSet set;
+	// *************************************************************************
+	//     UTIL METHODS
+	// *************************************************************************
 
-        public static Sketcher sketcher;
+	private static boolean fileOutput = false;
+	private static String textPath;
+	private static String outputPath;
 
-        public static int ActiveMapper = 0;
+	private static boolean parseParameters(String[] args) {
 
-        public PDDCarrier(PDDSet set, Sketcher sketcher){
-            this.set = set;
-            this.sketcher = sketcher;
-
-            // only allocate the set once one the machine
-            set.alloc();
-        }
-
-        public void open(Configuration parameters) throws Exception {
-            super.open(parameters);
-            ActiveMapper++;
-        }
-
-        public void close() throws Exception {
-            ActiveMapper--;
-
-            if(ActiveMapper == 0 ) {
-                Record r = new Record();
-                //r.setField(0, set);
-                collector.collect(r);
-            }
-
-            super.close();
-        }
-
-
-        public void map(Record record, Collector<Record> out) {
-            if(collector==null) collector = out;
-
-            sketcher.update(set, record );
-        }
-    }
-
-    /**
-     * merge partial sketches into one
-     */
-    public static class PDDCombiner extends ReduceFunction implements Serializable {
-
-        public PDDCombiner(){
-        }
-
-        public void reduce( Iterator<Record> records, Collector<Record> out) throws Exception {
-            PDDSet global_PDD = null;
-            Record element = null;
-
-            while (records.hasNext()) {
-
-                element = records.next();
-
-                PDDSet pddset = PDDSet.class.newInstance();
-                //element.getFieldInto(0, pddset);
-
-                // prepare global PDD
-                if (global_PDD == null) {
-                    global_PDD = pddset;
-                } else {
-                    global_PDD.mergeWith(pddset);
-                }
-            }
-
-            //global_PDD.print();
-
-            //out.collect(new Record(global_PDD));
-        }
-    }
-
-
-    @Override
-    public Plan getPlan(String... args) {
-
-        String dataInput = (args.length > 0 ? args[0] : "");
-        String output    = (args.length > 1 ? args[1] : "");
-
-        FileDataSource source = new FileDataSource(new TextInputFormat(), dataInput );
-
-        // Operations on the data set go here
-        MapOperator pddBuilder = MapOperator.builder(new PDDCarrier(set, sketcher ))
-                .input(source)
-                .name("local sketches")
-                .build();
-
-        pddBuilder.setDegreeOfParallelism(2);
-
-
-        ReduceOperator pddCombiner = ReduceOperator.builder( new PDDCombiner() )
-                .input(pddBuilder)
-                .name("merge sketches")
-                .build();
-
-
-        FileDataSink sink = new FileDataSink( new CsvOutputFormat(), output, pddCombiner );
-
-        CsvOutputFormat.configureRecordFormat(sink)
-                .recordDelimiter('\n')
-                .fieldDelimiter(' ')
-                .field(StringValue.class, 0);
-
-
-        return new Plan(sink);
-    }
-
-    @Override
-    public String getDescription() {
-        return null;
-    }
+		if(args.length > 0) {
+			// parse input arguments
+			fileOutput = true;
+			if(args.length == 2) {
+				textPath = args[0];
+				outputPath = args[1];
+			} else {
+				System.err.println("Usage: WordCount <text path> <result path>");
+				return false;
+			}
+		} else {
+			System.out.println("Executing WordCount example with built-in default data.");
+			System.out.println("  Provide parameters to read input data from a file.");
+			System.out.println("  Usage: WordCount <text path> <result path>");
+		}
+		return true;
+	}
 }
