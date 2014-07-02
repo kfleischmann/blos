@@ -16,11 +16,11 @@ public class HashFunction implements Serializable {
 
 	public static final long PRIME_MODULUS = (1L << 31) - 1;
 
-	private long a = Math.abs(new Random().nextLong());
+	public long a = Math.abs(new Random().nextLong());
 
-	private long b = Math.abs(new Random().nextLong());
+	public long b = Math.abs(new Random().nextLong());
 
-	private long w = 0;
+	public long w = 0;
 
 	public HashFunction(long w){
 		this.w=w;

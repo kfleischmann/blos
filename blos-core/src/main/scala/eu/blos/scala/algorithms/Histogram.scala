@@ -1,47 +1,26 @@
 package eu.blos.scala.algorithms
 
-import java.io.{DataInput, DataOutput}
-import eu.blos.java.api.common.PDD
+import scala.collection.JavaConversions._
+import scala.collection.mutable.ArrayBuffer
 
+@SerialVersionUID(1L)
+case class Histogram( feature : Int , maxBins : Int, var bins : java.util.List[(Double,Int)] ) extends Serializable  {
 
-class PDDHistogram( feature : Int , maxBins : Int ) extends Histogram with PDD[PDDHistogram]{
-  private final val serialVersionUID: Long = 1L
+  def this() = this( 1,1, new java.util.ArrayList[(Double,Int)]() )
+  def this(feature : Int , maxBins : Int ) = this(feature, maxBins, new ArrayBuffer[(Double,Int)]()  )
 
-  def this() = this(1,1)
-
-  override def alloc {
-    // nothing todo
-  }
-  override def memory_size = {
-    -1
-  }
-
-  override def mergeWith( h : PDDHistogram ) {
-    System.out.println("mergeWith histogram");
-    System.out.println("histogram-size: "+h.bins.length )
-    for(i<-0 until h.bins.length) {
-      update(h.bins(i)._1, h.bins(i)._2 )
-    }
-  }
-}
-
-case class Histogram( feature : Int , maxBins : Int ) {
-
-  def this() = this(1,1)
-
-  protected var bins : scala.collection.mutable.Buffer[(Double,Int)] = scala.collection.mutable.Buffer[(Double,Int)]()
-  protected var maxBinValue : Double = Double.NegativeInfinity
-  protected var minBinValue : Double = Double.PositiveInfinity
+  var maxBinValue : Double = Double.NegativeInfinity
+  var minBinValue : Double = Double.PositiveInfinity
 
   def getBins = bins
   def getMax = maxBinValue
   def getMin = minBinValue
   def getNormalSum = bins.map(_._2).sum
-  def getNormalSum( x : Double) = bins.filter(d=>d._1 > x).map(_._2).sum
+  def getNormalSum( x : Double) = bins.filter( d => { d._1 > x }).map(_._2).sum
 
   //TODO: Bug fix
   def uniform( Bnew : Integer ) = {
-    val u = scala.collection.mutable.Buffer[Double]()
+    val u = new java.util.ArrayList[Double]()
     if( Bnew > bins.length )
       u.toList
     else{
@@ -164,6 +143,7 @@ case class Histogram( feature : Int , maxBins : Int ) {
       System.out.println("    ("+b._2+") \n");
     }//for
   }
+
 }
 
 object Histogram extends Serializable {
@@ -175,5 +155,9 @@ object Histogram extends Serializable {
     val h = new Histogram(feature,maxBins)
     bins.foreach( b => h.update(b._1, b._2) )
     h
+  }
+
+  def main(args:Array[String]){
+    var h : Histogram = new Histogram(5, 5)
   }
 }
