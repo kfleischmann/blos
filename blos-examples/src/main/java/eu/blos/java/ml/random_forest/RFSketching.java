@@ -4,14 +4,12 @@ import eu.blos.java.algorithms.sketches.HashFunction;
 import eu.blos.scala.algorithms.Histogram;
 import eu.stratosphere.api.java.DataSet;
 import eu.stratosphere.api.java.ExecutionEnvironment;
-import eu.stratosphere.api.java.functions.FlatMapFunction;
-import eu.stratosphere.api.java.functions.MapFunction;
-import eu.stratosphere.api.java.functions.MapPartitionFunction;
-import eu.stratosphere.api.java.functions.ReduceFunction;
-import eu.stratosphere.api.java.operators.MapOperator;
-import eu.stratosphere.api.java.operators.ReduceOperator;
+import eu.stratosphere.api.java.functions.*;
+import eu.stratosphere.api.java.operators.*;
 import eu.stratosphere.api.java.tuple.Tuple2;
+import eu.stratosphere.api.java.tuple.Tuple3;
 import eu.stratosphere.api.java.tuple.Tuple4;
+import eu.stratosphere.api.java.tuple.Tuple5;
 import eu.stratosphere.core.fs.FileSystem;
 import eu.stratosphere.util.Collector;
 
@@ -21,27 +19,42 @@ import java.util.Iterator;
 
 public class RFSketching {
 
-	public static boolean fileOutput =  false;
+	public static boolean fileOutput =  true;
 	public static int numFeatures = 784;
 	public static int maxBins = 10;
 	public static int maxSplitCandidates = 5;
+	public static int numLabels = 10;
+
 
     public static void main(String[] args) throws Exception {
 		//final ExecutionEnvironment env = ExecutionEnvironment.createRemoteEnvironment("localhost", 6123, "/home/kay/blos/blos.jar");
+
 		final ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
 
 		String inputPath = "file:///home/kay/datasets/mnist/normalized_small.txt";
-		String outputPath=  "file:///home/kay/temp/rf"; //sketch_splitcandidates_mnist_normalized_small";
+		String outputPath=  "file:///home/kay/temp/rf/"; //sketch_splitcandidates_mnist_normalized_small";
 
+
+
+		String outputCandidates = outputPath+"/feature_split_candidates";
+		String outputSketch = outputPath+"/samples_sketch";
+
+		// -------------------------------
 		// Skeching-Phase
+		// -------------------------------
 
-		computeSplitCandidates(inputPath, outputPath+"/feature_split_candidates",  maxSplitCandidates, env);
+		double epsilon = 0.00000000001;
+		double delta = 0.001;
 
+		computeSplitCandidates(inputPath, outputCandidates,  env, maxSplitCandidates);
 
+		buildSketches(inputPath, outputPath + "/samples_sketch", env, epsilon, delta, outputCandidates);
 
+		// -------------------------------
 		// Learning-Phase
-	}
+		// -------------------------------
 
+	}
 
 
 	/**
@@ -53,7 +66,8 @@ public class RFSketching {
 	 * @param env
 	 * @throws Exception
 	 */
-	public  static void computeSplitCandidates(String inputPath, String outputPath, final int maxSplitCandidates, ExecutionEnvironment env ) throws Exception  {
+	public  static void computeSplitCandidates(String inputPath, String outputPath, ExecutionEnvironment env,
+											   final int maxSplitCandidates ) throws Exception  {
 		DataSet<String> samples = env.readTextFile(inputPath);
 
 		ReduceOperator<Tuple2<Integer, String>> histograms =
@@ -65,7 +79,7 @@ public class RFSketching {
 
 						for (int i = 0; i < numFeatures; i++) {
 							histograms[i] = new Histogram(i, maxBins);
-						}
+						}//for
 
 						while (samples.hasNext()) {
 							String[] values = samples.next().split(" ");
@@ -81,7 +95,7 @@ public class RFSketching {
 
 						for (int i = 0; i < numFeatures; i++) {
 							histogramCollector.collect(new Tuple2<Integer, String>(i, histograms[i].toString()));
-						}
+						}//for
 					}
 				})
 				.groupBy(0)
@@ -98,15 +112,30 @@ public class RFSketching {
 				histograms.map( new MapFunction<Tuple2<Integer, String>, Tuple2<Integer, String>>() {
 					@Override
 					public Tuple2<Integer, String> map(Tuple2<Integer, String> histogram ) throws Exception {
-						return new Tuple2<Integer,String>( histogram.f0, Histogram.fromString( histogram.f1 ).uniform(maxSplitCandidates).mkString(" ") );
+						return new Tuple2<Integer,String>( histogram.f0, Histogram.fromString( histogram.f1 )
+														.uniform(maxSplitCandidates).mkString(" ") );
 					}
 				});
 
+		// filter invalid features (without split-candidates)
+		DataSet output =
+		splitCandidates.filter( new FilterFunction<Tuple2<Integer, String>>() {
+			@Override
+			public boolean filter(Tuple2<Integer, String> splitCand) throws Exception {
+				// f0 is the feature id
+				// f1 list of valid split-candidates
+				if( splitCand.f1.trim().length() > 0 )
+					return true;
+				else
+					return false;
+			}
+		});
+
 		// emit result
 		if(fileOutput) {
-			splitCandidates.writeAsCsv(outputPath, "\n", " ", FileSystem.WriteMode.OVERWRITE );
+			output.writeAsCsv(outputPath, "\n", ",", FileSystem.WriteMode.OVERWRITE );
 		} else {
-			splitCandidates.print();
+			output.print();
 		}
 
 		// execute program
@@ -114,30 +143,81 @@ public class RFSketching {
 
 	}
 
-	public  static void buildSketch(String inputPath, String outputPath, ExecutionEnvironment env )
-																									throws Exception  {
-		double epsilon = 0.00000000001;
-		double delta = 0.001;
+	/**
+	 * build sketch data. This data is used for the learning phase
+	 *
+	 * Output (sketchId, sketchKey, value)
+	 *
+	 * @param inputPath
+	 * @param outputPath
+	 * @param env
+	 * @param epsilon
+	 * @param delta
+	 * @throws Exception
+	 */
+	public  static void buildSketches( String inputPath, String outputPath, ExecutionEnvironment env,
+									 double epsilon, double delta, String outputCandidates ) throws Exception  {
 
 		int d = (int)Math.ceil(Math.log(1 / delta));
 		long w = (long)Math.ceil(Math.exp(1) /epsilon);
 
-		System.out.println(w);
-		System.out.println(d);
-
 		final HashFunction[] hashfunctions = HashFunction.generateHashfunctions(d, w );
 
-		// get input data
+		// read samples
 		DataSet<String> samples = env.readTextFile(inputPath);
 
-		DataSet<Tuple4<String, Long, Integer, Integer>> hashed = samples.flatMap( new SketchBuilder(hashfunctions) );
 
+		// output: (sampleId, label, featureId, featureValue)
+		DataSet<Tuple4<Integer,Integer,Integer,Double>> sampleFeatures = samples.flatMap( new FlatMapFunction<String, Tuple4<Integer,Integer,Integer,Double> >() {
+			@Override
+			public void flatMap(String sample, Collector<Tuple4<Integer, Integer, Integer, Double>> collector) throws Exception {
+
+				String[] values = sample.split(" ");
+				Integer lineId = Integer.parseInt( values[0] );
+				Integer label = Integer.parseInt( values[1] );
+				Integer featureId = 0;
+
+				int numFeatures = values.length - 2;
+				for (int i = 2; i < values.length; i++) {
+					featureId = i-2;
+					collector.collect( new Tuple4<Integer, Integer, Integer, Double>( lineId, label, featureId, Double.parseDouble(values[i]) ));
+				}//for
+			}
+		});
+
+		// output: featureId, split-candidate (featureId, splitCandidate)
+		FlatMapOperator<String, Tuple2<Integer, Double>> candidates = env.readTextFile(outputCandidates)
+			.flatMap(new FlatMapFunction<String, Tuple2<Integer, Double>>() {
+				@Override
+				public void flatMap(String s, Collector<Tuple2<Integer, Double>> collector) throws Exception {
+					String[] values = s.split(",");
+					String[] candidates = values[1].split(" ");
+					for( String cand : candidates ){
+						collector.collect( new Tuple2<Integer, Double>(Integer.parseInt(values[0]) /*feature*/, Double.parseDouble(cand) /*split canidates*/));
+					}//for
+				}
+			});
+
+
+		// join by featureId
+		DataSet<Tuple5<Integer,Integer,Integer,Double, Double>> cout =  sampleFeatures
+			.joinWithTiny(candidates)
+			.where(2)
+			.equalTo(0)
+			.with(new JoinFunction< Tuple4<Integer,Integer,Integer,Double>, Tuple2<Integer, Double>, Tuple5<Integer,Integer,Integer,Double, Double>>(){
+			@Override
+			public Tuple5<Integer, Integer, Integer, Double, Double> join(Tuple4<Integer, Integer, Integer, Double> sampleFeature, Tuple2<Integer, Double> candidate) throws Exception {
+				return new Tuple5<Integer, Integer, Integer, Double, Double>( sampleFeature.f0, sampleFeature.f1, sampleFeature.f2, sampleFeature.f3, candidate.f1 );
+			}
+		});
+
+		//DataSet<Tuple4<String, Long, Integer, Integer>> hashed = samples.flatMap( new SketchBuilder(hashfunctions) );
 
 		// emit result
 		if(fileOutput) {
-			hashed.writeAsCsv(outputPath, "\n", " ", FileSystem.WriteMode.OVERWRITE );
+			cout.writeAsCsv(outputPath, "\n", " ", FileSystem.WriteMode.OVERWRITE );
 		} else {
-			hashed.print();
+			cout.print();
 		}
 
 		// execute program
