@@ -1,24 +1,23 @@
 package eu.blos.java.ml.random_forest;
 
-import eu.blos.java.algorithms.sketches.HashFunction;
 import eu.blos.scala.algorithms.Histogram;
 import eu.stratosphere.api.java.DataSet;
 import eu.stratosphere.api.java.ExecutionEnvironment;
 import eu.stratosphere.api.java.functions.*;
 import eu.stratosphere.api.java.operators.*;
-import eu.stratosphere.api.java.tuple.Tuple2;
-import eu.stratosphere.api.java.tuple.Tuple3;
-import eu.stratosphere.api.java.tuple.Tuple4;
-import eu.stratosphere.api.java.tuple.Tuple5;
+import eu.stratosphere.api.java.tuple.*;
 import eu.stratosphere.core.fs.FileSystem;
+import eu.stratosphere.core.fs.Path;
 import eu.stratosphere.util.Collector;
-
-import java.io.Serializable;
 import java.util.Iterator;
 
 
 public class RFSketching {
 
+	public static String PATH_OUTPUT_SPLIT_CANDIDATES = "feature_split_candidates";
+	public static String PATH_OUTPUT_SKETCH = "rf_sketch";
+
+	// context data
 	public static boolean fileOutput =  true;
 	public static int numFeatures = 784;
 	public static int maxBins = 10;
@@ -28,32 +27,21 @@ public class RFSketching {
 
     public static void main(String[] args) throws Exception {
 		//final ExecutionEnvironment env = ExecutionEnvironment.createRemoteEnvironment("localhost", 6123, "/home/kay/blos/blos.jar");
-
 		final ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
 
-		String inputPath = "file:///home/kay/datasets/mnist/normalized_small.txt";
-		String outputPath=  "file:///home/kay/temp/rf/"; //sketch_splitcandidates_mnist_normalized_small";
+		String inputPath = args[0];
+		String outputPath=  args[1];
+
+		new Path(outputPath).getFileSystem().delete(new Path(outputPath), true );
+		new Path(outputPath).getFileSystem().mkdirs(new Path(outputPath));
 
 
-
-		String outputCandidates = outputPath+"/feature_split_candidates";
-		String outputSketch = outputPath+"/samples_sketch";
-
-		// -------------------------------
-		// Skeching-Phase
-		// -------------------------------
-
-		double epsilon = 0.00000000001;
-		double delta = 0.001;
+		String outputCandidates = outputPath+"/"+PATH_OUTPUT_SPLIT_CANDIDATES;
+		String outputSketch = outputPath+"/"+PATH_OUTPUT_SKETCH;
 
 		computeSplitCandidates(inputPath, outputCandidates,  env, maxSplitCandidates);
 
-		buildSketches(inputPath, outputPath + "/samples_sketch", env, epsilon, delta, outputCandidates);
-
-		// -------------------------------
-		// Learning-Phase
-		// -------------------------------
-
+		buildSketches(inputPath, outputSketch, env, outputCandidates);
 	}
 
 
@@ -66,7 +54,7 @@ public class RFSketching {
 	 * @param env
 	 * @throws Exception
 	 */
-	public  static void computeSplitCandidates(String inputPath, String outputPath, ExecutionEnvironment env,
+	public static void computeSplitCandidates(String inputPath, String outputPath, ExecutionEnvironment env,
 											   final int maxSplitCandidates ) throws Exception  {
 		DataSet<String> samples = env.readTextFile(inputPath);
 
@@ -118,28 +106,28 @@ public class RFSketching {
 				});
 
 		// filter invalid features (without split-candidates)
-		DataSet output =
-		splitCandidates.filter( new FilterFunction<Tuple2<Integer, String>>() {
-			@Override
-			public boolean filter(Tuple2<Integer, String> splitCand) throws Exception {
-				// f0 is the feature id
-				// f1 list of valid split-candidates
-				if( splitCand.f1.trim().length() > 0 )
-					return true;
-				else
-					return false;
-			}
-		});
+		DataSet filtered_splitCandidates =
+			splitCandidates.filter( new FilterFunction<Tuple2<Integer, String>>() {
+				@Override
+				public boolean filter(Tuple2<Integer, String> splitCand) throws Exception {
+					// f0 is the feature id
+					// f1 list of valid split-candidates
+					if( splitCand.f1.trim().length() > 0 )
+						return true;
+					else
+						return false;
+				}
+			});
 
 		// emit result
 		if(fileOutput) {
-			output.writeAsCsv(outputPath, "\n", ",", FileSystem.WriteMode.OVERWRITE );
+			filtered_splitCandidates.writeAsCsv(outputPath, "\n", ",", FileSystem.WriteMode.OVERWRITE );
 		} else {
-			output.print();
+			filtered_splitCandidates.print();
 		}
 
 		// execute program
-		env.execute("Sketching example");
+		env.execute("Sketching phase");
 
 	}
 
@@ -151,18 +139,10 @@ public class RFSketching {
 	 * @param inputPath
 	 * @param outputPath
 	 * @param env
-	 * @param epsilon
-	 * @param delta
 	 * @throws Exception
 	 */
 	public  static void buildSketches( String inputPath, String outputPath, ExecutionEnvironment env,
-									 double epsilon, double delta, String outputCandidates ) throws Exception  {
-
-		int d = (int)Math.ceil(Math.log(1 / delta));
-		long w = (long)Math.ceil(Math.exp(1) /epsilon);
-
-		final HashFunction[] hashfunctions = HashFunction.generateHashfunctions(d, w );
-
+									   String outputCandidates ) throws Exception  {
 		// read samples
 		DataSet<String> samples = env.readTextFile(inputPath);
 
@@ -200,18 +180,19 @@ public class RFSketching {
 
 
 		// join by featureId
-		DataSet<Tuple5<Integer,Integer,Integer,Double, Double>> cout =  sampleFeatures
+		// output: sketch_type,sampleId,label,featureId,featureValue,SplitCandidate
+		DataSet<Tuple6<String,Integer,Integer,Integer,Double, Double>> cout =  sampleFeatures
 			.joinWithTiny(candidates)
 			.where(2)
 			.equalTo(0)
-			.with(new JoinFunction< Tuple4<Integer,Integer,Integer,Double>, Tuple2<Integer, Double>, Tuple5<Integer,Integer,Integer,Double, Double>>(){
+			.with(new JoinFunction< Tuple4<Integer,Integer,Integer,Double>, Tuple2<Integer, Double>, Tuple6<String, Integer,Integer,Integer,Double, Double>>(){
 			@Override
-			public Tuple5<Integer, Integer, Integer, Double, Double> join(Tuple4<Integer, Integer, Integer, Double> sampleFeature, Tuple2<Integer, Double> candidate) throws Exception {
-				return new Tuple5<Integer, Integer, Integer, Double, Double>( sampleFeature.f0, sampleFeature.f1, sampleFeature.f2, sampleFeature.f3, candidate.f1 );
+			public Tuple6<String, Integer, Integer, Integer, Double, Double> join(Tuple4<Integer, Integer, Integer, Double> sampleFeature, Tuple2<Integer, Double> candidate) throws Exception {
+				return new Tuple6<String, Integer, Integer, Integer, Double, Double>( "node-sketch", sampleFeature.f0, sampleFeature.f1, sampleFeature.f2, sampleFeature.f3, candidate.f1 );
 			}
 		});
 
-		//DataSet<Tuple4<String, Long, Integer, Integer>> hashed = samples.flatMap( new SketchBuilder(hashfunctions) );
+
 
 		// emit result
 		if(fileOutput) {
@@ -221,34 +202,7 @@ public class RFSketching {
 		}
 
 		// execute program
-		env.execute("Sketching example");
+		env.execute("Sketching phase");
 
-	}
-
-
-	public static final class SketchBuilder extends FlatMapFunction<String, Tuple4<String, Long, Integer, Integer>> implements Serializable{
-
-		public HashFunction[] hashfunctions;
-
-		public SketchBuilder( HashFunction[] hf ){
-			hashfunctions = hf;
-
-			System.out.println("SketchBuilder");
-		}
-
-
-		@Override
-		public void flatMap(String value, Collector<Tuple4<String, Long, Integer, Integer>> out) {
-			// normalize and split the line
-			String[] values = value.toLowerCase().split("\\W+");
-
-			for(int d=0; d < hashfunctions.length; d++ ){
-				HashFunction hf = hashfunctions[d];
-
-				String key = values[0]+"-splitcandidate-"+new java.util.Random().nextInt(Integer.MAX_VALUE);
-
-				out.collect(new Tuple4<String, Long, Integer, Integer>(key, hf.hash((long)key.hashCode()), d, 1));
-			}//for
-		}
 	}
 }

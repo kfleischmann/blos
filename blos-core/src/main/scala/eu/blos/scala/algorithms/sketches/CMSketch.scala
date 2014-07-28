@@ -2,7 +2,6 @@ package eu.blos.scala.algorithms.sketches
 
 import util.Random
 import scala.math._
-import eu.blos.java.api.common.PDD
 import scala.Serializable
 import pl.edu.icm.jlargearrays.FloatLargeArray
 ;
@@ -147,7 +146,7 @@ class CMSketch(   var delta: Double,
       x += 1
     }//for
 
-    // okay i am not sure to be completly correct do find the overall top
+    // okay i am not sure to be completely correct do find the overall top
     // disable heap feature
     //heap.foreach( { x => update_heap(x._2)} )
     //s.heap.foreach( { x => update_heap(x._2)} )

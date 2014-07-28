@@ -1,4 +1,4 @@
-package eu.blos.java.api.io;
+package eu.blos.java.stratosphere.sketch.io;
 
 import java.io.DataInput;
 import java.io.IOException;

@@ -4,8 +4,6 @@ import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 
-import eu.blos.java.api.common.PDDSet;
-
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 
