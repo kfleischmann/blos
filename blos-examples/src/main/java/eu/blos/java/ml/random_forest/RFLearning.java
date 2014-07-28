@@ -19,17 +19,7 @@ public class RFLearning {
 
 	public static boolean fileOutput =  true;
 
-    public static void main(String[] args) throws Exception {
-		final ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
-
-		String rawInputPath = "file:///home/kay/datasets/mnist/normalized_small.txt";
-		String sketchDataPath=  "file:///home/kay/temp/rf/tree-1-full-mnist/";
-
-
-		//RFSketching.main( new String[] { rawInputPath, sketchDataPath } );
-
-		String outputTreePath = "file:///home/kay/temp/rf/tree-1-full-mnist/tree";
-
+    public static void run(final ExecutionEnvironment env, String sketchDataPath, String outputTreePath ) throws Exception {
 		buildtrees( env, sketchDataPath, outputTreePath );
     }
 
@@ -59,6 +49,11 @@ public class RFLearning {
 	 * output: final trees
 	 */
 	static class RFLearningOperator extends  MapPartitionFunction<String, Tuple1<String>> implements Serializable, LearningFunction<Tuple1<String>> {
+
+
+		/**
+		 * SKETCH STRUCTURE for the learning phase
+		 */
 
 		// Knowlege about the sample-labels.
 		// Request qj(s, l) -> {0,1}

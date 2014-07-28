@@ -22,16 +22,15 @@ public class RFSketching {
 	public static int numFeatures = 784;
 	public static int maxBins = 10;
 	public static int maxSplitCandidates = 5;
-	public static int numLabels = 10;
 
 
-    public static void main(String[] args) throws Exception {
-		//final ExecutionEnvironment env = ExecutionEnvironment.createRemoteEnvironment("localhost", 6123, "/home/kay/blos/blos.jar");
-		final ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
+	// these values must be estimated, during the sketching phase
+	public static int NUMBER_LABELS  = 10;
+	public static int NUMBER_FEATURES = 784;
+	public static int NUMBER_SAMPLES = 10000;
 
-		String inputPath = args[0];
-		String outputPath=  args[1];
 
+    public static void run(final ExecutionEnvironment env, String inputPath, String outputPath ) throws Exception {
 		new Path(outputPath).getFileSystem().delete(new Path(outputPath), true );
 		new Path(outputPath).getFileSystem().mkdirs(new Path(outputPath));
 
@@ -75,6 +74,8 @@ public class RFSketching {
 							String label = values[1];
 
 							int numFeatures = values.length - 2;
+
+							// TODO: setup feature count
 
 							for (int i = 2; i < values.length; i++) {
 								histograms[i - 2].update(Double.parseDouble(values[i]));
