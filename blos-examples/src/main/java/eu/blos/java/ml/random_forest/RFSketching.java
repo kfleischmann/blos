@@ -14,8 +14,8 @@ import java.util.Iterator;
 
 public class RFSketching {
 
-	public static String PATH_OUTPUT_SPLIT_CANDIDATES = "feature_split_candidates";
-	public static String PATH_OUTPUT_SKETCH = "rf_sketch";
+	public static String PATH_OUTPUT_SKETCH_SPLIT_CANDIDATES = "feature_split_candidates";
+	public static String PATH_OUTPUT_SKETCH_NODE = "rf_sketch";
 
 	// context data
 	public static boolean fileOutput =  true;
@@ -35,8 +35,8 @@ public class RFSketching {
 		new Path(outputPath).getFileSystem().mkdirs(new Path(outputPath));
 
 
-		String outputCandidates = outputPath+"/"+PATH_OUTPUT_SPLIT_CANDIDATES;
-		String outputSketch = outputPath+"/"+PATH_OUTPUT_SKETCH;
+		String outputCandidates = outputPath+"/"+PATH_OUTPUT_SKETCH_SPLIT_CANDIDATES;
+		String outputSketch = outputPath+"/"+PATH_OUTPUT_SKETCH_NODE;
 
 		computeSplitCandidates(inputPath, outputCandidates,  env, maxSplitCandidates);
 
@@ -120,11 +120,21 @@ public class RFSketching {
 				}
 			});
 
+		// construct output
+		MapOperator<Tuple2<Integer, String>, Tuple3<String, Integer, String>> outputFormat =
+				filtered_splitCandidates.map( new MapFunction<Tuple2<Integer, String>, Tuple3<String, Integer, String>>() {
+					@Override
+					public Tuple3<String, Integer, String> map(Tuple2<Integer, String> tuple ) throws Exception {
+						return new Tuple3<String,Integer,String>("split-candidate", tuple.f0, tuple.f1 );
+					}
+				});
+
+
 		// emit result
 		if(fileOutput) {
-			filtered_splitCandidates.writeAsCsv(outputPath, "\n", ",", FileSystem.WriteMode.OVERWRITE );
+			outputFormat.writeAsCsv(outputPath, "\n", ",", FileSystem.WriteMode.OVERWRITE );
 		} else {
-			filtered_splitCandidates.print();
+			outputFormat.print();
 		}
 
 		// execute program
@@ -166,15 +176,15 @@ public class RFSketching {
 			}
 		});
 
-		// output: featureId, split-candidate (featureId, splitCandidate)
+		// output: split-candidate,<featureId>,<split-candidate-val> (featureId, splitCandidate)
 		FlatMapOperator<String, Tuple2<Integer, Double>> candidates = env.readTextFile(outputCandidates)
 			.flatMap(new FlatMapFunction<String, Tuple2<Integer, Double>>() {
 				@Override
 				public void flatMap(String s, Collector<Tuple2<Integer, Double>> collector) throws Exception {
 					String[] values = s.split(",");
-					String[] candidates = values[1].split(" ");
+					String[] candidates = values[2].split(" ");
 					for( String cand : candidates ){
-						collector.collect( new Tuple2<Integer, Double>(Integer.parseInt(values[0]) /*feature*/, Double.parseDouble(cand) /*split canidates*/));
+						collector.collect( new Tuple2<Integer, Double>(Integer.parseInt(values[1]) /*feature*/, Double.parseDouble(cand) /*split canidates*/));
 					}//for
 				}
 			});
@@ -197,7 +207,7 @@ public class RFSketching {
 
 		// emit result
 		if(fileOutput) {
-			cout.writeAsCsv(outputPath, "\n", " ", FileSystem.WriteMode.OVERWRITE );
+			cout.writeAsCsv(outputPath, "\n", ",", FileSystem.WriteMode.OVERWRITE );
 		} else {
 			cout.print();
 		}

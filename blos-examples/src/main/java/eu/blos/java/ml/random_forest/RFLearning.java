@@ -8,7 +8,6 @@ import eu.stratosphere.api.java.functions.MapPartitionFunction;
 import eu.stratosphere.api.java.tuple.Tuple1;
 import eu.stratosphere.core.fs.FileSystem;
 import eu.stratosphere.util.Collector;
-import org.apache.commons.lang.math.IntRange;
 import org.jblas.util.Random;
 
 import java.io.Serializable;
@@ -39,10 +38,11 @@ public class RFLearning {
 
 	public static void buildtrees( final ExecutionEnvironment env, String inputPath, String outputPath ) throws Exception {
 
-		DataSet<String> sketch = env.readTextFile(inputPath+"/"+RFSketching.PATH_OUTPUT_SKETCH);
+		DataSet<String> NodeSketch = env.readTextFile(inputPath+"/"+RFSketching.PATH_OUTPUT_SKETCH_NODE);
+		DataSet<String> SplitCandidateSketch = env.readTextFile(inputPath+"/"+RFSketching.PATH_OUTPUT_SKETCH_SPLIT_CANDIDATES);
 
 		// do the learning
-		DataSet<Tuple1<String>> trees = sketch.mapPartition( new RFLearningOperator() );
+		DataSet<Tuple1<String>> trees = NodeSketch.union(SplitCandidateSketch).mapPartition( new RFLearningOperator() );
 
 		// emit result
 		if(fileOutput) {
@@ -68,7 +68,6 @@ public class RFLearning {
 		/**
 		 * SKETCH STRUCTURE for the learning phase
 		 */
-
 		// Knowlege about the sample-labels.
 		// Request qj(s, l) -> {0,1}
 		private BloomFilter qj = new BloomFilter(2^31-1, 10000 );
@@ -83,29 +82,54 @@ public class RFLearning {
 
 		private Collector<Tuple1<String>> output;
 
+		// Knowlege about all split-canidates computed in the sketching phase
+		private Map<Integer, double[]> splitCandidates = new HashMap<Integer, double[]>();
+
+
+
 		public RFLearningOperator(){
 			super();
 		}
 
+		/**
+		 * read the sketch, put it into a sketch structure
+		 * @param sketch
+		 * @param output
+		 * @throws Exception
+		 */
 		@Override
 		public void mapPartition(Iterator<String> sketch, Collector<Tuple1<String>> output) throws Exception {
 			this.output = output;
 
 			while(sketch.hasNext()){
-				String[] fields = sketch.next().split(" ");
+				String[] fields = sketch.next().split(",");
+				String sketchtype = fields[0];
 
-				String sampleId = fields[1];
-				String label = fields[2];
-				String featureId = fields[3];
-				Double featureVal = Double.parseDouble(fields[4]);
-				Double splitCandidate = Double.parseDouble(fields[5]);
+				if(sketchtype.compareTo("node-sketch") == 0 ) {
+					String sampleId = fields[1];
+					String label = fields[2];
+					String featureId = fields[3];
+					Double featureVal = Double.parseDouble(fields[4]);
+					Double splitCandidate = Double.parseDouble(fields[5]);
 
-				qj.add(sampleId + label );
+					qj.add(sampleId + label);
 
-				if( featureVal < splitCandidate ) {
-					qjL.add(sampleId + featureId + splitCandidate);
-				} else {
-					qjR.add(sampleId + featureId + splitCandidate);
+					if (featureVal < splitCandidate) {
+						qjL.add(sampleId + featureId + splitCandidate);
+					} else {
+						qjR.add(sampleId + featureId + splitCandidate);
+					}
+				}
+
+
+				if(sketchtype.compareTo("split-candidate") == 0 ) {
+					Integer featureId = Integer.parseInt(fields[1]);
+					String[] features = fields[2].split(" ");
+					double[] featureList = new double[features.length];
+					for( int i=0; i < features.length; i++ ){
+						featureList[i] = Double.parseDouble(features[i]);
+					}//for
+					splitCandidates.put(featureId, featureList );
 				}
 			}
 
@@ -138,7 +162,7 @@ public class RFLearning {
 
 
 		/**
-		 *
+		 * create a new random bagging-table
 		 * @param sampleCount
 		 * @return
 		 */
@@ -164,6 +188,11 @@ public class RFLearning {
 				tmpFeatureSpace.remove(feature);
 			}
 			return features;
+		}
+
+
+		public void computeSplit(){
+
 		}
 	}
 }
