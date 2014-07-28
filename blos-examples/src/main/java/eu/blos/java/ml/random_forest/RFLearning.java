@@ -8,18 +8,32 @@ import eu.stratosphere.api.java.functions.MapPartitionFunction;
 import eu.stratosphere.api.java.tuple.Tuple1;
 import eu.stratosphere.core.fs.FileSystem;
 import eu.stratosphere.util.Collector;
+import org.apache.commons.lang.math.IntRange;
+import org.jblas.util.Random;
 
 import java.io.Serializable;
-import java.util.Iterator;
+import java.math.BigInteger;
+import java.util.*;
 
 
 public class RFLearning {
 
+	public static int SELECT_FEATURES_PER_NODE = 5;
+
 	public static int NUMBER_NODES = 1;
+
+	public static int NUMBER_TREES = 0;
+
+	public static int NUMBER_TREES_PER_NODE = 0;
 
 	public static boolean fileOutput =  true;
 
-    public static void run(final ExecutionEnvironment env, String sketchDataPath, String outputTreePath ) throws Exception {
+    public static void run(final ExecutionEnvironment env, String sketchDataPath, String outputTreePath, int trees ) throws Exception {
+
+		NUMBER_TREES = trees;
+
+		NUMBER_TREES_PER_NODE = NUMBER_TREES / NUMBER_NODES;
+
 		buildtrees( env, sketchDataPath, outputTreePath );
     }
 
@@ -67,12 +81,16 @@ public class RFLearning {
 		// Request qjR(s, f, c) -> {0,1}
 		private BloomFilter qjR = new BloomFilter(2^31-1, 10000 );
 
+		private Collector<Tuple1<String>> output;
+
 		public RFLearningOperator(){
 			super();
 		}
 
 		@Override
 		public void mapPartition(Iterator<String> sketch, Collector<Tuple1<String>> output) throws Exception {
+			this.output = output;
+
 			while(sketch.hasNext()){
 				String[] fields = sketch.next().split(" ");
 
@@ -98,6 +116,54 @@ public class RFLearning {
 
 		@Override
 		public void learn(Collector<Tuple1<String>> output) {
+			for( int tree=0; tree < NUMBER_TREES_PER_NODE; tree++ ){
+				List<Integer> featureSpace = new ArrayList<Integer>();
+				for(int i=0; i < RFSketching.NUMBER_FEATURES; i++ ) featureSpace.add(i);
+				int[] baggingTable = createBaggingtable(RFSketching.NUMBER_SAMPLES);
+				int[] features = selectRandomFeatures(featureSpace, SELECT_FEATURES_PER_NODE );
+
+				splitNode(baggingTable, features, featureSpace, tree, BigInteger.valueOf(0) );
+			}
+		}
+
+		/**
+		 * this method do all the magic stuff, find the best split, create new nodes and recursively split these
+		 * nodes again until a stopping criterion is reached
+		 * @param baggingTable
+		 * @param treeId
+		 * @param nodeId
+		 */
+		public void splitNode( int baggingTable[], int features[], List<Integer> featureSpace, long treeId, BigInteger nodeId ) {
+		}
+
+
+		/**
+		 *
+		 * @param sampleCount
+		 * @return
+		 */
+		public int[] createBaggingtable(int sampleCount ){
+			int bt[] = new int[sampleCount];
+			for( int i=0; i < sampleCount; i++ )
+				bt[i] = Random.nextInt(sampleCount);
+			return bt;
+		}
+
+		/**
+		 * select num random features from the feature space
+		 * @param featureSpace
+		 * @param num
+		 * @return
+		 */
+		public int[] selectRandomFeatures(final List<Integer> featureSpace, int num ){
+			List<Integer> tmpFeatureSpace = new ArrayList<Integer>(featureSpace);
+			int features[] = new int[num];
+			for( int f=0; f < num; f++ ){
+				int feature = Random.nextInt(tmpFeatureSpace.size());
+				features[f] = tmpFeatureSpace.get(feature);
+				tmpFeatureSpace.remove(feature);
+			}
+			return features;
 		}
 	}
 }

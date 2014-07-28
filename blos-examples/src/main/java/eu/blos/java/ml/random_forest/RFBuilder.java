@@ -5,6 +5,8 @@ import eu.stratosphere.api.java.ExecutionEnvironment;
 public class RFBuilder {
 	public static void main(String[] args ) throws Exception {
 		//final ExecutionEnvironment env = ExecutionEnvironment.createRemoteEnvironment("localhost", 6123, "/home/kay/blos/blos.jar");
+
+
 		final ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
 
 		String rawInputPath = "file:///home/kay/datasets/mnist/normalized_small.txt";
@@ -15,6 +17,6 @@ public class RFBuilder {
 
 		//RFSketching.run( env, rawInputPath, sketchDataPath );
 
-		RFLearning.run( env, sketchDataPath, outputTreePath );
+		RFLearning.run( env, sketchDataPath, outputTreePath, 1 );
 	}
 }
