@@ -110,15 +110,15 @@ public class RFLearning {
 
 		// Knowlege about the sample-labels.
 		// Request qj(s, l) -> {0,1}
-		private BloomFilter sketch_qj = new BloomFilter(2^31-1, 10000 );
+		private BloomFilter sketch_qj = new BloomFilter(2^31-1, 1000000 );
 
 		// Knowlege about the feature locations according to the different candidates.
 		// Request qjL(s, f, c) -> {0,1}
-		private BloomFilter sketch_qjL = new BloomFilter(2^31-1, 10000 );
+		private BloomFilter sketch_qjL = new BloomFilter(2^31-1, 1000000 );
 
 		// Knowlege about the feature locations according to the different candidates.
 		// Request qjR(s, f, c) -> {0,1}
-		private BloomFilter sketch_qjR = new BloomFilter(2^31-1, 10000 );
+		private BloomFilter sketch_qjR = new BloomFilter(2^31-1, 1000000 );
 
 		private Collector<Tuple1<String>> output;
 
@@ -162,9 +162,9 @@ public class RFLearning {
 					sketch_qj.add(sampleId + label);
 
 					if (featureVal < splitCandidate) {
-						sketch_qjL.add( (""+sampleId + featureId + ""+splitCandidate).getBytes() );
+						//sketch_qjL.add( (""+sampleId + featureId + ""+splitCandidate).getBytes() );
 					} else {
-						sketch_qjR.add( (""+sampleId + featureId + ""+splitCandidate).getBytes());
+						//sketch_qjR.add( (""+sampleId + featureId + ""+splitCandidate).getBytes());
 					}
 				}
 
@@ -264,11 +264,12 @@ public class RFLearning {
 				qj[sample.f1.intValue()]++;
 
 
-				if( this.sketch_qjL.contains( new String(""+sample.f0+feature+candidate).getBytes() ) ){
+				if( this.sketch_qjL.contains( (""+sample.f0+feature+candidate).getBytes()) ){
 					qjL[sample.f1.intValue()]++;
 					splitLeft++;
 				}
-				if( this.sketch_qjR.contains( new String(""+sample.f0+feature+candidate).getBytes() ) ){
+
+				if( this.sketch_qjR.contains( (""+sample.f0+feature+candidate).getBytes()) ){
 					qjR[sample.f1.intValue()]++;
 					splitRight++;
 				}
