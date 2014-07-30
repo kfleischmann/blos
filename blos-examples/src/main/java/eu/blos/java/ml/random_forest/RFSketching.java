@@ -16,6 +16,7 @@ public class RFSketching {
 
 	public static String PATH_OUTPUT_SKETCH_SPLIT_CANDIDATES = "feature_split_candidates";
 	public static String PATH_OUTPUT_SKETCH_NODE = "rf_sketch";
+	public static String PATH_OUTPUT_SKETCH_BAGGINGTABLE = "sample_labels";
 
 	// context data
 	public static boolean fileOutput =  true;
@@ -35,12 +36,13 @@ public class RFSketching {
 		new Path(outputPath).getFileSystem().mkdirs(new Path(outputPath));
 
 
+		String outputBaggingTable = outputPath+"/"+PATH_OUTPUT_SKETCH_BAGGINGTABLE;
 		String outputCandidates = outputPath+"/"+PATH_OUTPUT_SKETCH_SPLIT_CANDIDATES;
 		String outputSketch = outputPath+"/"+PATH_OUTPUT_SKETCH_NODE;
 
 		computeSplitCandidates(inputPath, outputCandidates,  env, maxSplitCandidates);
 
-		buildSketches(inputPath, outputSketch, env, outputCandidates);
+		buildSketches(env, inputPath, outputBaggingTable, outputCandidates, outputSketch);
 	}
 
 
@@ -129,7 +131,6 @@ public class RFSketching {
 					}
 				});
 
-
 		// emit result
 		if(fileOutput) {
 			outputFormat.writeAsCsv(outputPath, "\n", ",", FileSystem.WriteMode.OVERWRITE );
@@ -145,15 +146,21 @@ public class RFSketching {
 	/**
 	 * build sketch data. This data is used for the learning phase
 	 *
-	 * Output (sketchId, sketchKey, value)
+	 * Output sketch (sketchId, sketchKey, value)
 	 *
-	 * @param inputPath
-	 * @param outputPath
+	 *
 	 * @param env
+	 * @param inputPath
+	 * @param outputPathBaggingTable
+	 * @param outputCandidates
+	 * @param outputPathSketch
 	 * @throws Exception
 	 */
-	public  static void buildSketches( String inputPath, String outputPath, ExecutionEnvironment env,
-									   String outputCandidates ) throws Exception  {
+	public  static void buildSketches( ExecutionEnvironment env,
+									   String inputPath,
+									   String outputPathBaggingTable,
+									   String outputCandidates,
+									   String outputPathSketch ) throws Exception  {
 		// read samples
 		DataSet<String> samples = env.readTextFile(inputPath);
 
@@ -205,11 +212,26 @@ public class RFSketching {
 
 
 
+
+		// construct output
+		MapOperator<String, Tuple3<String, String, String>> sampleLabels = samples.map( new MapFunction<String, Tuple3<String, String, String>>() {
+			@Override
+			public Tuple3<String, String, String> map(String sample) throws Exception {
+				String[] values = sample.split(" ");
+				String lineId = values[0];
+				String label = values[1];
+				return new Tuple3<String, String, String>("sample-sketch", lineId, label );
+			}
+		});
+
+
 		// emit result
 		if(fileOutput) {
-			cout.writeAsCsv(outputPath, "\n", ",", FileSystem.WriteMode.OVERWRITE );
+			cout.writeAsCsv(outputPathSketch, "\n", ",", FileSystem.WriteMode.OVERWRITE );
+			sampleLabels.writeAsCsv(outputPathBaggingTable, "\n", ",", FileSystem.WriteMode.OVERWRITE );
 		} else {
 			cout.print();
+			sampleLabels.print();
 		}
 
 		// execute program
