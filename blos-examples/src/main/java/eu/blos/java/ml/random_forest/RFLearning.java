@@ -106,19 +106,21 @@ public class RFLearning {
 		// --------------------------------------------------
 		// SKETCH STRUCTURE for the learning phase
 		// --------------------------------------------------
+		private int BLOOM_FILTER_SIZE=2147483;
+		private double PROBABILITY_FALSE_POSITIVE = 0.4;
 
 
 		// Knowlege about the sample-labels.
 		// Request qj(s, l) -> {0,1}
-		private BloomFilter sketch_qj = new BloomFilter(2^31-1, 1000000 );
+		private BloomFilter sketch_qj = new BloomFilter( PROBABILITY_FALSE_POSITIVE , RFSketching.NUMBER_SAMPLES*RFSketching.NUMBER_LABELS );
 
 		// Knowlege about the feature locations according to the different candidates.
 		// Request qjL(s, f, c) -> {0,1}
-		private BloomFilter sketch_qjL = new BloomFilter(2^31-1, 1000000 );
+		private BloomFilter sketch_qjL = new BloomFilter( PROBABILITY_FALSE_POSITIVE, RFSketching.NUMBER_SAMPLES*RFSketching.NUMBER_FEATURES *RFSketching.maxSplitCandidates);
 
 		// Knowlege about the feature locations according to the different candidates.
 		// Request qjR(s, f, c) -> {0,1}
-		private BloomFilter sketch_qjR = new BloomFilter(2^31-1, 1000000 );
+		private BloomFilter sketch_qjR = new BloomFilter( PROBABILITY_FALSE_POSITIVE, RFSketching.NUMBER_SAMPLES*RFSketching.NUMBER_FEATURES *RFSketching.maxSplitCandidates );
 
 		private Collector<Tuple1<String>> output;
 
@@ -147,12 +149,15 @@ public class RFLearning {
 		public void mapPartition(Iterator<String> sketch, Collector<Tuple1<String>> output) throws Exception {
 			this.output = output;
 
+			int count_left=0;
+			int count_right=0;
+
 			while(sketch.hasNext()){
 				String[] fields = sketch.next().split(",");
 				String sketchtype = fields[0];
 
-
 				if(sketchtype.compareTo("node-sketch") == 0 ) {
+
 					String sampleId = fields[1];
 					String label = fields[2];
 					String featureId = fields[3];
@@ -162,9 +167,11 @@ public class RFLearning {
 					sketch_qj.add(sampleId + label);
 
 					if (featureVal < splitCandidate) {
-						//sketch_qjL.add( (""+sampleId + featureId + ""+splitCandidate).getBytes() );
+						sketch_qjL.add( (""+sampleId + featureId + ""+splitCandidate).getBytes() );
+						count_left++;
 					} else {
-						//sketch_qjR.add( (""+sampleId + featureId + ""+splitCandidate).getBytes());
+						sketch_qjR.add( (""+sampleId + featureId + ""+splitCandidate).getBytes());
+						count_right++;
 					}
 				}
 
@@ -187,6 +194,9 @@ public class RFLearning {
 
 				}
 			}
+
+			System.out.println(count_left);
+			System.out.println(count_right);
 
 			// now start learning phase
 			learn(output);

@@ -340,6 +340,8 @@ public class BloomFilter<E> implements Serializable {
      * @return true if the array could have been inserted into the Bloom filter.
      */
     public boolean contains(byte[] bytes) {
+
+
         int[] hashes = createHashes(bytes, k);
         for (int hash : hashes) {
             if (!bitset.get(Math.abs(hash % bitSetSize))) {
