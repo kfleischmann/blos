@@ -107,7 +107,7 @@ public class RFLearning {
 		// SKETCH STRUCTURE for the learning phase
 		// --------------------------------------------------
 		private int BLOOM_FILTER_SIZE=2147483;
-		private double PROBABILITY_FALSE_POSITIVE = 0.15;
+		private double PROBABILITY_FALSE_POSITIVE = 0.3;
 
 
 		// Knowlege about the sample-labels.
@@ -248,10 +248,12 @@ public class RFLearning {
 							}
 						}
 
-						System.out.println(split.candidate+" "+split.feature+" "+" "+split.splitLeft+","+split.splitRight+" "+split.quality() );
+						System.out.println(split.featureValue+" "+split.feature+" "+" "+split.splitLeft+","+split.splitRight+" "+split.quality() );
 					}
 				}
 			}
+
+			System.out.println("bestSplit: "+bestSplit.featureValue+" "+bestSplit.feature+" "+" "+bestSplit.splitLeft+","+bestSplit.splitRight+" "+bestSplit.quality() );
 
 			if(!isStoppingCriterion(bestSplit)){
 				Tuple2<List<Tuple2<Integer,Integer>>, List<Tuple2<Integer,Integer>>> baggingTables = createBaggingTable(bestSplit, node );
@@ -259,20 +261,21 @@ public class RFLearning {
 				BigInteger leftNodeId = node.nodeId.add(BigInteger.ONE).multiply(BigInteger.valueOf(2)).subtract(BigInteger.ONE);
 				BigInteger rightNodeId = node.nodeId.add(BigInteger.ONE).multiply(BigInteger.valueOf(2));
 
-				List<Integer> featureSpace = new ArrayList<Integer>(node.features);
+				List<Integer> featureSpace = new ArrayList<Integer>(node.featureSpace);
 				featureSpace.remove(bestSplit.feature);
+
 
 				List<Integer> features = selectRandomFeatures(featureSpace, SELECT_FEATURES_PER_NODE );
 
-				TreeNode leftNode = new TreeNode( node.treeId, leftNodeId, node.features, featureSpace, -1, "", -1,  baggingTable );
-				TreeNode rightNode = new TreeNode( node.treeId, rightNodeId, node.features, featureSpace, -1, "", -1,  baggingTable );
+				TreeNode leftNode = new TreeNode( node.treeId, leftNodeId, node.features, featureSpace, -1, "", -1,  baggingTables.f0 );
+				TreeNode rightNode = new TreeNode( node.treeId, rightNodeId, node.features, featureSpace, -1, "", -1,  baggingTables.f1 );
 
-				TreeNode middleNode = new TreeNode( node.treeId, node.nodeId, null, null, bestSplit.feature, bestSplit.candidate, -1, null );
+				TreeNode middleNode = new TreeNode( node.treeId, node.nodeId, null, null, bestSplit.feature, bestSplit.featureValue, -1, null );
 
 				addNode(middleNode);
 
-				//buildTree(node_left);
-				//buildTree(node_right);
+				buildTree(leftNode);
+				buildTree(rightNode);
 
 				System.out.println(" build node for " + leftNode );
 				System.out.println(" build node for " + rightNode );
@@ -302,10 +305,10 @@ public class RFLearning {
 			List<Tuple2<Integer,Integer>> right = new ArrayList<Tuple2<Integer,Integer>>();
 
 			for( Tuple2<Integer,Integer> sample : node.baggingTable ) {
-				if( this.sketch_qjL.contains( (""+sample.f0+candidate.candidate+candidate).getBytes()) ){
+				if( this.sketch_qjL.contains( (""+sample.f0+candidate.feature+candidate.featureValue).getBytes()) ){
 					left.add( sample );
 				}
-				if( this.sketch_qjR.contains( (""+sample.f0+candidate.candidate+candidate).getBytes()) ){
+				if( this.sketch_qjR.contains( (""+sample.f0+candidate.feature+candidate.featureValue).getBytes()) ){
 					right.add( sample );
 				}
 			}//for
@@ -399,7 +402,9 @@ public class RFLearning {
 		 * @return
 		 */
 		public List<Integer> selectRandomFeatures(final List<Integer> featureSpace, int num ){
-			List<Integer> tmpFeatureSpace = new ArrayList<Integer>(featureSpace);
+			List<Integer> tmpFeatureSpace = new ArrayList<Integer>();
+			for(Integer i : featureSpace) tmpFeatureSpace.add(i);
+
 			List<Integer> features= new ArrayList<Integer>();
 			for( int f=0; f < num; f++ ){
 				int feature = Random.nextInt(tmpFeatureSpace.size());
@@ -451,7 +456,7 @@ public class RFLearning {
 			}
 
 			public String toString(){
-				return treeId + "," + nodeId + "," + featureSplit + "," + featureSplitValue + "," + label;
+				return treeId + "," + nodeId + "," + featureSplit + "," + featureSplitValue + "," + label+", "+ (baggingTable!= null ? baggingTable.size() : "null");
 			}
 		}
 
@@ -464,7 +469,7 @@ public class RFLearning {
 			public double tau = 0.5;
 
 			public Integer feature;
-			public String candidate;
+			public String featureValue;
 			public int totalSamples;
 			public int splitLeft;
 			public int splitRight;
@@ -473,7 +478,7 @@ public class RFLearning {
 			public List<Double> qjR;
 
 			public SplitCandidate(	Integer feature,
-									String candidate,
+									String featureValue,
 									int totalSamples,
 									int splitLeft,
 									int splitRight,
@@ -481,7 +486,7 @@ public class RFLearning {
 									List<Double> qjL,
 									List<Double> qjR){
 				this.feature = feature;
-				this.candidate = candidate;
+				this.featureValue = featureValue;
 				this.totalSamples = totalSamples;
 				this.splitLeft = splitLeft;
 				this.splitRight = splitRight;
