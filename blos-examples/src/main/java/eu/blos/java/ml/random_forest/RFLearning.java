@@ -107,12 +107,12 @@ public class RFLearning {
 		// SKETCH STRUCTURE for the learning phase
 		// --------------------------------------------------
 		private int BLOOM_FILTER_SIZE=2147483;
-		private double PROBABILITY_FALSE_POSITIVE = 0.4;
+		private double PROBABILITY_FALSE_POSITIVE = 0.15;
 
 
 		// Knowlege about the sample-labels.
 		// Request qj(s, l) -> {0,1}
-		private BloomFilter sketch_qj = new BloomFilter( PROBABILITY_FALSE_POSITIVE , RFSketching.NUMBER_SAMPLES*RFSketching.NUMBER_LABELS );
+		private BloomFilter sketch_qj = new BloomFilter( PROBABILITY_FALSE_POSITIVE , RFSketching.NUMBER_SAMPLES );
 
 		// Knowlege about the feature locations according to the different candidates.
 		// Request qjL(s, f, c) -> {0,1}
@@ -149,12 +149,13 @@ public class RFLearning {
 		public void mapPartition(Iterator<String> sketch, Collector<Tuple1<String>> output) throws Exception {
 			this.output = output;
 
-			int count_left=0;
-			int count_right=0;
-
 			while(sketch.hasNext()){
 				String[] fields = sketch.next().split(",");
 				String sketchtype = fields[0];
+
+				// ------------------------------
+				// BUILD THE NODE SKETCH
+				// ------------------------------
 
 				if(sketchtype.compareTo("node-sketch") == 0 ) {
 
@@ -168,13 +169,10 @@ public class RFLearning {
 
 					if (featureVal < splitCandidate) {
 						sketch_qjL.add( (""+sampleId + featureId + ""+splitCandidate).getBytes() );
-						count_left++;
 					} else {
 						sketch_qjR.add( (""+sampleId + featureId + ""+splitCandidate).getBytes());
-						count_right++;
 					}
 				}
-
 
 				if(sketchtype.compareTo("split-candidate") == 0 ) {
 					Integer featureId = Integer.parseInt(fields[1]);
@@ -195,10 +193,10 @@ public class RFLearning {
 				}
 			}
 
-			System.out.println(count_left);
-			System.out.println(count_right);
+			// ---------------------------------------
+			// START LEARNING PHASE
+			// ---------------------------------------
 
-			// now start learning phase
 			learn(output);
 		}
 
@@ -232,6 +230,8 @@ public class RFLearning {
 		public void build_tree( TreeNode node ) {
 			List<SplitCandidate> splits = new ArrayList<SplitCandidate>();
 
+			SplitCandidate bestSplit = null;
+
 			for( Integer feature : node.features ){
 				if( this.splitCandidates.containsKey(feature)){
 					String[] candidates = this.splitCandidates.get(feature);
@@ -240,14 +240,28 @@ public class RFLearning {
 						SplitCandidate split = node_feature_distribution( feature, candidate, node );
 						splits.add( split );
 
+						if(bestSplit==null){
+							bestSplit = split;
+						} else {
+							if( split.quality() > bestSplit.quality() ){
+								bestSplit = split;
+							}
+						}
+
 						System.out.println(split.candidate+" "+split.feature+" "+" "+split.splitLeft+","+split.splitRight+" "+split.quality() );
 					}
 				}
 			}
+
+
+			System.out.println("bestSplit: "+bestSplit.candidate+" "+bestSplit.feature+" "+" "+bestSplit.splitLeft+","+bestSplit.splitRight+" "+bestSplit.quality() );
+
 		}
 
 
 		/**
+		 * construct the feature-distribution for a specific node by using the sketches. This is necessary
+		 * to compute the splits and find the best one
 		 *
 		 * @param feature
 		 * @param candidate
@@ -271,7 +285,16 @@ public class RFLearning {
 			int splitRight = 0;
 
 			for( Tuple2<Integer,Integer> sample : node.baggingTable ) {
-				qj[sample.f1.intValue()]++;
+
+				// find the labesl from
+				//qj[sample.f1.intValue()]++;
+
+				// find the labels from sketch
+				for(int i=0; i < RFSketching.NUMBER_LABELS; i++ ){
+					if( this.sketch_qjL.contains( (""+sample.f0+""+i).getBytes()) ){
+						qj[i]++;
+					}
+				}
 
 
 				if( this.sketch_qjL.contains( (""+sample.f0+feature+candidate).getBytes()) ){
@@ -286,9 +309,13 @@ public class RFLearning {
 			}
 
 			for(int i=0; i < RFSketching.NUMBER_LABELS; i++ ){
+
+				System.out.println(qj[i]+", "+qjR[i]+", "+qjL[i] );
+
 				qj[i] = qj[i] / totalSamples;
-				qjR[i] = qjR[i] / splitRight;
-				qjL[i] = qjL[i] / splitLeft;
+				qjR[i] = qjR[i] / totalSamples;
+				qjL[i] = qjL[i] / totalSamples;
+
 			}
 
 			return new SplitCandidate(
@@ -304,7 +331,7 @@ public class RFLearning {
 		}
 
 		/**+
-		 * decide whether the current split should not split again
+		 * decide if the current split should not split again
 		 * @param bestSplit
 		 * @return
 		 */
