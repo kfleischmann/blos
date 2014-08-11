@@ -23,7 +23,6 @@ public class RFSketching {
 	public static final String PATH_OUTPUT_SKETCH_BAGGINGTABLE = "sample_labels";
 
 	// context data
-	public static boolean fileOutput =  true;
 	public static int numFeatures = 784;
 	public static int maxBins = 10;
 	public static int maxSplitCandidates = 5;
@@ -45,7 +44,7 @@ public class RFSketching {
 	 * @param outputPath
 	 * @throws Exception
 	 */
-    public static void run(final ExecutionEnvironment env, String inputPath, String outputPath ) throws Exception {
+    public static void sketch(final ExecutionEnvironment env, String inputPath, String outputPath ) throws Exception {
 
 		LOG.info("start sketching phase");
 
@@ -110,7 +109,7 @@ public class RFSketching {
 						}//for
 					}
 				})
-				.groupBy(0)
+				.groupBy(0) // group by featureNr
 				.reduce(new ReduceFunction<Tuple2<Integer, String>>() {
 					@Override
 					public Tuple2<Integer, String> reduce(Tuple2<Integer, String> t1,
@@ -182,6 +181,9 @@ public class RFSketching {
 									   String outputPathBaggingTable,
 									   String outputCandidates,
 									   String outputPathSketch ) throws Exception  {
+
+		LOG.info("start building sketches for learning phase");
+
 		// read samples
 		DataSet<String> samples = env.readTextFile(inputPath);
 
@@ -247,7 +249,7 @@ public class RFSketching {
 
 
 		// emit result
-		if(fileOutput) {
+		if(RFBuilder.fileOutput) {
 			cout.writeAsCsv(outputPathSketch, "\n", ",", FileSystem.WriteMode.OVERWRITE );
 			sampleLabels.writeAsCsv(outputPathBaggingTable, "\n", ",", FileSystem.WriteMode.OVERWRITE );
 		} else {

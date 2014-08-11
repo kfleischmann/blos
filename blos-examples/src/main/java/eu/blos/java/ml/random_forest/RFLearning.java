@@ -18,7 +18,7 @@ import java.util.*;
 
 
 public class RFLearning {
-	private static final Log LOG = LogFactory.getLog(RFSketching.class);
+	private static final Log LOG = LogFactory.getLog(RFLearning.class);
 
 	public static int SELECT_FEATURES_PER_NODE = 5;
 
@@ -27,8 +27,6 @@ public class RFLearning {
 	public static int NUMBER_TREES = 0;
 
 	public static int NUMBER_TREES_PER_NODE = 0;
-
-	public static boolean fileOutput =  true;
 
 	public static int minNrOfSplitItems = 50;
 
@@ -41,7 +39,10 @@ public class RFLearning {
 	 * @param trees
 	 * @throws Exception
 	 */
-    public static void run(final ExecutionEnvironment env, String sketchDataPath, String outputTreePath, int trees ) throws Exception {
+    public static void learn(final ExecutionEnvironment env, String sketchDataPath, String outputTreePath, int trees ) throws Exception {
+
+		LOG.info("start learning phase");
+
 
 		// remember the number of tress
 		NUMBER_TREES = trees;
@@ -67,6 +68,8 @@ public class RFLearning {
 	 */
 	public static void readSketchesAndLearn( final ExecutionEnvironment env, String[] sketch_sources, String outputPath ) throws Exception {
 
+		LOG.info("start reading sketches into memory ");
+
 		// read sketches into memory
 		DataSet<String> sketches = null;
 
@@ -86,7 +89,7 @@ public class RFLearning {
 		DataSet<Tuple1<String>> trees = sketches.mapPartition( new RFLearningOperator() );
 
 		// emit result
-		if(fileOutput) {
+		if(RFBuilder.fileOutput) {
 			trees.writeAsCsv(outputPath, "\n", ",", FileSystem.WriteMode.OVERWRITE);
 		} else {
 			trees.print();
@@ -153,6 +156,9 @@ public class RFLearning {
 		public void mapPartition(Iterator<String> sketch, Collector<Tuple1<String>> output) throws Exception {
 			this.output = output;
 
+			LOG.info("finished reading sketches into memory");
+
+
 			while(sketch.hasNext()){
 				String[] fields = sketch.next().split(",");
 				String sketchtype = fields[0];
@@ -197,9 +203,13 @@ public class RFLearning {
 				}
 			}
 
+
+			LOG.info("finished reading sketches into memory");
+
 			// ---------------------------------------
 			// START LEARNING PHASE
 			// ---------------------------------------
+
 
 			learn(output);
 		}
@@ -210,8 +220,9 @@ public class RFLearning {
 
 		@Override
 		public void learn(Collector<Tuple1<String>> output) {
-			for( int tree=0; tree < NUMBER_TREES_PER_NODE; tree++ ){
+			LOG.info("start building trees");
 
+			for( int tree=0; tree < NUMBER_TREES_PER_NODE; tree++ ){
 				List<Integer> featureSpace = new ArrayList<Integer>();
 				for(int i=0; i < RFSketching.NUMBER_FEATURES; i++ ) featureSpace.add(i);
 				BigInteger nodeId = BigInteger.valueOf(0);
@@ -220,9 +231,7 @@ public class RFLearning {
 				String featureSplitValue = "";
 				int label = -1;
 
-
 				TreeNode node = new TreeNode(tree, nodeId, features, featureSpace, featureSplit, featureSplitValue, label,  baggingTable );
-
 				buildTree(node);
 			}
 		}
@@ -439,38 +448,6 @@ public class RFLearning {
 		/**
 		 * TreeNode
 		 */
-		class TreeNode implements Serializable {
-			public int treeId;
-			public BigInteger nodeId;
-			public List<Integer> features;
-			public List<Integer> featureSpace;
-			public Integer featureSplit;
-			public String featureSplitValue;
-			public int label;
-			public List<Tuple2<Integer,Integer>> baggingTable;
-
-			public TreeNode( int treeId,
-							 BigInteger nodeId,
-							 List<Integer> features,
-							 List<Integer> featureSpace,
-							 Integer featureSplit,
-							 String featureSplitValue,
-							 int label,
-							 List<Tuple2<Integer,Integer>> baggingTable) {
-				this.treeId = treeId;
-				this.nodeId = nodeId;
-				this.features = features;
-				this.featureSpace = featureSpace;
-				this.featureSplit = featureSplit;
-				this.featureSplitValue = featureSplitValue;
-				this.label = label;
-				this.baggingTable = baggingTable;
-			}
-
-			public String toString(){
-				return treeId + "," + nodeId + "," + featureSplit + "," + featureSplitValue + "," + label+", "+ (baggingTable!= null ? baggingTable.size() : "null");
-			}
-		}
 
 
 		/**
