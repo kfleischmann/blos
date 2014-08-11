@@ -9,14 +9,18 @@ import eu.stratosphere.api.java.tuple.*;
 import eu.stratosphere.core.fs.FileSystem;
 import eu.stratosphere.core.fs.Path;
 import eu.stratosphere.util.Collector;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import java.util.Iterator;
 
 
 public class RFSketching {
+	private static final Log LOG = LogFactory.getLog(RFSketching.class);
 
-	public static String PATH_OUTPUT_SKETCH_SPLIT_CANDIDATES = "feature_split_candidates";
-	public static String PATH_OUTPUT_SKETCH_NODE = "rf_sketch";
-	public static String PATH_OUTPUT_SKETCH_BAGGINGTABLE = "sample_labels";
+	public static final String PATH_OUTPUT_SKETCH_SPLIT_CANDIDATES = "feature_split_candidates";
+	public static final String PATH_OUTPUT_SKETCH_NODE = "rf_sketch";
+	public static final String PATH_OUTPUT_SKETCH_BAGGINGTABLE = "sample_labels";
 
 	// context data
 	public static boolean fileOutput =  true;
@@ -25,23 +29,38 @@ public class RFSketching {
 	public static int maxSplitCandidates = 5;
 
 
-	// these values must be estimated, during the sketching phase
+	// TODO: these values should be estimated, during the sketching phase
+	//
+
 	public static int NUMBER_LABELS  = 10;
 	public static int NUMBER_FEATURES = 784;
 	public static int NUMBER_SAMPLES = 10000;
 
 
+	/**
+	 * starts the sketching process. reads the data from hdfs and stores the result back to hdfs
+	 *
+	 * @param env
+	 * @param inputPath
+	 * @param outputPath
+	 * @throws Exception
+	 */
     public static void run(final ExecutionEnvironment env, String inputPath, String outputPath ) throws Exception {
+
+		LOG.info("start sketching phase");
+
+		// prepare
 		new Path(outputPath).getFileSystem().delete(new Path(outputPath), true );
 		new Path(outputPath).getFileSystem().mkdirs(new Path(outputPath));
-
 
 		String outputBaggingTable = outputPath+"/"+PATH_OUTPUT_SKETCH_BAGGINGTABLE;
 		String outputCandidates = outputPath+"/"+PATH_OUTPUT_SKETCH_SPLIT_CANDIDATES;
 		String outputSketch = outputPath+"/"+PATH_OUTPUT_SKETCH_NODE;
 
+		// compute split candidates
 		computeSplitCandidates(inputPath, outputCandidates,  env, maxSplitCandidates);
 
+		// build the sketch with the help
 		buildSketches(env, inputPath, outputBaggingTable, outputCandidates, outputSketch);
 	}
 
@@ -58,6 +77,8 @@ public class RFSketching {
 	public static void computeSplitCandidates(String inputPath, String outputPath, ExecutionEnvironment env,
 											   final int maxSplitCandidates ) throws Exception  {
 		DataSet<String> samples = env.readTextFile(inputPath);
+
+		LOG.info("compute split candidates with maxSplitCandidates="+maxSplitCandidates);
 
 		ReduceOperator<Tuple2<Integer, String>> histograms =
 

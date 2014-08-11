@@ -9,6 +9,8 @@ import eu.stratosphere.api.java.tuple.Tuple1;
 import eu.stratosphere.api.java.tuple.Tuple2;
 import eu.stratosphere.core.fs.FileSystem;
 import eu.stratosphere.util.Collector;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.jblas.util.Random;
 import java.io.Serializable;
 import java.math.BigInteger;
@@ -16,6 +18,7 @@ import java.util.*;
 
 
 public class RFLearning {
+	private static final Log LOG = LogFactory.getLog(RFSketching.class);
 
 	public static int SELECT_FEATURES_PER_NODE = 5;
 
@@ -128,6 +131,7 @@ public class RFLearning {
 		private Map<Integer, String[]> splitCandidates = new HashMap<Integer, String[]>();
 
 		//private Map<String, String> sampleLabels = new HashMap<String, String>();
+
 
 		private List<Tuple2<Integer,Integer>> baggingTable = new ArrayList<Tuple2<Integer,Integer>>();
 
@@ -247,13 +251,12 @@ public class RFLearning {
 								bestSplit = split;
 							}
 						}
-
-						System.out.println(split.featureValue+" "+split.feature+" "+" "+split.splitLeft+","+split.splitRight+" "+split.quality() );
-					}
-				}
+						//System.out.println(split.featureValue+" "+split.feature+" "+" "+split.splitLeft+","+split.splitRight+" "+split.quality() );
+					}//for
+				}//for
 			}
 
-			System.out.println("bestSplit: "+bestSplit.featureValue+" "+bestSplit.feature+" "+" "+bestSplit.splitLeft+","+bestSplit.splitRight+" "+bestSplit.quality() );
+			LOG.debug("bestSplit: "+bestSplit.featureValue+" "+bestSplit.feature+" "+" "+bestSplit.splitLeft+","+bestSplit.splitRight+" "+bestSplit.quality() );
 
 			if(!isStoppingCriterion(bestSplit)){
 				Tuple2<List<Tuple2<Integer,Integer>>, List<Tuple2<Integer,Integer>>> baggingTables = createBaggingTable(bestSplit, node );
@@ -262,13 +265,19 @@ public class RFLearning {
 				BigInteger rightNodeId = node.nodeId.add(BigInteger.ONE).multiply(BigInteger.valueOf(2));
 
 				List<Integer> featureSpace = new ArrayList<Integer>(node.featureSpace);
+
+				LOG.debug("featureSpace Before: "+featureSpace.size());
 				featureSpace.remove(bestSplit.feature);
+				LOG.debug("featureSpace After: "+featureSpace.size());
 
 
-				List<Integer> features = selectRandomFeatures(featureSpace, SELECT_FEATURES_PER_NODE );
+				//List<Integer> features = selectRandomFeatures(featureSpace, SELECT_FEATURES_PER_NODE );
 
-				TreeNode leftNode = new TreeNode( node.treeId, leftNodeId, node.features, featureSpace, -1, "", -1,  baggingTables.f0 );
-				TreeNode rightNode = new TreeNode( node.treeId, rightNodeId, node.features, featureSpace, -1, "", -1,  baggingTables.f1 );
+				TreeNode leftNode = new TreeNode( node.treeId, leftNodeId, selectRandomFeatures(featureSpace, SELECT_FEATURES_PER_NODE ), featureSpace, -1, "", -1,  baggingTables.f0 );
+				TreeNode rightNode = new TreeNode( node.treeId, rightNodeId, selectRandomFeatures(featureSpace, SELECT_FEATURES_PER_NODE ), featureSpace, -1, "", -1,  baggingTables.f1 );
+
+				LOG.debug("leftNode:"+leftNode);
+				LOG.debug("rightNode:"+rightNode);
 
 				TreeNode middleNode = new TreeNode( node.treeId, node.nodeId, null, null, bestSplit.feature, bestSplit.featureValue, -1, null );
 
@@ -277,8 +286,6 @@ public class RFLearning {
 				buildTree(leftNode);
 				buildTree(rightNode);
 
-				System.out.println(" build node for " + leftNode );
-				System.out.println(" build node for " + rightNode );
 
 			} else {
 
@@ -289,7 +296,8 @@ public class RFLearning {
 
 				addNode(finalNode);
 
-				System.out.println( "finished node with class "+label );
+				LOG.debug( "finished node "+finalNode.nodeId+" with class "+label );
+				LOG.debug( "finished node "+finalNode.nodeId+" with class "+label );
 			}
 
 		}
@@ -406,10 +414,14 @@ public class RFLearning {
 			for(Integer i : featureSpace) tmpFeatureSpace.add(i);
 
 			List<Integer> features= new ArrayList<Integer>();
-			for( int f=0; f < num; f++ ){
-				int feature = Random.nextInt(tmpFeatureSpace.size());
-				features.add( tmpFeatureSpace.get(feature) );
-				tmpFeatureSpace.remove(feature);
+			while(features.size() < num ){
+				//for( int f=0; f < num; f++ ){
+				Integer feature = tmpFeatureSpace.get( Random.nextInt(tmpFeatureSpace.size()-1));
+
+				if(this.splitCandidates.containsKey(feature) ) {
+					features.add(feature);
+					tmpFeatureSpace.remove(feature);
+				}
 			}
 			return features;
 		}
