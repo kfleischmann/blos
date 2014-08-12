@@ -16,6 +16,7 @@ public class RFBuilder {
 		final ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
 		env.setDegreeOfParallelism(1);
 
+
 		String rawInputPath = "file:///home/kay/datasets/mnist/normalized_small.txt";
 		String sketchDataPath=  "file:///home/kay/temp/rf/tree-1-full-mnist/";
 		String outputTreePath = "file:///home/kay/temp/rf/tree-1-full-mnist/tree";

@@ -152,7 +152,7 @@ public class RFSketching {
 				});
 
 		// emit result
-		if(fileOutput) {
+		if(RFBuilder.fileOutput) {
 			outputFormat.writeAsCsv(outputPath, "\n", ",", FileSystem.WriteMode.OVERWRITE );
 		} else {
 			outputFormat.print();
@@ -189,7 +189,8 @@ public class RFSketching {
 
 
 		// output: (sampleId, label, featureId, featureValue)
-		DataSet<Tuple4<Integer,Integer,Integer,Double>> sampleFeatures = samples.flatMap( new FlatMapFunction<String, Tuple4<Integer,Integer,Integer,Double> >() {
+		DataSet<Tuple4<Integer,Integer,Integer,Double>> sampleFeatures =
+					samples.flatMap( new FlatMapFunction<String, Tuple4<Integer,Integer,Integer,Double> >() {
 			@Override
 			public void flatMap(String sample, Collector<Tuple4<Integer, Integer, Integer, Double>> collector) throws Exception {
 

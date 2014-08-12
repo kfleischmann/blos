@@ -2,6 +2,7 @@ package eu.blos.java.ml.random_forest;
 
 import eu.blos.java.algorithms.sketches.BloomFilter;
 import eu.blos.java.api.common.LearningFunction;
+import eu.stratosphere.api.common.operators.SingleInputSemanticProperties;
 import eu.stratosphere.api.java.DataSet;
 import eu.stratosphere.api.java.ExecutionEnvironment;
 import eu.stratosphere.api.java.functions.MapPartitionFunction;
@@ -155,6 +156,7 @@ public class RFLearning {
 		@Override
 		public void mapPartition(Iterator<String> sketch, Collector<Tuple1<String>> output) throws Exception {
 			this.output = output;
+
 
 			LOG.info("finished reading sketches into memory");
 
