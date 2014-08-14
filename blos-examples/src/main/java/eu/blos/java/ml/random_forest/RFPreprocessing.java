@@ -19,14 +19,16 @@ public class RFPreprocessing {
 
 	private static final Log LOG = LogFactory.getLog(RFPreprocessing.class);
 
-	public static final String PATH_OUTPUT_SKETCH_SPLIT_CANDIDATES = "feature_split_candidates";
-	public static final String PATH_OUTPUT_SKETCH_NODE = "rf_sketch";
-	public static final String PATH_OUTPUT_SKETCH_BAGGINGTABLE = "sample_labels";
+	public static final String PATH_OUTPUT_SKETCH_SPLIT_CANDIDATES = "feature-split-candidates";
+	public static final String PATH_OUTPUT_SKETCH_NODE = "rf-sketch";
+	public static final String PATH_OUTPUT_SKETCH_SAMPLE_LABELS = "sample-labels";
 
-	// TODO: these values should be estimated, during the preprocessing phase
 
 	public static int HISTOGRAM_MAX_BINS 			= 10;
 	public static int HISTOGRAM_SPLIT_CANDIDATES 	= 5;
+
+	// TODO: these values should be estimated, during the preprocessing phase
+
 	public static int NUM_SAMPLE_LABELS  			= 10;
 	public static int NUM_SAMPLE_FEATURES 			= 784;
 	public static int NUM_SAMPLES 					= 10000;
@@ -42,13 +44,13 @@ public class RFPreprocessing {
 	 */
     public static void process(final ExecutionEnvironment env, String inputPath, String outputPath ) throws Exception {
 
-		LOG.info("start sketching phase");
+		LOG.info("start preprocessing phase");
 
 		// prepare
 		new Path(outputPath).getFileSystem().delete(new Path(outputPath), true );
 		new Path(outputPath).getFileSystem().mkdirs(new Path(outputPath));
 
-		String outputBaggingTable = outputPath+"/"+PATH_OUTPUT_SKETCH_BAGGINGTABLE;
+		String outputBaggingTable = outputPath+"/"+PATH_OUTPUT_SKETCH_SAMPLE_LABELS;
 		String outputCandidates = outputPath+"/"+PATH_OUTPUT_SKETCH_SPLIT_CANDIDATES;
 		String outputSketch = outputPath+"/"+PATH_OUTPUT_SKETCH_NODE;
 
@@ -139,11 +141,11 @@ public class RFPreprocessing {
 			});
 
 		// construct output
-		MapOperator<Tuple2<Integer, String>, Tuple3<String, Integer, String>> outputFormat =
-				filtered_splitCandidates.map( new MapFunction<Tuple2<Integer, String>, Tuple3<String, Integer, String>>() {
+		MapOperator<Tuple2<Integer, String>, Tuple2<Integer, String>> outputFormat =
+				filtered_splitCandidates.map( new MapFunction<Tuple2<Integer, String>, Tuple2<Integer, String>>() {
 					@Override
-					public Tuple3<String, Integer, String> map(Tuple2<Integer, String> tuple ) throws Exception {
-						return new Tuple3<String,Integer,String>("split-candidate", tuple.f0, tuple.f1 );
+					public Tuple2<Integer, String> map(Tuple2<Integer, String> tuple ) throws Exception {
+						return new Tuple2<Integer,String>(tuple.f0, tuple.f1 );
 					}
 				});
 
@@ -155,7 +157,7 @@ public class RFPreprocessing {
 		}
 
 		// execute program
-		env.execute("Sketching phase");
+		env.execute("Preprocessing");
 
 	}
 
@@ -209,9 +211,9 @@ public class RFPreprocessing {
 				@Override
 				public void flatMap(String s, Collector<Tuple2<Integer, Double>> collector) throws Exception {
 					String[] values = s.split(",");
-					String[] candidates = values[2].split(" ");
+					String[] candidates = values[1].split(" ");
 					for( String cand : candidates ){
-						collector.collect( new Tuple2<Integer, Double>(Integer.parseInt(values[1]) /*feature*/, Double.parseDouble(cand) /*split canidates*/));
+						collector.collect( new Tuple2<Integer, Double>(Integer.parseInt(values[0]) /*feature*/, Double.parseDouble(cand) /*split canidates*/));
 					}//for
 				}
 			});
@@ -219,14 +221,14 @@ public class RFPreprocessing {
 
 		// join by featureId
 		// output: sketch_type,sampleId,label,featureId,featureValue,SplitCandidate
-		DataSet<Tuple6<String,Integer,Integer,Integer,Double, Double>> cout =  sampleFeatures
+		DataSet<Tuple5<Integer,Integer,Integer,Double, Double>> cout =  sampleFeatures
 			.joinWithTiny(candidates)
 			.where(2)
 			.equalTo(0)
-			.with(new JoinFunction< Tuple4<Integer,Integer,Integer,Double>, Tuple2<Integer, Double>, Tuple6<String, Integer,Integer,Integer,Double, Double>>(){
+			.with(new JoinFunction< Tuple4<Integer,Integer,Integer,Double>, Tuple2<Integer, Double>, Tuple5<Integer,Integer,Integer,Double, Double>>(){
 			@Override
-			public Tuple6<String, Integer, Integer, Integer, Double, Double> join(Tuple4<Integer, Integer, Integer, Double> sampleFeature, Tuple2<Integer, Double> candidate) throws Exception {
-				return new Tuple6<String, Integer, Integer, Integer, Double, Double>( "node-sketch", sampleFeature.f0, sampleFeature.f1, sampleFeature.f2, sampleFeature.f3, candidate.f1 );
+			public Tuple5<Integer, Integer, Integer, Double, Double> join(Tuple4<Integer, Integer, Integer, Double> sampleFeature, Tuple2<Integer, Double> candidate) throws Exception {
+				return new Tuple5<Integer, Integer, Integer, Double, Double>( sampleFeature.f0, sampleFeature.f1, sampleFeature.f2, sampleFeature.f3, candidate.f1 );
 			}
 		});
 
@@ -234,13 +236,13 @@ public class RFPreprocessing {
 
 
 		// construct output
-		MapOperator<String, Tuple3<String, String, String>> sampleLabels = samples.map( new MapFunction<String, Tuple3<String, String, String>>() {
+		MapOperator<String, Tuple2<String, String>> sampleLabels = samples.map( new MapFunction<String, Tuple2<String, String>>() {
 			@Override
-			public Tuple3<String, String, String> map(String sample) throws Exception {
+			public Tuple2<String, String> map(String sample) throws Exception {
 				String[] values = sample.split(" ");
 				String lineId = values[0];
 				String label = values[1];
-				return new Tuple3<String, String, String>("sample-sketch", lineId, label );
+				return new Tuple2<String, String>( lineId, label );
 			}
 		});
 
@@ -255,7 +257,7 @@ public class RFPreprocessing {
 		}
 
 		// execute program
-		env.execute("Sketching phase");
+		env.execute("Preprocessing");
 
 	}
 }

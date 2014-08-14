@@ -54,7 +54,7 @@ public class RFLearning {
 		readSketchesAndLearn(env, new String[]{
 						sketchDataPath + "/" + RFPreprocessing.PATH_OUTPUT_SKETCH_NODE,
 						sketchDataPath + "/" + RFPreprocessing.PATH_OUTPUT_SKETCH_SPLIT_CANDIDATES,
-						sketchDataPath + "/" + RFPreprocessing.PATH_OUTPUT_SKETCH_BAGGINGTABLE
+						sketchDataPath + "/" + RFPreprocessing.PATH_OUTPUT_SKETCH_SAMPLE_LABELS
 						},
 				outputTreePath);
     }
@@ -261,7 +261,6 @@ public class RFLearning {
 								bestSplit = split;
 							}
 						}
-						//System.out.println(split.featureValue+" "+split.feature+" "+" "+split.splitLeft+","+split.splitRight+" "+split.quality() );
 					}//for
 				}//for
 			}
@@ -280,8 +279,6 @@ public class RFLearning {
 				featureSpace.remove(bestSplit.feature);
 				LOG.debug("featureSpace After: "+featureSpace.size());
 
-
-				//List<Integer> features = selectRandomFeatures(featureSpace, SELECT_FEATURES_PER_NODE );
 
 				TreeNode leftNode = new TreeNode( node.treeId, leftNodeId, selectRandomFeatures(featureSpace, SELECT_FEATURES_PER_NODE ), featureSpace, -1, "", -1,  baggingTables.f0 );
 				TreeNode rightNode = new TreeNode( node.treeId, rightNodeId, selectRandomFeatures(featureSpace, SELECT_FEATURES_PER_NODE ), featureSpace, -1, "", -1,  baggingTables.f1 );
