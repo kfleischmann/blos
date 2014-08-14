@@ -48,19 +48,7 @@ public class BloomFilter<E> implements Sketch {
     private int k; // number of hash functions
 
     static final Charset charset = Charset.forName("UTF-8"); // encoding used for storing hash values as strings
-    //static final String hashName = "MD5"; // MD5 gives good enough accuracy in most circumstances. Change to SHA1 if it's needed
-    //static final MessageDigest digestFunction;
 	private HashFunction[] hashFunctions;
-
-	static { // The digest method is reused between instances
-        /*MessageDigest tmp;
-        try {
-            tmp = java.security.MessageDigest.getInstance(hashName);
-        } catch (NoSuchAlgorithmException e) {
-            tmp = null;
-        }
-        digestFunction = tmp;*/
-    }
 
 	private void createHashFunctions(int k, long w ){
 		this.hashFunctions = DefaultHashFunction.generateHashfunctions(k, w);
@@ -81,7 +69,7 @@ public class BloomFilter<E> implements Sketch {
 		this.bitSetSize = (int)Math.ceil(c * n);
 		createHashFunctions(k, this.bitSetSize );
 		numberOfAddedElements = 0;
-		allocate();
+		//allocate();
     }
 
     /**
@@ -140,15 +128,8 @@ public class BloomFilter<E> implements Sketch {
         return createHash(val.getBytes(charset));
     }
 
-    /**
-     * Generates a digest based on the contents of a String.
-     *
-     * @param val specifies the input data. The encoding is expected to be UTF-8.
-     * @return digest as long.
-     */
-    /*public int createHash(String val) {
-        return createHash(val);
-    }*/
+
+	public HashFunction[] getHashFunctions(){ return this.hashFunctions; }
 
     /**
      * Generates a digest based on the contents of an array of bytes.
