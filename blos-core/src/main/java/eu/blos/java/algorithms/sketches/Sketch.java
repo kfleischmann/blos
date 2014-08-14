@@ -1,5 +1,7 @@
 package eu.blos.java.algorithms.sketches;
 
 
-public interface Sketch {
+import java.io.Serializable;
+
+public interface Sketch extends Serializable  {
 }

@@ -1,11 +1,14 @@
 package eu.blos.java.ml.random_forest;
 
 import eu.blos.java.algorithms.sketches.BloomFilter;
+import eu.blos.java.algorithms.sketches.DefaultHashFunction;
 import eu.blos.java.api.common.SketchBuilder;
-import eu.blos.java.api.common.SketchMapper;
 import eu.stratosphere.api.java.ExecutionEnvironment;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import java.nio.charset.Charset;
+import java.util.Arrays;
 
 public class RFBuilder {
 	public static boolean fileOutput =  true;
@@ -25,16 +28,20 @@ public class RFBuilder {
 		String outputTreePath = "file:///home/kay/temp/rf/tree-1-full-mnist/tree";
 
 		// start preprocessing phase
-		RFPreprocessing.process(env, rawInputPath, preprocessedDataPath);
+		//RFPreprocessing.process(env, rawInputPath, preprocessedDataPath);
 
-		// start sketching phase
-		RFSketching.sketch(	preprocessedDataPath, sketchDataPath,
-							SketchBuilder.map("node-sketch", 		new BloomFilter(0.3, 10000)),
-							SketchBuilder.map("split-candidate", 	new BloomFilter(0.3, 10000)),
-							SketchBuilder.map("sample-sketch", 		new BloomFilter(0.3, 10000))
+
+		/*// start sketching phase
+		SketchBuilder.sketch(	preprocessedDataPath, sketchDataPath,
+								SketchBuilder.map("node-sketch", 		new BloomFilter(0.3, 10000)),
+								SketchBuilder.map("split-candidate", 	new BloomFilter(0.3, 10000)),
+								SketchBuilder.map("sample-sketch", 		new BloomFilter(0.3, 10000))
+
 							);
+
 
 		// Start Learning phase
 		RFLearning.learn(env, sketchDataPath, outputTreePath, 1);
+		*/
 	}
 }

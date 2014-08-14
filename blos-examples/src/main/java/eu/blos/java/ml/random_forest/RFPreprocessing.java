@@ -16,24 +16,20 @@ import java.util.Iterator;
 
 
 public class RFPreprocessing {
+
 	private static final Log LOG = LogFactory.getLog(RFPreprocessing.class);
 
 	public static final String PATH_OUTPUT_SKETCH_SPLIT_CANDIDATES = "feature_split_candidates";
 	public static final String PATH_OUTPUT_SKETCH_NODE = "rf_sketch";
 	public static final String PATH_OUTPUT_SKETCH_BAGGINGTABLE = "sample_labels";
 
-	// context data
-	public static int numFeatures = 784;
-	public static int maxBins = 10;
-	public static int maxSplitCandidates = 5;
+	// TODO: these values should be estimated, during the preprocessing phase
 
-
-	// TODO: these values should be estimated, during the sketching phase
-	//
-
-	public static int NUMBER_LABELS  = 10;
-	public static int NUMBER_FEATURES = 784;
-	public static int NUMBER_SAMPLES = 10000;
+	public static int HISTOGRAM_MAX_BINS 			= 10;
+	public static int HISTOGRAM_SPLIT_CANDIDATES 	= 5;
+	public static int NUM_SAMPLE_LABELS  			= 10;
+	public static int NUM_SAMPLE_FEATURES 			= 784;
+	public static int NUM_SAMPLES 					= 10000;
 
 
 	/**
@@ -57,10 +53,10 @@ public class RFPreprocessing {
 		String outputSketch = outputPath+"/"+PATH_OUTPUT_SKETCH_NODE;
 
 		// compute split candidates
-		computeSplitCandidates(inputPath, outputCandidates,  env, maxSplitCandidates);
+		computeSplitCandidates(inputPath, outputCandidates,  env, HISTOGRAM_SPLIT_CANDIDATES);
 
-		// build the sketch with the help
-		buildSketches(env, inputPath, outputBaggingTable, outputCandidates, outputSketch);
+		// build the raw input data that is read from the sketcher
+		buildSketchRawData(env, inputPath, outputBaggingTable, outputCandidates, outputSketch);
 	}
 
 
@@ -84,10 +80,10 @@ public class RFPreprocessing {
 				samples.mapPartition(new MapPartitionFunction<String, Tuple2<Integer, String>>() {
 					@Override
 					public void mapPartition(Iterator<String> samples, Collector<Tuple2<Integer, String>> histogramCollector) throws Exception {
-						Histogram[] histograms = new Histogram[numFeatures];
+						Histogram[] histograms = new Histogram[NUM_SAMPLE_FEATURES];
 
-						for (int i = 0; i < numFeatures; i++) {
-							histograms[i] = new Histogram(i, maxBins);
+						for (int i = 0; i < NUM_SAMPLE_FEATURES; i++) {
+							histograms[i] = new Histogram(i, HISTOGRAM_MAX_BINS);
 						}//for
 
 						while (samples.hasNext()) {
@@ -104,7 +100,7 @@ public class RFPreprocessing {
 							}//for
 						}//while
 
-						for (int i = 0; i < numFeatures; i++) {
+						for (int i = 0; i < NUM_SAMPLE_FEATURES; i++) {
 							histogramCollector.collect(new Tuple2<Integer, String>(i, histograms[i].toString()));
 						}//for
 					}
@@ -176,7 +172,7 @@ public class RFPreprocessing {
 	 * @param outputPathSketch
 	 * @throws Exception
 	 */
-	public  static void buildSketches( ExecutionEnvironment env,
+	public  static void buildSketchRawData( ExecutionEnvironment env,
 									   String inputPath,
 									   String outputPathBaggingTable,
 									   String outputCandidates,

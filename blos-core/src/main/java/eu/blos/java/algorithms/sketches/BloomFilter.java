@@ -37,27 +37,34 @@ import java.util.Collection;
  * @param <E> Object type that is to be inserted into the Bloom filter, e.g. String or Integer.
  * @author Magnus Skjegstad <magnus@skjegstad.com>
  */
-public class BloomFilter<E> implements Serializable, Sketch {
-    private BitSet bitset;
+public class BloomFilter<E> implements Sketch {
+
+	private BitSet bitset;
     private int bitSetSize;
     private double bitsPerElement;
+
     private int expectedNumberOfFilterElements; // expected (maximum) number of elements to be added
     private int numberOfAddedElements; // number of elements actually added to the Bloom filter
     private int k; // number of hash functions
 
     static final Charset charset = Charset.forName("UTF-8"); // encoding used for storing hash values as strings
+    //static final String hashName = "MD5"; // MD5 gives good enough accuracy in most circumstances. Change to SHA1 if it's needed
+    //static final MessageDigest digestFunction;
+	private HashFunction[] hashFunctions;
 
-    static final String hashName = "MD5"; // MD5 gives good enough accuracy in most circumstances. Change to SHA1 if it's needed
-    static final MessageDigest digestFunction;
-    static { // The digest method is reused between instances
-        MessageDigest tmp;
+	static { // The digest method is reused between instances
+        /*MessageDigest tmp;
         try {
             tmp = java.security.MessageDigest.getInstance(hashName);
         } catch (NoSuchAlgorithmException e) {
             tmp = null;
         }
-        digestFunction = tmp;
+        digestFunction = tmp;*/
     }
+
+	private void createHashFunctions(int k, long w ){
+		this.hashFunctions = DefaultHashFunction.generateHashfunctions(k, w);
+	}
 
     /**
       * Constructs an empty Bloom filter. The total length of the Bloom filter will be
@@ -67,13 +74,14 @@ public class BloomFilter<E> implements Serializable, Sketch {
       * @param n is the expected number of elements the filter will contain.
       * @param k is the number of hash functions used.
       */
-    public BloomFilter(double c, int n, int k) {
-      this.expectedNumberOfFilterElements = n;
-      this.k = k;
-      this.bitsPerElement = c;
-      this.bitSetSize = (int)Math.ceil(c * n);
-      numberOfAddedElements = 0;
-      this.bitset = new BitSet(bitSetSize);
+	public BloomFilter(double c, int n, int k) {
+		this.expectedNumberOfFilterElements = n;
+		this.k = k;
+		this.bitsPerElement = c;
+		this.bitSetSize = (int)Math.ceil(c * n);
+		createHashFunctions(k, this.bitSetSize );
+		numberOfAddedElements = 0;
+		allocate();
     }
 
     /**
@@ -117,6 +125,10 @@ public class BloomFilter<E> implements Serializable, Sketch {
         this.numberOfAddedElements = actualNumberOfFilterElements;
     }
 
+	public void allocate(){
+		this.bitset = new BitSet(bitSetSize);
+	}
+
     /**
      * Generates a digest based on the contents of a String.
      *
@@ -124,7 +136,7 @@ public class BloomFilter<E> implements Serializable, Sketch {
      * @param charset specifies the encoding of the input data.
      * @return digest as long.
      */
-    public static int createHash(String val, Charset charset) {
+    public long createHash(String val, Charset charset) {
         return createHash(val.getBytes(charset));
     }
 
@@ -134,9 +146,9 @@ public class BloomFilter<E> implements Serializable, Sketch {
      * @param val specifies the input data. The encoding is expected to be UTF-8.
      * @return digest as long.
      */
-    public static int createHash(String val) {
-        return createHash(val, charset);
-    }
+    /*public int createHash(String val) {
+        return createHash(val);
+    }*/
 
     /**
      * Generates a digest based on the contents of an array of bytes.
@@ -144,7 +156,7 @@ public class BloomFilter<E> implements Serializable, Sketch {
      * @param data specifies input data.
      * @return digest as long.
      */
-    public static int createHash(byte[] data) {
+    public long createHash(byte[] data) {
         return createHashes(data, 1)[0];
     }
 
@@ -157,29 +169,12 @@ public class BloomFilter<E> implements Serializable, Sketch {
      * @param hashes number of hashes/int's to produce.
      * @return array of int-sized hashes
      */
-    public static int[] createHashes(byte[] data, int hashes) {
-        int[] result = new int[hashes];
+    public long[] createHashes(byte[] data, int hashes) {
+        long[] result = new long[hashes];
 
-        int k = 0;
-        byte salt = 0;
-        while (k < hashes) {
-            byte[] digest;
-            synchronized (digestFunction) {
-                digestFunction.update(salt);
-                salt++;
-                digest = digestFunction.digest(data);                
-            }
-        
-            for (int i = 0; i < digest.length/4 && k < hashes; i++) {
-                int h = 0;
-                for (int j = (i*4); j < (i*4)+4; j++) {
-                    h <<= 8;
-                    h |= ((int) digest[j]) & 0xFF;
-                }
-                result[k] = h;
-                k++;
-            }
-        }
+		for(int i=0; i < hashes; i++ ){
+			result[i] = hashFunctions[i].hash(data);
+		}
         return result;
     }
 
@@ -304,9 +299,10 @@ public class BloomFilter<E> implements Serializable, Sketch {
      * @param bytes array of bytes to add to the Bloom filter.
      */
     public void add(byte[] bytes) {
-       int[] hashes = createHashes(bytes, k);
-       for (int hash : hashes)
-           bitset.set(Math.abs(hash % bitSetSize), true);
+       long[] hashes = createHashes(bytes, k);
+       for (long hash : hashes) {
+		   bitset.set( /*Math.abs(hash % bitSetSize*/ (int) hash);
+	   }
        numberOfAddedElements ++;
     }
 
@@ -340,11 +336,9 @@ public class BloomFilter<E> implements Serializable, Sketch {
      * @return true if the array could have been inserted into the Bloom filter.
      */
     public boolean contains(byte[] bytes) {
-
-
-        int[] hashes = createHashes(bytes, k);
-        for (int hash : hashes) {
-            if (!bitset.get(Math.abs(hash % bitSetSize))) {
+		long[] hashes = createHashes(bytes, k);
+        for (long hash : hashes) {
+            if (!bitset.get( (int)hash )) {
                 return false;
             }
         }
