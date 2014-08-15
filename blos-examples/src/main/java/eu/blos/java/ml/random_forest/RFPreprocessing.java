@@ -220,7 +220,7 @@ public class RFPreprocessing {
 
 
 		// join by featureId
-		// output: sketch_type,sampleId,label,featureId,featureValue,SplitCandidate
+		// output: sampleId,label,featureId,featureValue,SplitCandidate
 		DataSet<Tuple5<Integer,Integer,Integer,Double, Double>> cout =  sampleFeatures
 			.joinWithTiny(candidates)
 			.where(2)

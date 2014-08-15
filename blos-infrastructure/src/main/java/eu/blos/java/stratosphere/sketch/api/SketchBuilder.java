@@ -53,6 +53,8 @@ public class SketchBuilder {
 
 		for( Sketcher sketch : mapper ){
 
+			// TODO: possible optimization - bloomfilter hashes can be reduced with groupBy(0), instean groupBy(0,1)
+
 			env.readTextFile(preprocessedDataPath+"/"+sketch.getSource())
 					.flatMap(new SketchOperator(sketch)) // do the hashing
 					.groupBy(0,1)  // reduce

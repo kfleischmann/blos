@@ -31,7 +31,7 @@ public class RFBuilder {
 		// start preprocessing phase
 		// ------------------------------------------
 
-		RFPreprocessing.process(env, rawInputPath, preprocessedDataPath);
+		//RFPreprocessing.process(env, rawInputPath, preprocessedDataPath);
 
 		BloomFilter bfNode 				= new BloomFilter(0.3, 10000);
 		BloomFilter bfSplitCandidate 	= new BloomFilter(0.3, 10000);
@@ -42,36 +42,41 @@ public class RFBuilder {
 		// start sketching phase
 		// ------------------------------------------
 
+
+
 		SketchBuilder.sketch(	env,
 								preprocessedDataPath, sketchDataPath,
 								SketchBuilder.apply( RFPreprocessing.PATH_OUTPUT_SKETCH_NODE,
 													 RFPreprocessing.PATH_OUTPUT_SKETCH_NODE+"-left",
 														bfNode.getHashFunctions(), SketchBuilder.SKETCHTYPE_BLOOM_FILTER, new SketcherUDF() {
+									private SketchBuilder.DefaultSketcherUDF defaultSketcher = new SketchBuilder.DefaultSketcherUDF();
+
 									@Override
 									public void sketch(String record, Collector<Tuple3<Long, Integer, Integer>> collector, HashFunction[] hashFunctions) {
 										// only sketch left
 										String[] values = record.split(",");
-										Double splitCandidate = Double.parseDouble(values[3]);
-										Double featureValue = Double.parseDouble(values[4]);
-
+										Double featureValue = Double.parseDouble(values[3]);
+										Double splitCandidate = Double.parseDouble(values[4]);
 										if(featureValue<=splitCandidate){
-											new SketchBuilder.DefaultSketcherUDF().sketch(record, collector, hashFunctions );
+
+											defaultSketcher.sketch(record, collector, hashFunctions );
 										}
 									}
 								}),
 								SketchBuilder.apply( 	RFPreprocessing.PATH_OUTPUT_SKETCH_NODE,
 														RFPreprocessing.PATH_OUTPUT_SKETCH_NODE+"-right",
 														bfNode.getHashFunctions(), SketchBuilder.SKETCHTYPE_BLOOM_FILTER, new SketcherUDF() {
+									private SketchBuilder.DefaultSketcherUDF defaultSketcher = new SketchBuilder.DefaultSketcherUDF();
 									@Override
 									public void sketch(String record, Collector<Tuple3<Long, Integer, Integer>> collector, HashFunction[] hashFunctions) {
 
 										// only sketch right
 										String[] values = record.split(",");
-										Double splitCandidate = Double.parseDouble(values[3]);
-										Double featureValue = Double.parseDouble(values[4]);
+										Double featureValue = Double.parseDouble(values[3]);
+										Double splitCandidate = Double.parseDouble(values[4]);
 
 										if(featureValue>splitCandidate){
-											new SketchBuilder.DefaultSketcherUDF().sketch(record, collector, hashFunctions );
+											defaultSketcher.sketch(record, collector, hashFunctions );
 										}
 									}
 
