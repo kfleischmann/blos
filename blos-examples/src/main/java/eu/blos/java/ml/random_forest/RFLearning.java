@@ -1,13 +1,16 @@
 package eu.blos.java.ml.random_forest;
 
 import eu.blos.java.algorithms.sketches.BloomFilter;
+import eu.blos.java.algorithms.sketches.Sketch;
 import eu.blos.java.api.common.LearningFunction;
 import eu.stratosphere.api.java.DataSet;
 import eu.stratosphere.api.java.ExecutionEnvironment;
+import eu.stratosphere.api.java.functions.MapFunction;
 import eu.stratosphere.api.java.functions.MapPartitionFunction;
 import eu.stratosphere.api.java.tuple.Tuple1;
 import eu.stratosphere.api.java.tuple.Tuple2;
 import eu.stratosphere.core.fs.FileSystem;
+import eu.stratosphere.core.fs.Path;
 import eu.stratosphere.util.Collector;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -36,57 +39,60 @@ public class RFLearning {
 	 * @param env
 	 * @param sketchDataPath
 	 * @param outputTreePath
-	 * @param trees
+	 * @param sketches
+	 * @param args
 	 * @throws Exception
 	 */
-    public static void learn(final ExecutionEnvironment env, String sketchDataPath, String outputTreePath, int trees ) throws Exception {
+    public static void learn(final ExecutionEnvironment env, String preprocessedDataPath, String sketchDataPath, String outputTreePath, Sketch[] sketches, String ... args ) throws Exception {
 
 		LOG.info("start learning phase");
 
 
 		// remember the number of tress
-		NUMBER_TREES = trees;
+		NUMBER_TREES = Integer.parseInt(args[0]);
 
 		// how many trees per node?
 		NUMBER_TREES_PER_NODE = NUMBER_TREES / NUMBER_NODES;
 
 		// prepare environment, distribute the sketches to all nodes and start learning phase
 		readSketchesAndLearn(env, new String[]{
-						sketchDataPath + "/" + RFPreprocessing.PATH_OUTPUT_SKETCH_NODE,
-						sketchDataPath + "/" + RFPreprocessing.PATH_OUTPUT_SKETCH_SPLIT_CANDIDATES,
-						sketchDataPath + "/" + RFPreprocessing.PATH_OUTPUT_SKETCH_SAMPLE_LABELS
+						sketchDataPath + "/" + RFPreprocessing.PATH_OUTPUT_SKETCH_NODE+"-left",
+						sketchDataPath + "/" + RFPreprocessing.PATH_OUTPUT_SKETCH_NODE+"-right",
+						preprocessedDataPath + "/" + RFPreprocessing.PATH_OUTPUT_SKETCH_SPLIT_CANDIDATES,
+						preprocessedDataPath + "/" + RFPreprocessing.PATH_OUTPUT_SKETCH_SAMPLE_LABELS
 						},
-				outputTreePath);
+						outputTreePath,
+						sketches);
     }
 
 	/**
 	 *
 	 * @param env
-	 * @param sketch_sources
+	 * @param sketchSources
 	 * @param outputPath
 	 * @throws Exception
 	 */
-	public static void readSketchesAndLearn( final ExecutionEnvironment env, String[] sketch_sources, String outputPath ) throws Exception {
+	public static void readSketchesAndLearn( final ExecutionEnvironment env, String[] sketchSources, String outputPath, final Sketch[] sketches ) throws Exception {
 
 		LOG.info("start reading sketches into memory ");
 
 		// read sketches into memory
-		DataSet<String> sketches = null;
+		DataSet<Tuple2<String,String>> SketchDataSet = null;
 
-		for( String source : sketch_sources ) {
-			if(sketches == null ){
-				sketches = env.readTextFile( source );
+		for( String source : sketchSources ) {
+			if(SketchDataSet == null ){
+				SketchDataSet = env.readTextFile( source ).map(new MapSketchType(new Path(source).getName()));
 			} else {
 				// read new source
-				DataSet<String> sketch_source = env.readTextFile( source );
+				DataSet<Tuple2<String,String>> sketchDataSet = env.readTextFile( source ).map(new MapSketchType(new Path(source).getName()));
 
 				// append reading
-				sketches = sketches.union( sketch_source  );
+				SketchDataSet = SketchDataSet.union( sketchDataSet  );
 			}
 		}
 
 		// do the learning
-		DataSet<Tuple1<String>> trees = sketches.mapPartition(new RFLearningOperator());
+		DataSet<Tuple1<String>> trees = SketchDataSet.mapPartition(new RFLearningOperator(sketches)).setParallelism(1);
 
 		// emit result
 		if(RFBuilder.fileOutput) {
@@ -101,13 +107,30 @@ public class RFLearning {
 
 
 	/**
+	 *
+	 */
+	static class MapSketchType extends MapFunction<String, Tuple2<String,String>> implements Serializable {
+		private String sketchType;
+
+		public MapSketchType(String sketchType){
+			this.sketchType = sketchType;
+		}
+
+		@Override
+		public Tuple2<String, String> map(String s) throws Exception {
+			return new Tuple2<String, String>(this.sketchType, s);
+		}
+	}
+
+
+	/**
 	 * RandomForest LearningOprator
 	 *
 	 * this operator reads the sketch into memory built in the previous phase and starts the learning process
 	 * output: final trees
 	 */
-	static class RFLearningOperator extends  MapPartitionFunction<String, Tuple1<String>> implements Serializable, LearningFunction<Tuple1<String>> {
-
+	static class RFLearningOperator extends  MapPartitionFunction<Tuple2<String,String>, Tuple1<String>> implements Serializable, LearningFunction<Tuple1<String>> {
+		private static final Log LOG = LogFactory.getLog(RFLearningOperator.class);
 
 		// --------------------------------------------------
 		// SKETCH STRUCTURE for the learning phase
@@ -118,15 +141,15 @@ public class RFLearning {
 
 		// Knowlege about the sample-labels.
 		// Request qj(s, l) -> {0,1}
-		private BloomFilter sketch_qj = new BloomFilter( PROBABILITY_FALSE_POSITIVE , RFPreprocessing.NUM_SAMPLES );
+		private BloomFilter sketch_qj; // = new BloomFilter( PROBABILITY_FALSE_POSITIVE , RFPreprocessing.NUM_SAMPLES );
 
 		// Knowlege about the feature locations according to the different candidates.
 		// Request qjL(s, f, c) -> {0,1}
-		private BloomFilter sketch_qjL = new BloomFilter( PROBABILITY_FALSE_POSITIVE, RFPreprocessing.NUM_SAMPLES* RFPreprocessing.NUM_SAMPLE_FEATURES * RFPreprocessing.HISTOGRAM_SPLIT_CANDIDATES);
+		private BloomFilter sketch_qjL; // = new BloomFilter( PROBABILITY_FALSE_POSITIVE, RFPreprocessing.NUM_SAMPLES* RFPreprocessing.NUM_SAMPLE_FEATURES * RFPreprocessing.HISTOGRAM_SPLIT_CANDIDATES);
 
 		// Knowlege about the feature locations according to the different candidates.
 		// Request qjR(s, f, c) -> {0,1}
-		private BloomFilter sketch_qjR = new BloomFilter( PROBABILITY_FALSE_POSITIVE, RFPreprocessing.NUM_SAMPLES* RFPreprocessing.NUM_SAMPLE_FEATURES * RFPreprocessing.HISTOGRAM_SPLIT_CANDIDATES );
+		private BloomFilter sketch_qjR; // = new BloomFilter( PROBABILITY_FALSE_POSITIVE, RFPreprocessing.NUM_SAMPLES* RFPreprocessing.NUM_SAMPLE_FEATURES * RFPreprocessing.HISTOGRAM_SPLIT_CANDIDATES );
 
 		private Collector<Tuple1<String>> output;
 
@@ -135,11 +158,15 @@ public class RFLearning {
 
 		//private Map<String, String> sampleLabels = new HashMap<String, String>();
 
-
 		private List<Tuple2<Integer,Integer>> baggingTable = new ArrayList<Tuple2<Integer,Integer>>();
 
-		public RFLearningOperator(){
+		public RFLearningOperator(Sketch[] sketches){
 			super();
+
+			sketch_qj = (BloomFilter)sketches[0];
+			sketch_qjL = (BloomFilter)sketches[1];
+			sketch_qjR = (BloomFilter)sketches[2];
+
 		}
 
 		// ----------------------------------------------------
@@ -153,41 +180,55 @@ public class RFLearning {
 		 * @throws Exception
 		 */
 		@Override
-		public void mapPartition(Iterator<String> sketch, Collector<Tuple1<String>> output) throws Exception {
+		public void mapPartition(Iterator<Tuple2<String,String>> sketch, Collector<Tuple1<String>> output) throws Exception {
 			this.output = output;
+			sketch_qj.allocate();
+			sketch_qjL.allocate();
+			sketch_qjR.allocate();
+
+			LOG.info("qj-size:"+sketch_qj.getBitSet().length());
+			LOG.info("qjL-size:" + sketch_qjL.getBitSet().length());
+			LOG.info("qjR-size:" + sketch_qjR.getBitSet().length());
+
+			int counter=0;
 
 
 			LOG.info("finished reading sketches into memory");
 
-
 			while(sketch.hasNext()){
-				String[] fields = sketch.next().split(",");
-				String sketchtype = fields[0];
+				Tuple2<String,String> sketchData = sketch.next();
+
+				String sketchType = sketchData.f0;
+				String sketchFields = sketchData.f1;
 
 				// ------------------------------
 				// BUILD THE NODE SKETCH
 				// ------------------------------
 
-				if(sketchtype.compareTo("node-sketch") == 0 ) {
+				if(sketchType.compareTo("rf-sketch-left") == 0 ) {
+					String[] fields = sketchFields.split(",");
+					Long bit = Long.parseLong(fields[0]);
+					Long count = Long.parseLong(fields[2]);
 
-					String sampleId = fields[1];
-					String label = fields[2];
-					String featureId = fields[3];
-					Double featureVal = Double.parseDouble(fields[4]);
-					Double splitCandidate = Double.parseDouble(fields[5]);
 
-					sketch_qj.add(sampleId + label);
-
-					if (featureVal < splitCandidate) {
-						sketch_qjL.add( (""+sampleId + featureId + ""+splitCandidate).getBytes() );
-					} else {
-						sketch_qjR.add( (""+sampleId + featureId + ""+splitCandidate).getBytes());
-					}
+					sketch_qjL.setBit(bit.longValue(), true );
 				}
 
-				if(sketchtype.compareTo("split-candidate") == 0 ) {
-					Integer featureId = Integer.parseInt(fields[1]);
-					String[] features = fields[2].split(" ");
+				if(sketchType.compareTo("rf-sketch-right") == 0 ) {
+					String[] fields = sketchFields.split(",");
+					Long bit = Long.parseLong(fields[0]);
+					Long count = Long.parseLong(fields[2]);
+
+
+					sketch_qjR.setBit(bit.longValue(), true );
+				}
+
+
+				if(sketchType.compareTo("feature-split-candidates") == 0 ) {
+					String[] fields = sketchFields.split(",");
+
+					Integer featureId = Integer.parseInt(fields[0]);
+					String[] features = fields[1].split(" ");
 					String[] featureList = new String[features.length];
 					for( int i=0; i < features.length; i++ ){
 						featureList[i] = features[i];
@@ -195,12 +236,18 @@ public class RFLearning {
 					splitCandidates.put(featureId, featureList);
 				}
 
-				if(sketchtype.compareTo("sample-sketch") == 0 ) {
-					String sampleId = fields[1];
-					String label = fields[2];
+				if(sketchType.compareTo("sample-labels") == 0 ) {
+					String[] fields = sketchFields.split(",");
 
+					String sampleId = fields[0];
+					String label = fields[1];
 					baggingTable.add( new Tuple2<Integer, Integer>( Integer.parseInt(sampleId), Integer.parseInt(label) ));
+				}
 
+				counter++;
+
+				if(counter % 100000 == 0){
+					System.out.println("counter "+counter);
 				}
 			}
 

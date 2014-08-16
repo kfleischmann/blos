@@ -11,6 +11,7 @@ public class Sketcher implements Serializable  {
 	private HashFunction[] hashfunctions;
 	private int sketchType;
 	private SketcherUDF udf;
+	private int[] groupBy;
 
 	/**
 	 *
@@ -19,12 +20,13 @@ public class Sketcher implements Serializable  {
 	 * @param hashfunctions
 	 * @param sketchType
 	 */
-	public Sketcher(String source, String dest, HashFunction[] hashfunctions, SketcherUDF udf, int sketchType ){
+	public Sketcher(String source, String dest, HashFunction[] hashfunctions, SketcherUDF udf, int sketchType, int[] groupBy ){
 		this.source = source;
 		this.dest = dest;
 		this.hashfunctions = hashfunctions;
 		this.sketchType = sketchType;
 		this.udf = udf;
+		this.groupBy = groupBy;
 	}
 
 	public String getSource(){ return source; }
@@ -32,4 +34,5 @@ public class Sketcher implements Serializable  {
 	public HashFunction[] getHashFunctions(){ return this.hashfunctions; }
 	public int getSketchType(){ return sketchType; }
 	public SketcherUDF getUDF(){return udf;}
+	public int[] getGroupBy(){ return groupBy; }
 }

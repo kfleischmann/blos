@@ -21,8 +21,8 @@ public class SketchBuilder {
 	public static final int SKETCHTYPE_BLOOM_FILTER 	= 1;
 	public static final int SKETCHTYPE_CM_SKETCH 		= 2;
 
-	public static Sketcher apply( String source, String dest, HashFunction[] hashfunctions, int type, SketcherUDF udf ){
-		return new Sketcher( source, dest, hashfunctions, udf, type );
+	public static int[] ReduceSketchByFields(int ... keys ){
+		return keys;
 	}
 
 	public static class DefaultSketcherUDF implements SketcherUDF {
@@ -34,8 +34,12 @@ public class SketchBuilder {
 		}
 	}
 
-	public static Sketcher apply( String source, String dest, HashFunction[] hashfunctions, int type ){
-		return new Sketcher( source, dest, hashfunctions, new DefaultSketcherUDF(), type );
+	public static Sketcher apply( String source, String dest, HashFunction[] hashfunctions, int type, int[] groupBy ){
+		return new Sketcher( source, dest, hashfunctions, new DefaultSketcherUDF(), type, groupBy );
+	}
+
+	public static Sketcher apply( String source, String dest, HashFunction[] hashfunctions, int type, SketcherUDF udf, int[] groupBy ){
+		return new Sketcher( source, dest, hashfunctions, udf, type, groupBy );
 	}
 
 	/**
@@ -53,11 +57,11 @@ public class SketchBuilder {
 
 		for( Sketcher sketch : mapper ){
 
-			// TODO: possible optimization - bloomfilter hashes can be reduced with groupBy(0), instean groupBy(0,1)
+			// TODO: possible optimization - bloomfilter hashes can be reduced with groupBy(0), instead groupBy(0,1)
 
 			env.readTextFile(preprocessedDataPath+"/"+sketch.getSource())
 					.flatMap(new SketchOperator(sketch)) // do the hashing
-					.groupBy(0,1)  // reduce
+					.groupBy(sketch.getGroupBy())  // reduce
 					.reduce(new ReduceFunction<Tuple3<Long, Integer, Integer>>() {
 						@Override
 						public Tuple3<Long, Integer, Integer> reduce(Tuple3<Long, Integer, Integer> left,

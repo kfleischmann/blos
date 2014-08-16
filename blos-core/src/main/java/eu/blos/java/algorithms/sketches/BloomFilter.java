@@ -342,8 +342,8 @@ public class BloomFilter<E> implements Sketch {
      * @param bit the bit to read.
      * @return true if the bit is set, false if it is not.
      */
-    public boolean getBit(int bit) {
-        return bitset.get(bit);
+    public boolean getBit(long bit) {
+        return bitset.get( (int)bit);
     }
 
     /**
@@ -351,8 +351,8 @@ public class BloomFilter<E> implements Sketch {
      * @param bit is the bit to set.
      * @param value If true, the bit is set. If false, the bit is cleared.
      */
-    public void setBit(int bit, boolean value) {
-        bitset.set(bit, value);
+    public void setBit(long bit, boolean value) {
+        bitset.set( (int)bit, value);
     }
 
     /**
