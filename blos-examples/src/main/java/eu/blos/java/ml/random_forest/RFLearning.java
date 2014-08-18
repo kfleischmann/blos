@@ -141,7 +141,7 @@ public class RFLearning {
 
 		// Knowlege about the sample-labels.
 		// Request qj(s, l) -> {0,1}
-		private BloomFilter sketch_qj; // = new BloomFilter( PROBABILITY_FALSE_POSITIVE , RFPreprocessing.NUM_SAMPLES );
+		//private BloomFilter sketch_qj; // = new BloomFilter( PROBABILITY_FALSE_POSITIVE , RFPreprocessing.NUM_SAMPLES );
 
 		// Knowlege about the feature locations according to the different candidates.
 		// Request qjL(s, f, c) -> {0,1}
@@ -163,7 +163,7 @@ public class RFLearning {
 		public RFLearningOperator(Sketch[] sketches){
 			super();
 
-			sketch_qj = (BloomFilter)sketches[0];
+			//sketch_qj = (BloomFilter)sketches[0];
 			sketch_qjL = (BloomFilter)sketches[1];
 			sketch_qjR = (BloomFilter)sketches[2];
 
@@ -182,16 +182,10 @@ public class RFLearning {
 		@Override
 		public void mapPartition(Iterator<Tuple2<String,String>> sketch, Collector<Tuple1<String>> output) throws Exception {
 			this.output = output;
-			sketch_qj.allocate();
+
+			//sketch_qj.allocate();
 			sketch_qjL.allocate();
 			sketch_qjR.allocate();
-
-			LOG.info("qj-size:"+sketch_qj.getBitSet().length());
-			LOG.info("qjL-size:" + sketch_qjL.getBitSet().length());
-			LOG.info("qjR-size:" + sketch_qjR.getBitSet().length());
-
-			int counter=0;
-
 
 			LOG.info("finished reading sketches into memory");
 
@@ -211,7 +205,7 @@ public class RFLearning {
 					Long count = Long.parseLong(fields[2]);
 
 
-					sketch_qjL.setBit(bit.longValue(), true );
+					sketch_qjL.add( bit.longValue() );
 				}
 
 				if(sketchType.compareTo("rf-sketch-right") == 0 ) {
@@ -219,8 +213,7 @@ public class RFLearning {
 					Long bit = Long.parseLong(fields[0]);
 					Long count = Long.parseLong(fields[2]);
 
-
-					sketch_qjR.setBit(bit.longValue(), true );
+					sketch_qjR.add(bit.longValue() );
 				}
 
 
@@ -233,6 +226,7 @@ public class RFLearning {
 					for( int i=0; i < features.length; i++ ){
 						featureList[i] = features[i];
 					}//for
+
 					splitCandidates.put(featureId, featureList);
 				}
 
@@ -244,11 +238,6 @@ public class RFLearning {
 					baggingTable.add( new Tuple2<Integer, Integer>( Integer.parseInt(sampleId), Integer.parseInt(label) ));
 				}
 
-				counter++;
-
-				if(counter % 100000 == 0){
-					System.out.println("counter "+counter);
-				}
 			}
 
 
@@ -270,6 +259,7 @@ public class RFLearning {
 		public void learn(Collector<Tuple1<String>> output) {
 			LOG.info("start building trees");
 
+
 			for( int tree=0; tree < NUMBER_TREES_PER_NODE; tree++ ){
 				List<Integer> featureSpace = new ArrayList<Integer>();
 				for(int i=0; i < RFPreprocessing.NUM_SAMPLE_FEATURES; i++ ) featureSpace.add(i);
@@ -281,7 +271,8 @@ public class RFLearning {
 
 				TreeNode node = new TreeNode(tree, nodeId, features, featureSpace, featureSplit, featureSplitValue, label,  baggingTable );
 				buildTree(node);
-			}
+			} //for
+
 		}
 
 		/**
@@ -308,11 +299,14 @@ public class RFLearning {
 								bestSplit = split;
 							}
 						}
+
+						System.out.println("Split: "+split.featureValue+" "+split.feature+" "+" "+split.splitLeft+","+split.splitRight+" "+split.quality() );
+
 					}//for
 				}//for
 			}
 
-			LOG.debug("bestSplit: "+bestSplit.featureValue+" "+bestSplit.feature+" "+" "+bestSplit.splitLeft+","+bestSplit.splitRight+" "+bestSplit.quality() );
+			System.out.println("bestSplit: "+bestSplit.featureValue+" "+bestSplit.feature+" "+" "+bestSplit.splitLeft+","+bestSplit.splitRight+" "+bestSplit.quality() );
 
 			if(!isStoppingCriterion(bestSplit)){
 				Tuple2<List<Tuple2<Integer,Integer>>, List<Tuple2<Integer,Integer>>> baggingTables = createBaggingTable(bestSplit, node );
@@ -350,7 +344,6 @@ public class RFLearning {
 
 				addNode(finalNode);
 
-				LOG.debug( "finished node "+finalNode.nodeId+" with class "+label );
 				LOG.debug( "finished node "+finalNode.nodeId+" with class "+label );
 			}
 
@@ -397,6 +390,8 @@ public class RFLearning {
 				qjL[i] = new Double(0);
 			}
 
+			System.out.println("computeNodeFeaturDistribution");
+
 
 			int totalSamples = node.baggingTable.size();
 			int splitLeft = 0;
@@ -405,22 +400,22 @@ public class RFLearning {
 			for( Tuple2<Integer,Integer> sample : node.baggingTable ) {
 
 				// find the labesl from
-				//qj[sample.f1.intValue()]++;
+				qj[sample.f1.intValue()]++;
 
 				// find the labels from sketch
-				for(int i=0; i < RFPreprocessing.NUM_SAMPLE_LABELS; i++ ){
-					if( this.sketch_qjL.contains( (""+sample.f0+""+i).getBytes()) ){
+				/*for(int i=0; i < RFPreprocessing.NUM_SAMPLE_LABELS; i++ ){
+					if( this.sketch_qjL.contains( (""+sample.f0+" "+i).getBytes()) ){
 						qj[i]++;
 					}
-				}
+				}*/
 
-
-				if( this.sketch_qjL.contains( (""+sample.f0+feature+candidate).getBytes()) ){
+				//System.out.println("check: "+""+sample.f0+" "+feature+" "+candidate );
+				if( this.sketch_qjL.contains( (""+sample.f0+feature+" "+candidate).getBytes()) ){
 					qjL[sample.f1.intValue()]++;
 					splitLeft++;
 				}
 
-				if( this.sketch_qjR.contains( (""+sample.f0+feature+candidate).getBytes()) ){
+				if( this.sketch_qjR.contains( (""+sample.f0+" "+feature+" "+candidate).getBytes()) ){
 					qjR[sample.f1.intValue()]++;
 					splitRight++;
 				}

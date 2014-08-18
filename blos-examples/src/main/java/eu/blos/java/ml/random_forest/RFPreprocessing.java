@@ -31,7 +31,7 @@ public class RFPreprocessing {
 
 	public static int NUM_SAMPLE_LABELS  			= 10;
 	public static int NUM_SAMPLE_FEATURES 			= 784;
-	public static int NUM_SAMPLES 					= 10000;
+	public static int NUM_SAMPLES 					= 1000;
 
 
 	/**
@@ -162,9 +162,7 @@ public class RFPreprocessing {
 	}
 
 	/**
-	 * build sketch data. This data is used for the learning phase
-	 *
-	 * Output sketch (sketchId, sketchKey, value)
+	 * build raw data for the sketching phase
 	 *
 	 *
 	 * @param env

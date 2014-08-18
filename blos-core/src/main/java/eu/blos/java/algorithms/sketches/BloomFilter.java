@@ -47,8 +47,8 @@ public class BloomFilter<E> implements Sketch {
     static final Charset charset = Charset.forName("UTF-8"); // encoding used for storing hash values as strings
 	private HashFunction[] hashFunctions;
 
-	private void createHashFunctions(int k, long w ){
-		this.hashFunctions = DefaultHashFunction.generateHashfunctions(k, w);
+	private void createHashFunctions(int k ){
+		this.hashFunctions = DigestHashFunction.generateHashfunctions( k, getBitSetSize() );
 	}
 
     /**
@@ -64,7 +64,7 @@ public class BloomFilter<E> implements Sketch {
 		this.k = k;
 		this.bitsPerElement = c;
 		this.bitSetSize = (int)Math.ceil(c * n);
-		createHashFunctions(k, this.bitSetSize );
+		createHashFunctions(k);
 		numberOfAddedElements = 0;
 		//allocate();
     }
@@ -110,33 +110,13 @@ public class BloomFilter<E> implements Sketch {
         this.numberOfAddedElements = actualNumberOfFilterElements;
     }
 
+	public long getBitSetSize(){return this.bitSetSize; };
+
 	public void allocate(){
 		this.bitset = new BitSet(bitSetSize);
 	}
 
-    /**
-     * Generates a digest based on the contents of a String.
-     *
-     * @param val specifies the input data.
-     * @param charset specifies the encoding of the input data.
-     * @return digest as long.
-     */
-    public long createHash(String val, Charset charset) {
-        return createHash(val.getBytes(charset));
-    }
-
-
 	public HashFunction[] getHashFunctions(){ return this.hashFunctions; }
-
-    /**
-     * Generates a digest based on the contents of an array of bytes.
-     *
-     * @param data specifies input data.
-     * @return digest as long.
-     */
-    public long createHash(byte[] data) {
-        return createHashes(data, 1)[0];
-    }
 
     /**
      * Generates digests based on the contents of an array of bytes and splits the result into 4-byte int's and store them in an array. The
@@ -144,16 +124,14 @@ public class BloomFilter<E> implements Sketch {
      * is prepended to the data. The salt is increased by 1 for each call.
      *
      * @param data specifies input data.
-     * @param hashes number of hashes/int's to produce.
      * @return array of int-sized hashes
      */
-    public long[] createHashes(byte[] data, int hashes) {
-        long[] result = new long[hashes];
-
-		for(int i=0; i < hashes; i++ ){
-			result[i] = hashFunctions[i].hash(data);
+    public long[] createHashes(byte[] data ) {
+		long[] hashes = new long[this.getK()];
+		for(int i=0; i < this.hashFunctions.length; i++ ){
+			hashes[i] = this.hashFunctions[i].hash(data);
 		}
-        return result;
+		return hashes;
     }
 
     /**
@@ -277,9 +255,9 @@ public class BloomFilter<E> implements Sketch {
      * @param bytes array of bytes to add to the Bloom filter.
      */
     public void add(byte[] bytes) {
-       long[] hashes = createHashes(bytes, k);
+       long[] hashes = createHashes(bytes);
        for (long hash : hashes) {
-		   bitset.set( /*Math.abs(hash % bitSetSize*/ (int) hash);
+		   bitset.set( (int)Math.abs(hash % bitSetSize));
 	   }
        numberOfAddedElements ++;
     }
@@ -314,9 +292,9 @@ public class BloomFilter<E> implements Sketch {
      * @return true if the array could have been inserted into the Bloom filter.
      */
     public boolean contains(byte[] bytes) {
-		long[] hashes = createHashes(bytes, k);
+		long[] hashes = createHashes(bytes);
         for (long hash : hashes) {
-            if (!bitset.get( (int)hash )) {
+            if (!bitset.get( (int)Math.abs(hash % bitSetSize) )) {
                 return false;
             }
         }
