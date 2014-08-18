@@ -22,7 +22,7 @@ public class RFBuilder {
 		env.setDegreeOfParallelism(1);
 
 
-		String rawInputPath = "file:///home/kay/datasets/mnist/normalized_very_small.txt";
+		String rawInputPath = "file:///home/kay/datasets/mnist/normalized_small.txt";
 		String preprocessedDataPath=  "file:///home/kay/temp/rf/tree-1-test-mnist/preprocessed";
 		String sketchDataPath=  "file:///home/kay/temp/rf/tree-1-test-mnist/sketched";
 		String outputTreePath = "file:///home/kay/temp/rf/tree-1-test-mnist/tree";
@@ -31,7 +31,7 @@ public class RFBuilder {
 		// start preprocessing phase
 		// ------------------------------------------
 
-		//RFPreprocessing.process(env, rawInputPath, preprocessedDataPath);
+		RFPreprocessing.process(env, rawInputPath, preprocessedDataPath);
 
 
 		// ------------------------------------------
@@ -39,11 +39,9 @@ public class RFBuilder {
 		// ------------------------------------------
 
 
-		final BloomFilter bfNodeLeft 	= new BloomFilter(0.3, RFPreprocessing.NUM_SAMPLES* RFPreprocessing.NUM_SAMPLE_FEATURES * RFPreprocessing.HISTOGRAM_SPLIT_CANDIDATES );
-		final BloomFilter bfNodeRight 	= new BloomFilter(0.3, RFPreprocessing.NUM_SAMPLES* RFPreprocessing.NUM_SAMPLE_FEATURES * RFPreprocessing.HISTOGRAM_SPLIT_CANDIDATES );
-		BloomFilter bfSampleSketch 		= new BloomFilter(0.3, RFPreprocessing.NUM_SAMPLES );
-
-
+		final BloomFilter bfNodeLeft 	 = new BloomFilter(0.1, RFPreprocessing.NUM_SAMPLES* RFPreprocessing.NUM_SAMPLE_FEATURES * RFPreprocessing.HISTOGRAM_SPLIT_CANDIDATES*10 );
+		final BloomFilter bfNodeRight 	 = new BloomFilter(0.1, RFPreprocessing.NUM_SAMPLES* RFPreprocessing.NUM_SAMPLE_FEATURES * RFPreprocessing.HISTOGRAM_SPLIT_CANDIDATES*10 );
+		final BloomFilter bfSampleSketch = new BloomFilter(0.1, RFPreprocessing.NUM_SAMPLES );
 
 		SketchBuilder.sketch(	env,
 								preprocessedDataPath, sketchDataPath,
@@ -63,6 +61,7 @@ public class RFBuilder {
 
 																	if(featureValue<=splitCandidate){
 																		defaultSketcher.sketch(record, collector, hashFunctions );
+
 																	} else {
 																	}
 																}
@@ -98,13 +97,12 @@ public class RFBuilder {
 
 							);
 
-
 		// ------------------------------------------
 		// Start Learning phase
 		// ------------------------------------------
-		//Sketch[] sketches = {bfSampleSketch, bfNodeLeft, bfNodeRight};
+		Sketch[] sketches = {bfSampleSketch, bfNodeLeft, bfNodeRight};
 
-		//RFLearning.learn(env, preprocessedDataPath, sketchDataPath, outputTreePath, sketches, "1");
+		RFLearning.learn(env, preprocessedDataPath, sketchDataPath, outputTreePath, sketches, "1");
 
 	}
 }

@@ -51,8 +51,8 @@ public class SketchBuilder {
 
 
 			for( int i=0; i < hashFunctions.length; i++ ){
-				long hash = hashFunctions[i].hash(key.getBytes());
-				System.out.println("key: "+key + "=> hash: "+hash+"("+record+")" );
+				long hash = hashFunctions[i].hash(key);
+				//System.out.println("key: "+key + "=> hash: "+hash+"("+record+")" );
 				collector.collect( new Tuple3<Long, Integer, Integer>( hash, i, 1 ) );
 			}//for
 		}
@@ -107,9 +107,7 @@ public class SketchBuilder {
 
 		@Override
 		public void flatMap(String record, Collector<Tuple3<Long, Integer, Integer>> collector) throws Exception {
-
 			sketcher.getUDF().sketch(record, collector, sketcher.getHashFunctions() );
-
 		}
 	}
 }

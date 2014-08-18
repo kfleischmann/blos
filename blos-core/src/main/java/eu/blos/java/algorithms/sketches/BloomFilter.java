@@ -44,7 +44,6 @@ public class BloomFilter<E> implements Sketch {
     private int numberOfAddedElements; // number of elements actually added to the Bloom filter
     private int k; // number of hash functions
 
-    static final Charset charset = Charset.forName("UTF-8"); // encoding used for storing hash values as strings
 	private HashFunction[] hashFunctions;
 
 	private void createHashFunctions(int k ){
@@ -126,7 +125,7 @@ public class BloomFilter<E> implements Sketch {
      * @param data specifies input data.
      * @return array of int-sized hashes
      */
-    public long[] createHashes(byte[] data ) {
+    public long[] createHashes(String data) {
 		long[] hashes = new long[this.getK()];
 		for(int i=0; i < this.hashFunctions.length; i++ ){
 			hashes[i] = this.hashFunctions[i].hash(data);
@@ -246,16 +245,16 @@ public class BloomFilter<E> implements Sketch {
      * @param element is an element to register in the Bloom filter.
      */
     public void add(E element) {
-       add(element.toString().getBytes(charset));
+       add(element.toString());
     }
 
     /**
      * Adds an array of bytes to the Bloom filter.
      *
-     * @param bytes array of bytes to add to the Bloom filter.
+     * @param key to add to the Bloom filter.
      */
-    public void add(byte[] bytes) {
-       long[] hashes = createHashes(bytes);
+    public void add(String key) {
+       long[] hashes = createHashes(key);
        for (long hash : hashes) {
 		   bitset.set( (int)Math.abs(hash % bitSetSize));
 	   }
@@ -280,7 +279,7 @@ public class BloomFilter<E> implements Sketch {
      * @return true if the element could have been inserted into the Bloom filter.
      */
     public boolean contains(E element) {
-        return contains(element.toString().getBytes(charset));
+        return contains(element.toString());
     }
 
     /**
@@ -288,11 +287,11 @@ public class BloomFilter<E> implements Sketch {
      * Use getFalsePositiveProbability() to calculate the probability of this
      * being correct.
      *
-     * @param bytes array of bytes to check.
+     * @param key to check.
      * @return true if the array could have been inserted into the Bloom filter.
      */
-    public boolean contains(byte[] bytes) {
-		long[] hashes = createHashes(bytes);
+    public boolean contains(String key) {
+		long[] hashes = createHashes(key);
         for (long hash : hashes) {
             if (!bitset.get( (int)Math.abs(hash % bitSetSize) )) {
                 return false;

@@ -189,6 +189,11 @@ public class RFLearning {
 
 			LOG.info("finished reading sketches into memory");
 
+			System.out.println(sketch_qjL.getBitSetSize());
+			System.out.println(sketch_qjR.getBitSetSize());
+			int left=0;
+			int right=0;
+
 			while(sketch.hasNext()){
 				Tuple2<String,String> sketchData = sketch.next();
 
@@ -204,8 +209,8 @@ public class RFLearning {
 					Long bit = Long.parseLong(fields[0]);
 					Long count = Long.parseLong(fields[2]);
 
-
-					sketch_qjL.add( bit.longValue() );
+					sketch_qjL.setBit( bit.longValue(), true );
+					left++;
 				}
 
 				if(sketchType.compareTo("rf-sketch-right") == 0 ) {
@@ -213,7 +218,8 @@ public class RFLearning {
 					Long bit = Long.parseLong(fields[0]);
 					Long count = Long.parseLong(fields[2]);
 
-					sketch_qjR.add(bit.longValue() );
+					sketch_qjR.setBit( bit.longValue(), true );
+					right++;
 				}
 
 
@@ -239,7 +245,6 @@ public class RFLearning {
 				}
 
 			}
-
 
 			LOG.info("finished reading sketches into memory");
 
@@ -360,10 +365,10 @@ public class RFLearning {
 			List<Tuple2<Integer,Integer>> right = new ArrayList<Tuple2<Integer,Integer>>();
 
 			for( Tuple2<Integer,Integer> sample : node.baggingTable ) {
-				if( this.sketch_qjL.contains( (""+sample.f0+candidate.feature+candidate.featureValue).getBytes()) ){
+				if( this.sketch_qjL.contains( ""+sample.f0+" "+candidate.feature+" "+candidate.featureValue) ){
 					left.add( sample );
 				}
-				if( this.sketch_qjR.contains( (""+sample.f0+candidate.feature+candidate.featureValue).getBytes()) ){
+				if( this.sketch_qjR.contains( ""+sample.f0+" "+candidate.feature+" "+candidate.featureValue) ){
 					right.add( sample );
 				}
 			}//for
@@ -410,12 +415,12 @@ public class RFLearning {
 				}*/
 
 				//System.out.println("check: "+""+sample.f0+" "+feature+" "+candidate );
-				if( this.sketch_qjL.contains( (""+sample.f0+feature+" "+candidate).getBytes()) ){
+				if( this.sketch_qjL.contains( ""+sample.f0+" "+feature+" "+candidate) ){
 					qjL[sample.f1.intValue()]++;
 					splitLeft++;
 				}
 
-				if( this.sketch_qjR.contains( (""+sample.f0+" "+feature+" "+candidate).getBytes()) ){
+				if( this.sketch_qjR.contains( ""+sample.f0+" "+feature+" "+candidate) ){
 					qjR[sample.f1.intValue()]++;
 					splitRight++;
 				}

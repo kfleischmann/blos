@@ -8,7 +8,7 @@ import java.security.NoSuchAlgorithmException;
 public class DigestHashFunction implements HashFunction {
 
 	/**
-	 * this method generate a list od hashfunction
+	 * this method generates a list of hashfunctions
 	 *
 	 * @param number number of hash functions
 	 * @param w      the maximum
@@ -50,8 +50,8 @@ public class DigestHashFunction implements HashFunction {
 		return hash((text + seed).getBytes(charset));
 	}
 
-	@Override
-	public long hash(byte[] x) {
+
+	private long hash(byte[] x) {
 		byte[] hash = digest.digest(x);
 		long value = 0;
 		for (int i = 0; i < hash.length; i++) {
