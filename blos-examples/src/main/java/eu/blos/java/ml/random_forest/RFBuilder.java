@@ -22,10 +22,10 @@ public class RFBuilder {
 		env.setDegreeOfParallelism(1);
 
 
-		String rawInputPath = "file:///home/kay/datasets/mnist/normalized_small.txt";
-		String preprocessedDataPath=  "file:///home/kay/temp/rf/tree-1-test-mnist/preprocessed";
-		String sketchDataPath=  "file:///home/kay/temp/rf/tree-1-test-mnist/sketched";
-		String outputTreePath = "file:///home/kay/temp/rf/tree-1-test-mnist/tree";
+		String rawInputPath = "file:///home/kay/datasets/mnist/normalized_full.txt";
+		String preprocessedDataPath=  	"file:///home/kay/temp/rf/tree-1-test1-mnist/preprocessed";
+		String sketchDataPath=  		"file:///home/kay/temp/rf/tree-1-test1-mnist/sketched";
+		String outputTreePath = 		"file:///home/kay/temp/rf/tree-1-test1-mnist/tree";
 
 		// ------------------------------------------
 		// start preprocessing phase
@@ -39,9 +39,9 @@ public class RFBuilder {
 		// ------------------------------------------
 
 
-		final BloomFilter bfNodeLeft 	 = new BloomFilter(0.1, RFPreprocessing.NUM_SAMPLES* RFPreprocessing.NUM_SAMPLE_FEATURES * RFPreprocessing.HISTOGRAM_SPLIT_CANDIDATES*10 );
-		final BloomFilter bfNodeRight 	 = new BloomFilter(0.1, RFPreprocessing.NUM_SAMPLES* RFPreprocessing.NUM_SAMPLE_FEATURES * RFPreprocessing.HISTOGRAM_SPLIT_CANDIDATES*10 );
-		final BloomFilter bfSampleSketch = new BloomFilter(0.1, RFPreprocessing.NUM_SAMPLES );
+		final BloomFilter bfNodeLeft 	 = new BloomFilter(0.3, RFPreprocessing.NUM_SAMPLES* RFPreprocessing.NUM_SAMPLE_FEATURES * RFPreprocessing.HISTOGRAM_SPLIT_CANDIDATES );
+		final BloomFilter bfNodeRight 	 = new BloomFilter(0.3, RFPreprocessing.NUM_SAMPLES* RFPreprocessing.NUM_SAMPLE_FEATURES * RFPreprocessing.HISTOGRAM_SPLIT_CANDIDATES );
+		final BloomFilter bfSampleSketch = new BloomFilter(0.3, RFPreprocessing.NUM_SAMPLES );
 
 		SketchBuilder.sketch(	env,
 								preprocessedDataPath, sketchDataPath,

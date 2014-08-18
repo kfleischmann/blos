@@ -24,14 +24,14 @@ public class RFPreprocessing {
 	public static final String PATH_OUTPUT_SKETCH_SAMPLE_LABELS = "sample-labels";
 
 
-	public static int HISTOGRAM_MAX_BINS 			= 10;
+	public static int HISTOGRAM_MAX_BINS 			= 5;
 	public static int HISTOGRAM_SPLIT_CANDIDATES 	= 5;
 
 	// TODO: these values should be estimated, during the preprocessing phase
 
 	public static int NUM_SAMPLE_LABELS  			= 10;
 	public static int NUM_SAMPLE_FEATURES 			= 784;
-	public static int NUM_SAMPLES 					= 1000;
+	public static int NUM_SAMPLES 					= 60000;
 
 
 	/**
