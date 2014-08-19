@@ -16,7 +16,9 @@ import java.util.Iterator;
 import java.util.List;
 
 public class RFEvaluation {
+
 	private static final BigInteger TWO = new BigInteger("2");
+
 	private static final Log LOG = LogFactory.getLog(RFEvaluation.class);
 
 	/**

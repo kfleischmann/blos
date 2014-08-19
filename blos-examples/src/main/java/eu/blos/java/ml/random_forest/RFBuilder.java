@@ -22,14 +22,22 @@ public class RFBuilder {
 		env.setDegreeOfParallelism(1);
 
 
+
+		final BloomFilter bfNodeLeft 	 = new BloomFilter(0.3, RFPreprocessing.NUM_SAMPLES* RFPreprocessing.NUM_SAMPLE_FEATURES * RFPreprocessing.HISTOGRAM_SPLIT_CANDIDATES );
+		final BloomFilter bfNodeRight 	 = new BloomFilter(0.3, RFPreprocessing.NUM_SAMPLES* RFPreprocessing.NUM_SAMPLE_FEATURES * RFPreprocessing.HISTOGRAM_SPLIT_CANDIDATES );
+		final BloomFilter bfSampleSketch = new BloomFilter(0.3, RFPreprocessing.NUM_SAMPLES );
+
+
 		String rawInputPath = "file:///home/kay/datasets/mnist/normalized_full.txt";
 		String preprocessedDataPath=  	"file:///home/kay/temp/rf/tree-1-test1-mnist/preprocessed";
 		String sketchDataPath=  		"file:///home/kay/temp/rf/tree-1-test1-mnist/sketched";
-		String outputTreePath = 		"file:///home/kay/temp/rf/tree-1-test1-mnist/tree";
+		String outputTreePath = 		"file:///home/kay/temp/rf/tree-100-test1-mnist/tree";
 
 		// ------------------------------------------
 		// start preprocessing phase
 		// ------------------------------------------
+
+		/*
 
 		RFPreprocessing.process(env, rawInputPath, preprocessedDataPath);
 
@@ -38,10 +46,6 @@ public class RFBuilder {
 		// start sketching phase
 		// ------------------------------------------
 
-
-		final BloomFilter bfNodeLeft 	 = new BloomFilter(0.3, RFPreprocessing.NUM_SAMPLES* RFPreprocessing.NUM_SAMPLE_FEATURES * RFPreprocessing.HISTOGRAM_SPLIT_CANDIDATES );
-		final BloomFilter bfNodeRight 	 = new BloomFilter(0.3, RFPreprocessing.NUM_SAMPLES* RFPreprocessing.NUM_SAMPLE_FEATURES * RFPreprocessing.HISTOGRAM_SPLIT_CANDIDATES );
-		final BloomFilter bfSampleSketch = new BloomFilter(0.3, RFPreprocessing.NUM_SAMPLES );
 
 		SketchBuilder.sketch(	env,
 								preprocessedDataPath, sketchDataPath,
@@ -97,12 +101,13 @@ public class RFBuilder {
 
 							);
 
+		*/
 		// ------------------------------------------
 		// Start Learning phase
 		// ------------------------------------------
-		Sketch[] sketches = {bfSampleSketch, bfNodeLeft, bfNodeRight};
+		Sketch[] sketches = {bfNodeLeft, bfNodeRight, bfSampleSketch};
 
-		RFLearning.learn(env, preprocessedDataPath, sketchDataPath, outputTreePath, sketches, "1");
+		RFLearning.learn(env, preprocessedDataPath, sketchDataPath, outputTreePath, sketches, "100");
 
 	}
 }

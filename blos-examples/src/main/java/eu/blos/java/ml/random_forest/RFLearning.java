@@ -135,8 +135,6 @@ public class RFLearning {
 		// --------------------------------------------------
 		// SKETCH STRUCTURE for the learning phase
 		// --------------------------------------------------
-		private int BLOOM_FILTER_SIZE=2147483;
-		private double PROBABILITY_FALSE_POSITIVE = 0.3;
 
 
 		// Knowlege about the sample-labels.
@@ -163,9 +161,9 @@ public class RFLearning {
 		public RFLearningOperator(Sketch[] sketches){
 			super();
 
-			//sketch_qj = (BloomFilter)sketches[0];
-			sketch_qjL = (BloomFilter)sketches[1];
-			sketch_qjR = (BloomFilter)sketches[2];
+			sketch_qjL = (BloomFilter)sketches[0];
+			sketch_qjR = (BloomFilter)sketches[1];
+			//sketch_qj = (BloomFilter)sketches[2];
 
 		}
 
@@ -189,8 +187,9 @@ public class RFLearning {
 
 			LOG.info("finished reading sketches into memory");
 
-			System.out.println(sketch_qjL.getBitSetSize());
-			System.out.println(sketch_qjR.getBitSetSize());
+			LOG.info("sketch size left-node distribution:"+sketch_qjL.getBitSetSize());
+			LOG.info("sketch size right-node distribution:"+sketch_qjR.getBitSetSize());
+
 			int left=0;
 			int right=0;
 
