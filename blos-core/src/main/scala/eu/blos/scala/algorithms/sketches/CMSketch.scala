@@ -7,6 +7,7 @@ import pl.edu.icm.jlargearrays.FloatLargeArray
 ;
 
 
+<<<<<<< Updated upstream
 case class Hashfunction(var BIG_PRIME :  Long,
                         var w:Long,
                         var a : Long = Math.abs(Random.nextLong()),
@@ -14,6 +15,14 @@ case class Hashfunction(var BIG_PRIME :  Long,
   def this() = this(0,0,0,0)
   def hash( x: Long ) = {
     (BigInt(a)*x+b) % BIG_PRIME % w
+=======
+case class Hashfunction(var BIG_PRIME :  BigInt,
+                        var w:Int,
+                        var a : BigInt = Math.abs(Random.nextLong()),
+                        var b : BigInt = Math.abs(Random.nextLong()) ) extends Serializable {
+  def hash( x: Long ) = {
+    (a*x+b) % BIG_PRIME % w
+>>>>>>> Stashed changes
   }
 }
 
@@ -27,7 +36,51 @@ class CMSketch(   var delta: Double,
     this(1,1/*,1, None*/ )
   }
 
+<<<<<<< Updated upstream
   var hashfunctions = generate_hashfunctions
+=======
+  def write( dataOutput : DataOutput ) {
+    dataOutput.writeDouble(delta)
+    dataOutput.writeDouble(epsilon)
+    dataOutput.writeInt(k)
+    dataOutput.writeInt(w)
+    dataOutput.writeInt(d)
+
+    for( x <- 0 until d){
+      for( y <- 0 until w ) {
+        dataOutput.writeFloat( count(x)(y) )
+      }//for
+    }//for
+
+    for ( x <- 0 until d ){
+      dataOutput.writeLong( hashfunctions.get(x).a.toLong )
+      dataOutput.writeLong( hashfunctions.get(x).b.toLong )
+    }
+  }
+
+  def read( dataInput : DataInput ) {
+    delta = dataInput.readDouble();
+    epsilon = dataInput.readDouble();
+    k=dataInput.readInt();
+    w=dataInput.readInt()
+    d=dataInput.readInt()
+
+    alloc
+
+    for( x <- 0 until d){
+      for( y <- 0 until w ) {
+        count(x)(y) = dataInput.readFloat()
+      }//for
+    }//for
+
+    hashfunctions = new java.util.ArrayList[Hashfunction]()
+    for ( x <- 0 until d ){
+      val a = dataInput.readLong()
+      val b = dataInput.readLong()
+      hashfunctions.add( new Hashfunction(BIG_PRIME, w, a, b ) )
+    }
+  }
+>>>>>>> Stashed changes
 
   val BIG_PRIME : Long = 9223372036854775783L
 
