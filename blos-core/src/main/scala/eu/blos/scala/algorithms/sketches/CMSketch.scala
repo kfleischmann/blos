@@ -1,21 +1,8 @@
 package eu.blos.scala.algorithms.sketches
 
-import util.Random
-import scala.math._
-import scala.Serializable
 import pl.edu.icm.jlargearrays.FloatLargeArray
-;
-
-
-case class Hashfunction(var BIG_PRIME :  Long,
-                        var w:Long,
-                        var a : Long = Math.abs(Random.nextLong()),
-                        var b : Long = Math.abs(Random.nextLong()) ) extends Serializable {
-  def this() = this(0,0,0,0)
-  def hash( x: Long ) = {
-    (BigInt(a)*x+b) % BIG_PRIME % w
-  }
-}
+import eu.blos.java.algorithms.sketches.HashFunction
+import eu.blos.java.algorithms.sketches.DigestHashFunction
 
 class CMSketch(   var delta: Double,
                   var epsilon: Double
@@ -28,6 +15,7 @@ class CMSketch(   var delta: Double,
   }
 
   var hashfunctions = generate_hashfunctions
+
 
   val BIG_PRIME : Long = 9223372036854775783L
 
@@ -77,7 +65,7 @@ class CMSketch(   var delta: Double,
 
   def update( key : String, increment : Float ) = {
     for( row <- 0 until get_hashfunctions.size ){
-      val col = get_hashfunctions.get(row).hash(Math.abs(key.hashCode)).toInt
+      val col = get_hashfunctions.get(row).hash(key).toInt
       array_set(row,col, array_get(row,col)+increment ) //, count(row)(col)
     }
     //update_heap(key)
@@ -119,16 +107,16 @@ class CMSketch(   var delta: Double,
   def get( key : String ) = {
     var result = Float.MaxValue
     for( row <- 0 until get_hashfunctions.size ){
-      val col = get_hashfunctions.get(row).hash(Math.abs(key.hashCode)).toLong
+      val col = get_hashfunctions.get(row).hash(key).toLong
       result = Math.min( array_get(row, col), result )
     }
     result
   }
 
   def generate_hashfunctions = {
-    val hf = new java.util.ArrayList[Hashfunction]()
+    val hf = new java.util.ArrayList[HashFunction]()
     for ( x <- 0 until d.toInt ){
-      hf.add( new Hashfunction(BIG_PRIME, w.toLong) )
+      hf.add( new DigestHashFunction(w.toLong, x) )
     }
     hf
   }
