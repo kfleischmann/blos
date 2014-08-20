@@ -9,6 +9,7 @@ import eu.stratosphere.api.java.operators.ReduceGroupOperator;
 import eu.stratosphere.api.java.tuple.Tuple1;
 import eu.stratosphere.api.java.tuple.Tuple2;
 import eu.stratosphere.api.java.tuple.Tuple3;
+import eu.stratosphere.core.fs.FileSystem;
 import eu.stratosphere.util.Collector;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -51,10 +52,6 @@ public class RFEvaluation {
 				public Tuple2<Integer,String> map(String nodedata ) throws Exception {
 					String[] fields = nodedata.split(",");
 					Integer treeId = new Integer(fields[0]);
-					BigInteger nodeId = new BigInteger(fields[1]);
-					Integer featureSplit = Integer.parseInt(fields[2]);
-					String featureSplitValue = fields[3];
-					int label = Integer.parseInt(fields[4]);
 					return new Tuple2<Integer, String>(treeId, nodedata );
 				}
 			})
@@ -88,6 +85,7 @@ public class RFEvaluation {
 							int featureSplit = -1;
 							Double featureSplitValue=0.0;
 
+							// navigate through the tree and find the class label
 							do {
 								// find next node. First node is zero.
 								boolean found=false;
@@ -122,8 +120,7 @@ public class RFEvaluation {
 									if( Double.parseDouble(sampleValues[featureSplit+2]) <= featureSplitValue ){
 										currentNodeId = currentNodeId.subtract(BigInteger.ONE);
 									}
-
-							}
+								}//if
 
 							} while(labelVote == -1 );
 
@@ -134,7 +131,6 @@ public class RFEvaluation {
 
 
 		// forest evaluation
-
 		DataSet<Tuple2<Integer,Integer>> forestEvaluations = treeEvaluations
 			.groupBy(0)
 			.reduceGroup(
@@ -173,13 +169,11 @@ public class RFEvaluation {
 
 		// emit result
 		if(RFBuilder.fileOutput) {
-			//cout.writeAsCsv(outputFile, "\n", ",", FileSystem.WriteMode.OVERWRITE );
+			forestEvaluations.writeAsCsv(outputFile, "\n", ",", FileSystem.WriteMode.OVERWRITE );
 
 		} else {
+			forestEvaluations.print();
 		}
-		//treeNodes.print();
-		forestEvaluations.print();
-
 
 		// execute program
 		env.execute("Evaluation phase");
