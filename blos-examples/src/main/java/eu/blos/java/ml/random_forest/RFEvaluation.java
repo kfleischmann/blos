@@ -28,10 +28,10 @@ public class RFEvaluation {
 		final ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
 		env.setDegreeOfParallelism(1);
 
-		String outputTreePath 	= "file:///home/kay/temp/rf/tree-100-test1-mnist/tree";
+		String outputTreePath 	= "file:///home/kay/temp/rf/tree-1-test1-mnist/tree";
 		String inputTestPath 	= "file:///home/kay/datasets/mnist/normalized_test.txt";
 
-		evaluate(env, outputTreePath, inputTestPath, "file:///home/kay/output");
+		evaluate(env, outputTreePath, inputTestPath, "file:///home/kay/temp/rf/tree-1-test1-mnist/results");
 	}
 	/**
 	 * evaluate the testset on the learned trees. write the result back to outputPath
@@ -123,9 +123,8 @@ public class RFEvaluation {
 								}//if
 
 							} while(labelVote == -1 );
-
+							
 							return new Tuple3<Integer, Integer, Integer>(index, labelVote, Integer.parseInt(label));
-
 						}
 					});
 
@@ -169,7 +168,7 @@ public class RFEvaluation {
 
 		// emit result
 		if(RFBuilder.fileOutput) {
-			forestEvaluations.writeAsCsv(outputFile, "\n", ",", FileSystem.WriteMode.OVERWRITE );
+			forestEvaluations.writeAsCsv(outputFile, "\n", " ", FileSystem.WriteMode.OVERWRITE );
 
 		} else {
 			forestEvaluations.print();
