@@ -1,30 +1,8 @@
 package eu.blos.scala.algorithms.sketches
 
-import util.Random
-import scala.math._
-import scala.Serializable
 import pl.edu.icm.jlargearrays.FloatLargeArray
-;
-
-
-<<<<<<< Updated upstream
-case class Hashfunction(var BIG_PRIME :  Long,
-                        var w:Long,
-                        var a : Long = Math.abs(Random.nextLong()),
-                        var b : Long = Math.abs(Random.nextLong()) ) extends Serializable {
-  def this() = this(0,0,0,0)
-  def hash( x: Long ) = {
-    (BigInt(a)*x+b) % BIG_PRIME % w
-=======
-case class Hashfunction(var BIG_PRIME :  BigInt,
-                        var w:Int,
-                        var a : BigInt = Math.abs(Random.nextLong()),
-                        var b : BigInt = Math.abs(Random.nextLong()) ) extends Serializable {
-  def hash( x: Long ) = {
-    (a*x+b) % BIG_PRIME % w
->>>>>>> Stashed changes
-  }
-}
+import eu.blos.java.algorithms.sketches.HashFunction
+import eu.blos.java.algorithms.sketches.DigestHashFunction
 
 class CMSketch(   var delta: Double,
                   var epsilon: Double
@@ -36,51 +14,8 @@ class CMSketch(   var delta: Double,
     this(1,1/*,1, None*/ )
   }
 
-<<<<<<< Updated upstream
   var hashfunctions = generate_hashfunctions
-=======
-  def write( dataOutput : DataOutput ) {
-    dataOutput.writeDouble(delta)
-    dataOutput.writeDouble(epsilon)
-    dataOutput.writeInt(k)
-    dataOutput.writeInt(w)
-    dataOutput.writeInt(d)
 
-    for( x <- 0 until d){
-      for( y <- 0 until w ) {
-        dataOutput.writeFloat( count(x)(y) )
-      }//for
-    }//for
-
-    for ( x <- 0 until d ){
-      dataOutput.writeLong( hashfunctions.get(x).a.toLong )
-      dataOutput.writeLong( hashfunctions.get(x).b.toLong )
-    }
-  }
-
-  def read( dataInput : DataInput ) {
-    delta = dataInput.readDouble();
-    epsilon = dataInput.readDouble();
-    k=dataInput.readInt();
-    w=dataInput.readInt()
-    d=dataInput.readInt()
-
-    alloc
-
-    for( x <- 0 until d){
-      for( y <- 0 until w ) {
-        count(x)(y) = dataInput.readFloat()
-      }//for
-    }//for
-
-    hashfunctions = new java.util.ArrayList[Hashfunction]()
-    for ( x <- 0 until d ){
-      val a = dataInput.readLong()
-      val b = dataInput.readLong()
-      hashfunctions.add( new Hashfunction(BIG_PRIME, w, a, b ) )
-    }
-  }
->>>>>>> Stashed changes
 
   val BIG_PRIME : Long = 9223372036854775783L
 
@@ -130,7 +65,7 @@ class CMSketch(   var delta: Double,
 
   def update( key : String, increment : Float ) = {
     for( row <- 0 until get_hashfunctions.size ){
-      val col = get_hashfunctions.get(row).hash(Math.abs(key.hashCode)).toInt
+      val col = get_hashfunctions.get(row).hash(key).toInt
       array_set(row,col, array_get(row,col)+increment ) //, count(row)(col)
     }
     //update_heap(key)
@@ -172,16 +107,16 @@ class CMSketch(   var delta: Double,
   def get( key : String ) = {
     var result = Float.MaxValue
     for( row <- 0 until get_hashfunctions.size ){
-      val col = get_hashfunctions.get(row).hash(Math.abs(key.hashCode)).toLong
+      val col = get_hashfunctions.get(row).hash(key).toLong
       result = Math.min( array_get(row, col), result )
     }
     result
   }
 
   def generate_hashfunctions = {
-    val hf = new java.util.ArrayList[Hashfunction]()
+    val hf = new java.util.ArrayList[HashFunction]()
     for ( x <- 0 until d.toInt ){
-      hf.add( new Hashfunction(BIG_PRIME, w.toLong) )
+      hf.add( new DigestHashFunction(w.toLong, x) )
     }
     hf
   }

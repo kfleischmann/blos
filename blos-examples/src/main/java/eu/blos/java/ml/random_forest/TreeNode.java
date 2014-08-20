@@ -16,6 +16,8 @@ public class TreeNode implements Serializable {
 			public int label;
 			public List<Tuple2<Integer,Integer>> baggingTable;
 
+			public TreeNode(){}
+
 			public TreeNode( int treeId,
 							 BigInteger nodeId,
 							 List<Integer> features,
