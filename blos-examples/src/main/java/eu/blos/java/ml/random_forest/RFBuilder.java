@@ -22,24 +22,20 @@ public class RFBuilder {
 		env.setDegreeOfParallelism(1);
 
 
+		final BloomFilter bfNodeLeft 	 = new BloomFilter(0.5, RFPreprocessing.NUM_SAMPLES* RFPreprocessing.NUM_SAMPLE_FEATURES * RFPreprocessing.HISTOGRAM_SPLIT_CANDIDATES );
+		final BloomFilter bfNodeRight 	 = new BloomFilter(0.5, RFPreprocessing.NUM_SAMPLES* RFPreprocessing.NUM_SAMPLE_FEATURES * RFPreprocessing.HISTOGRAM_SPLIT_CANDIDATES );
+		final BloomFilter bfSampleSketch = new BloomFilter(0.5, RFPreprocessing.NUM_SAMPLES );
 
-		final BloomFilter bfNodeLeft 	 = new BloomFilter(0.3, RFPreprocessing.NUM_SAMPLES* RFPreprocessing.NUM_SAMPLE_FEATURES * RFPreprocessing.HISTOGRAM_SPLIT_CANDIDATES );
-		final BloomFilter bfNodeRight 	 = new BloomFilter(0.3, RFPreprocessing.NUM_SAMPLES* RFPreprocessing.NUM_SAMPLE_FEATURES * RFPreprocessing.HISTOGRAM_SPLIT_CANDIDATES );
-		final BloomFilter bfSampleSketch = new BloomFilter(0.3, RFPreprocessing.NUM_SAMPLES );
 
-
-		String rawInputPath = "file:///home/kay/datasets/mnist/normalized_full.txt";
-		String preprocessedDataPath=  	"file:///home/kay/temp/rf/tree-1-test1-mnist/preprocessed";
-		String sketchDataPath=  		"file:///home/kay/temp/rf/tree-1-test1-mnist/sketched";
-		String outputTreePath = 		"file:///home/kay/temp/rf/tree-100-test1-mnist/tree";
+		String rawInputPath	= 			"file:///home/kay/datasets/mnist/normalized_full.txt";
+		String preprocessedDataPath=  	"file:///home/kay/temp/rf/tree-1-test1-mnist-05/preprocessed";
+		String sketchDataPath=  		"file:///home/kay/temp/rf/tree-1-test1-mnist-05/sketched";
+		String outputTreePath = 		"file:///home/kay/temp/rf/tree-1-test1-mnist-05/tree/tree";
 
 		// ------------------------------------------
 		// start preprocessing phase
 		// ------------------------------------------
-
-		/*
-
-		RFPreprocessing.process(env, rawInputPath, preprocessedDataPath);
+		//RFPreprocessing.process(env, rawInputPath, preprocessedDataPath);
 
 
 		// ------------------------------------------
@@ -47,6 +43,7 @@ public class RFBuilder {
 		// ------------------------------------------
 
 
+		/*
 		SketchBuilder.sketch(	env,
 								preprocessedDataPath, sketchDataPath,
 								SketchBuilder.apply( 	RFPreprocessing.PATH_OUTPUT_SKETCH_NODE,
@@ -100,8 +97,8 @@ public class RFBuilder {
 								//					);
 
 							);
-
 		*/
+
 		// ------------------------------------------
 		// Start Learning phase
 		// ------------------------------------------

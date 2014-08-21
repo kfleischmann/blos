@@ -50,7 +50,6 @@ public class DigestHashFunction implements HashFunction {
 		return hash((text + seed).getBytes(charset));
 	}
 
-
 	private long hash(byte[] x) {
 		byte[] hash = digest.digest(x);
 		long value = 0;
