@@ -17,25 +17,25 @@ public class RFBuilder {
 	private static final Log LOG = LogFactory.getLog(RFBuilder.class);
 
 	public static void main(String[] args ) throws Exception {
-		//final ExecutionEnvironment env = ExecutionEnvironment.createRemoteEnvironment("localhost", 6123, "/home/kay/blos/blos.jar");
-		final ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
+		final ExecutionEnvironment env = ExecutionEnvironment.createRemoteEnvironment("localhost", 6123, "/home/kay/blos/blos.jar");
+		//final ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
 		env.setDegreeOfParallelism(1);
 
 
-		final BloomFilter bfNodeLeft 	 = new BloomFilter(0.5, RFPreprocessing.NUM_SAMPLES* RFPreprocessing.NUM_SAMPLE_FEATURES * RFPreprocessing.HISTOGRAM_SPLIT_CANDIDATES );
-		final BloomFilter bfNodeRight 	 = new BloomFilter(0.5, RFPreprocessing.NUM_SAMPLES* RFPreprocessing.NUM_SAMPLE_FEATURES * RFPreprocessing.HISTOGRAM_SPLIT_CANDIDATES );
+		final BloomFilter bfNodeLeft 	 = new BloomFilter(0.5, (int)(RFPreprocessing.NUM_SAMPLES* RFPreprocessing.NUM_SAMPLE_FEATURES * RFPreprocessing.HISTOGRAM_SPLIT_CANDIDATES*0.5) );
+		final BloomFilter bfNodeRight 	 = new BloomFilter(0.5, (int)(RFPreprocessing.NUM_SAMPLES* RFPreprocessing.NUM_SAMPLE_FEATURES * RFPreprocessing.HISTOGRAM_SPLIT_CANDIDATES*0.5) );
 		final BloomFilter bfSampleSketch = new BloomFilter(0.5, RFPreprocessing.NUM_SAMPLES );
 
 
 		String rawInputPath	= 			"file:///home/kay/datasets/mnist/normalized_full.txt";
-		String preprocessedDataPath=  	"file:///home/kay/temp/rf/tree-1-test1-mnist-05/preprocessed";
-		String sketchDataPath=  		"file:///home/kay/temp/rf/tree-1-test1-mnist-05/sketched";
-		String outputTreePath = 		"file:///home/kay/temp/rf/tree-1-test1-mnist-05/tree/tree";
+		String preprocessedDataPath=  	"file:///home/kay/temp/rf/tree-1-test-mnist-small-05/preprocessed";
+		String sketchDataPath=  		"file:///home/kay/temp/rf/tree-1-test-mnist-small-05/sketched";
+		String outputTreePath = 		"file:///home/kay/temp/rf/tree-1-test-mnist-small-05/tree/tree";
 
 		// ------------------------------------------
 		// start preprocessing phase
 		// ------------------------------------------
-		//RFPreprocessing.process(env, rawInputPath, preprocessedDataPath);
+		RFPreprocessing.process(env, rawInputPath, preprocessedDataPath);
 
 
 		// ------------------------------------------
@@ -43,7 +43,6 @@ public class RFBuilder {
 		// ------------------------------------------
 
 
-		/*
 		SketchBuilder.sketch(	env,
 								preprocessedDataPath, sketchDataPath,
 								SketchBuilder.apply( 	RFPreprocessing.PATH_OUTPUT_SKETCH_NODE,
@@ -97,14 +96,13 @@ public class RFBuilder {
 								//					);
 
 							);
-		*/
 
 		// ------------------------------------------
 		// Start Learning phase
 		// ------------------------------------------
 		Sketch[] sketches = {bfNodeLeft, bfNodeRight, bfSampleSketch};
 
-		RFLearning.learn(env, preprocessedDataPath, sketchDataPath, outputTreePath, sketches, "100");
+		RFLearning.learn(env, preprocessedDataPath, sketchDataPath, outputTreePath, sketches, "1");
 
 	}
 }

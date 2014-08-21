@@ -35,14 +35,16 @@ public class RFPreprocessing {
 
 
 	/**
-	 * starts the sketching process. reads the data from hdfs and stores the result back to hdfs
+	 * do the preprocessing for the sketching phase. reads the data from hdfs and prepare the data for the
+	 * sketching phase
 	 *
 	 * @param env
 	 * @param inputPath
 	 * @param outputPath
+	 * @param args
 	 * @throws Exception
 	 */
-    public static void process(final ExecutionEnvironment env, String inputPath, String outputPath ) throws Exception {
+    public static void process(final ExecutionEnvironment env, String inputPath, String outputPath, String ... args ) throws Exception {
 
 		LOG.info("start preprocessing phase");
 

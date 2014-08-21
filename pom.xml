@@ -1,13 +1,12 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-
-    <groupId>bigdata_sketching</groupId>
-    <artifactId>bigdata_sketching</artifactId>
+    <groupId>eu.blos.tu-berlin</groupId>
+    <artifactId>blos</artifactId>
     <version>0.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>BigData Sketching</name>
+    <name>BigLearning on sketches</name>
 
     <repositories>
         <repository>
@@ -27,6 +26,11 @@
 
     <dependencies>
         <dependency>
+            <groupId>net.sourceforge.argparse4j</groupId>
+            <artifactId>argparse4j</artifactId>
+            <version>0.4.3</version>
+        </dependency>
+        <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>4.8.2</version>
@@ -42,7 +46,6 @@
             <artifactId>breeze-viz_2.10</artifactId>
             <version>0.5.2</version>
         </dependency>
-
         <dependency>
             <groupId>com.esotericsoftware.kryo</groupId>
             <artifactId>kryo</artifactId>
