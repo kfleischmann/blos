@@ -34,17 +34,17 @@ public class RFBuilder {
 
 		// ------------------------------------------
 		// start preprocessing phase
+		// the preprocessor prepares the raw data for the sketchin phase
 		// ------------------------------------------
-		RFPreprocessing.process(env, rawInputPath, preprocessedDataPath);
+		RFPreprocessing.transform(	env, rawInputPath, preprocessedDataPath);
 
 
 		// ------------------------------------------
 		// start sketching phase
 		// ------------------------------------------
-
-
 		SketchBuilder.sketch(	env,
 								preprocessedDataPath, sketchDataPath,
+
 								SketchBuilder.apply( 	RFPreprocessing.PATH_OUTPUT_SKETCH_NODE,
 													 	RFPreprocessing.PATH_OUTPUT_SKETCH_NODE+"-left",
 														bfNodeLeft.getHashFunctions(),SketchBuilder.SKETCHTYPE_BLOOM_FILTER,
@@ -67,7 +67,8 @@ public class RFBuilder {
 																}
 															},
 														SketchBuilder.ReduceSketchByFields(0)),
-													SketchBuilder.apply( 	RFPreprocessing.PATH_OUTPUT_SKETCH_NODE,
+													SketchBuilder.apply(
+														RFPreprocessing.PATH_OUTPUT_SKETCH_NODE,
 														RFPreprocessing.PATH_OUTPUT_SKETCH_NODE+"-right",
 														bfNodeRight.getHashFunctions(), SketchBuilder.SKETCHTYPE_BLOOM_FILTER,
 															new SketcherUDF() {

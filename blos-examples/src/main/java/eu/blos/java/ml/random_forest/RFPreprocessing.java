@@ -35,7 +35,7 @@ public class RFPreprocessing {
 
 
 	/**
-	 * do the preprocessing for the sketching phase. reads the data from hdfs and prepare the data for the
+	 * do the preprocessing for the sketching phase. reads the raw data from hdfs and prepare the data for the
 	 * sketching phase
 	 *
 	 * @param env
@@ -44,13 +44,13 @@ public class RFPreprocessing {
 	 * @param args
 	 * @throws Exception
 	 */
-    public static void process(final ExecutionEnvironment env, String inputPath, String outputPath, String ... args ) throws Exception {
+    public static void transform(final ExecutionEnvironment env, String inputPath, String outputPath, String ... args ) throws Exception {
 
 		LOG.info("start preprocessing phase");
 
 		// prepare
-		new Path(outputPath).getFileSystem().delete(new Path(outputPath), true );
-		new Path(outputPath).getFileSystem().mkdirs(new Path(outputPath));
+		new Path(outputPath).getFileSystem().delete( new Path(outputPath), true );
+		new Path(outputPath).getFileSystem().mkdirs( new Path(outputPath) );
 
 		String outputBaggingTable = outputPath+"/"+PATH_OUTPUT_SKETCH_SAMPLE_LABELS;
 		String outputCandidates = outputPath+"/"+PATH_OUTPUT_SKETCH_SPLIT_CANDIDATES;
@@ -98,7 +98,6 @@ public class RFPreprocessing {
 							int numFeatures = values.length - 2;
 
 							// TODO: setup feature count
-
 							for (int i = 2; i < values.length; i++) {
 								histograms[i - 2].update(Double.parseDouble(values[i]));
 							}//for

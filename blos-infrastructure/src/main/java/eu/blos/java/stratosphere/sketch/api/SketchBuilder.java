@@ -15,7 +15,6 @@ import org.apache.commons.logging.LogFactory;
 import java.io.Serializable;
 
 public class SketchBuilder {
-
 	private static final Log LOG = LogFactory.getLog(SketchBuilder.class);
 
 	public static final int SKETCHTYPE_BLOOM_FILTER 	= 1;
@@ -52,7 +51,6 @@ public class SketchBuilder {
 
 			for( int i=0; i < hashFunctions.length; i++ ){
 				long hash = hashFunctions[i].hash(key);
-				//System.out.println("key: "+key + "=> hash: "+hash+"("+record+")" );
 				collector.collect( new Tuple3<Long, Integer, Integer>( hash, i, 1 ) );
 			}//for
 		}

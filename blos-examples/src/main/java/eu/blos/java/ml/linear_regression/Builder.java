@@ -33,7 +33,7 @@ public class Builder {
 	 *
 	 * @param args
 	 */
-	public static void main(String[] args ){
+	public static void main(String[] args ) throws Exception {
 		CommandLine cmd = parseArguments(args);
 		final ExecutionEnvironment env = getEnv(cmd);
 
@@ -44,18 +44,23 @@ public class Builder {
 		String outputTreePath = 		cmd.getOptionValue("learn-path"); //"file:///home/kay/temp/rf/tree-1-test1-mnist-05/tree/tree";
 
 
-		CMSketch cmSketch = new CMSketch(0.5, 0.5);
+		// allocates 5 GB memory
+		CMSketch cmSketch = new CMSketch(0.01, 0.00000001);
+		cmSketch.alloc();
+
+		System.out.println(cmSketch.w() );
+		System.out.println(cmSketch.d() );
+		System.out.println("size in mb:"+cmSketch.size()*4/1024/1024 );
 
 		// ------------------------------------------
 		// start preprocessing phase
 		// ------------------------------------------
-		//RFPreprocessing.process(env, rawInputPath, preprocessedDataPath);
+		Preprocessor.process(env, rawInputPath, preprocessedDataPath);
 
 
 		// ------------------------------------------
 		// start sketching phase
 		// ------------------------------------------
-
 
 
 	}
@@ -65,7 +70,7 @@ public class Builder {
 	 * @param args
 	 * @return
 	 */
-	public static CommandLine parseArguments(String[] args ){
+	public static CommandLine parseArguments(String[] args ) throws Exception {
 		Options lvOptions = new Options();
 
 		lvOptions.addOption("h", "help", false, "shows valid arguments and options");
@@ -157,11 +162,9 @@ public class Builder {
 
 		CommandLineParser lvParser = new BasicParser();
 		CommandLine cmd = null;
-		try {
-			cmd = lvParser.parse(lvOptions, args);
-		} catch (ParseException pvException) {
-			System.out.println(pvException.getMessage());
-		}
+
+		cmd = lvParser.parse(lvOptions, args);
+
 		return cmd;
 	}
 

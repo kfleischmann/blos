@@ -24,7 +24,7 @@ public class RFEvaluation {
 
 	private static final Log LOG = LogFactory.getLog(RFEvaluation.class);
 
-	public static void main(String[] args ) throws Exception {
+	/*public static void main(String[] args ) throws Exception {
 		final ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
 		env.setDegreeOfParallelism(1);
 
@@ -32,7 +32,7 @@ public class RFEvaluation {
 		String inputTestPath 	= "file:///home/kay/datasets/mnist/normalized_test.txt";
 
 		evaluate(env, outputTreePath, inputTestPath, "file:///home/kay/temp/rf/tree-1-test1-mnist-05/results");
-	}
+	}*/
 	/**
 	 * evaluate the testset on the learned trees. write the result back to outputPath
 	 *

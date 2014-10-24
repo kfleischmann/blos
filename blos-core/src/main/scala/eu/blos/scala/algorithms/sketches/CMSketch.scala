@@ -3,8 +3,8 @@ package eu.blos.scala.algorithms.sketches
 import pl.edu.icm.jlargearrays.FloatLargeArray
 import eu.blos.java.algorithms.sketches.{Sketch, HashFunction, DigestHashFunction}
 
-case class CMSketch(   var delta: Double,
-                  var epsilon: Double
+case class CMSketch(  var delta: Double,
+                      var epsilon: Double
                 ) extends Sketch with Serializable {
 
   def this() = {
@@ -24,7 +24,7 @@ case class CMSketch(   var delta: Double,
   var count : FloatLargeArray = null;
 
   def alloc = {
-    count = new FloatLargeArray(w*d)
+    count = new FloatLargeArray(w*d, true /*init memory with zeros*/ )
   }
 
   def size = if(count == null) 0 else d*w
