@@ -45,7 +45,7 @@ public class Builder {
 
 
 		// allocates 5 GB memory
-		CMSketch cmSketch = new CMSketch(0.01, 0.00000001);
+		CMSketch cmSketch = new CMSketch(0.01 /*factor*/, 0.00001 /*prob*/);
 		cmSketch.alloc();
 
 		System.out.println(cmSketch.w() );
@@ -55,12 +55,14 @@ public class Builder {
 		// ------------------------------------------
 		// start preprocessing phase
 		// ------------------------------------------
-		Preprocessor.process(env, rawInputPath, preprocessedDataPath);
+		Preprocessor.transform(env, rawInputPath, preprocessedDataPath);
 
 
-		// ------------------------------------------
+		// -----------------------------------------
 		// start sketching phase
 		// ------------------------------------------
+
+
 
 
 	}
