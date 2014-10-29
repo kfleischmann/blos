@@ -45,6 +45,9 @@ public class Preprocessor {
 		new Path(outputPath).getFileSystem().delete(new Path(outputPath), true );
 		new Path(outputPath).getFileSystem().mkdirs(new Path(outputPath));
 
+		System.out.println(inputPath);
+		System.out.println(outputPath);
+
 		// read samples
 		DataSet<String> samples = env.readTextFile(inputPath);
 
@@ -100,6 +103,11 @@ public class Preprocessor {
 		});
 
 		sketch1.writeAsCsv( outputPath+"/sketch1", "\n", ",", FileSystem.WriteMode.OVERWRITE );
-		sketch1.writeAsCsv( outputPath+"/sketch2", "\n", ",", FileSystem.WriteMode.OVERWRITE );
+		sketch2.writeAsCsv( outputPath+"/sketch2", "\n", ",", FileSystem.WriteMode.OVERWRITE );
+
+		// execute program
+		env.execute("Preprocessing");
+
+
 	}
 }

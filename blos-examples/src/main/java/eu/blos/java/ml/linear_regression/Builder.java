@@ -39,9 +39,9 @@ public class Builder {
 
 
 		String rawInputPath	= 			cmd.getOptionValue("input-path"); //"file:///home/kay/datasets/mnist/normalized_full.txt";
-		String preprocessedDataPath=  	cmd.getOptionValue("prep-path"); //"file:///home/kay/temp/rf/tree-1-test1-mnist-05/preprocessed";
+		String preprocessedDataPath=  	cmd.getOptionValue("preprocessing-path"); //"file:///home/kay/temp/rf/tree-1-test1-mnist-05/preprocessed";
 		String sketchDataPath=  		cmd.getOptionValue("sketch-path"); //"file:///home/kay/temp/rf/tree-1-test1-mnist-05/sketched";
-		String outputTreePath = 		cmd.getOptionValue("learn-path"); //"file:///home/kay/temp/rf/tree-1-test1-mnist-05/tree/tree";
+		String outputTreePath = 		cmd.getOptionValue("output-path"); //"file:///home/kay/temp/rf/tree-1-test1-mnist-05/tree/tree";
 
 
 		// allocates 5 GB memory
@@ -97,7 +97,7 @@ public class Builder {
 
 		lvOptions.addOption(
 				OptionBuilder
-						.withLongOpt("prep-path")
+						.withLongOpt("preprocessing-path")
 						.withDescription("preprocessor results path")
 						//.isRequired()
 						.withValueSeparator('=')
