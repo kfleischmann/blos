@@ -34,10 +34,52 @@
 #
 #
 ################################################################################
-def run(**kwargs):
-	print "main"
+import matplotlib.pyplot as plt
+from numpy.random import rand
+from PIL import Image
+from os.path import basename
 
-	print kwargs('verbose')
+
+def run(**kwargs):
+	format=kwargs['output_size'].split("x")
+	max_d = 0
+	max_w = 0
+	max_count = 0
+
+	# read statistics
+	with open(kwargs['sketch']) as f:
+		for line in f:
+			fields=line.strip().split(',')
+			w=int(fields[0])
+			d=int(fields[1])
+			count=int(fields[2])
+
+			max_w = max(w,max_w)
+			max_d = max(d,max_d)
+			max_count = max(count,max_count)
+
+	white = (255,255,255)
+	img = Image.new("RGB", [max_w+1,max_d+1], white)
+
+	# read statistics
+	with open(kwargs['sketch']) as f:
+		for line in f:
+			fields=line.strip().split(',')
+			w=int(fields[0])
+			d=int(fields[1])
+			count=int(fields[2])
+
+			s = int( float(count)/float(max_count)*255.0)
+			color = ( s ,s ,s )
+			img.putpixel((w, d), color)
+
+	img2=img.resize((int(format[0]),int(format[1])))
+	output=kwargs['output_dir']+basename(kwargs['sketch'])+"."+kwargs['output_format']
+	img2.save(output)
+
+	if bool(kwargs['display']):
+		img2.show()
+
 
 if __name__=='__main__':
 	# handle command line arguments
@@ -52,8 +94,11 @@ if __name__=='__main__':
 
 	# specify arguments
 	argparser.add_argument("-v", "--verbose", action="store_true", help="turns on verbosity")
-	argparser.add_argument("-s", "--sketch-dir", action="store", required=True, help="Path to sketch directory")
+	argparser.add_argument("-s", "--sketch", action="store", required=True, help="sketch file")
 	argparser.add_argument("-o", "--output_dir", action="store", required=True, help="Path to output directory")
+	argparser.add_argument("-S", "--output_size", action="store", required=False, help="output image format", default="1000x500")
+	argparser.add_argument("-f", "--output_format", action="store", required=False, help="output image format", default="jpg")
+	argparser.add_argument("-d", "--display", action="store_true", required=False, help="display image" )
 
 	# validate arguments
 	args = argparser.parse_args()

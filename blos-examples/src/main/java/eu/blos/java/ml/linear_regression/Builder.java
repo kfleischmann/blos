@@ -48,11 +48,14 @@ public class Builder {
 		String sketchDataPath=  		cmd.getOptionValue("sketch-path"); //"file:///home/kay/temp/rf/tree-1-test1-mnist-05/sketched";
 		String outputPath = 			cmd.getOptionValue("output-path"); //"file:///home/kay/temp/rf/tree-1-test1-mnist-05/tree/tree";
 
-		CMSketch sketch1 = new CMSketch(0.01 /*factor*/, 0.0001 /*prob*/);
-		CMSketch sketch2 = new CMSketch(0.01 /*factor*/, 0.0001 /*prob*/);
+		CMSketch sketch1 = new CMSketch(0.1 /*factor*/, 0.1 /*prob*/);
+		CMSketch sketch2 = new CMSketch(0.1 /*factor*/, 0.01 /*prob*/);
+		CMSketch sketch3 = new CMSketch(0.001 /*factor*/, 0.001 /*prob*/);
+		CMSketch sketch4 = new CMSketch(0.01 /*factor*/, 0.0001 /*prob*/);
+		CMSketch sketch5 = new CMSketch(0.01 /*factor*/, 0.00001 /*prob*/);
 
-		sketch1.alloc();
-		sketch2.alloc();
+		//sketch1.alloc();
+		//sketch2.alloc();
 
 		System.out.println(rawInputPath);
 		System.out.println(preprocessedDataPath);
@@ -73,7 +76,7 @@ public class Builder {
 		// ------------------------------------------
 		SketchBuilder.sketch(env,
 				preprocessedDataPath, sketchDataPath,
-				SketchBuilder.apply( 	"sketch1",	// input preprocessed
+				/*SketchBuilder.apply( 	"sketch1",	// input preprocessed
 										"sketch1",  // output sketch
 										sketch1.get_hashfunctions().toArray(new HashFunction[sketch1.get_hashfunctions().size()]),
 										SketchBuilder.SKETCHTYPE_CM_SKETCH,
@@ -82,18 +85,52 @@ public class Builder {
 												2,	// emit y-value
 												SketchBuilder.Fields(0,1)), // extract fields for hashing (i,k)
 										SketchBuilder.ReduceSketchByFields(0, 1) // group by hash
+				),*/
+				SketchBuilder.apply( 	"sketch2", /*input*/ "sketch2_1",  /*output*/
+						sketch1.get_hashfunctions().toArray(new HashFunction[sketch1.get_hashfunctions().size()]),
+						SketchBuilder.SKETCHTYPE_CM_SKETCH,
+						new SketchBuilder.DefaultSketcherUDF(
+								",", // split line by comma
+								3,	// emit y-value
+								SketchBuilder.Fields(0,1,2)), // extract fields for hashing (i,k)
+						SketchBuilder.ReduceSketchByFields(0, 1) // group by hash
 				),
-				SketchBuilder.apply( 	"sketch2",	// input preprocessed
-										"sketch2",  // output sketch
+				SketchBuilder.apply( 	"sketch2", /*input*/ "sketch2_2",  /*output*/
 						sketch2.get_hashfunctions().toArray(new HashFunction[sketch2.get_hashfunctions().size()]),
-										SketchBuilder.SKETCHTYPE_CM_SKETCH,
-										new SketchBuilder.DefaultSketcherUDF(
-												",", // split line by comma
-												3,	// emit y-value
-												SketchBuilder.Fields(0,1,2)), // extract fields for hashing (i,k)
-										SketchBuilder.ReduceSketchByFields(0, 1) // group by hash
+						SketchBuilder.SKETCHTYPE_CM_SKETCH,
+						new SketchBuilder.DefaultSketcherUDF(
+								",", // split line by comma
+								3,	// emit y-value
+								SketchBuilder.Fields(0,1,2)), // extract fields for hashing (i,k)
+						SketchBuilder.ReduceSketchByFields(0, 1) // group by hash
+				),
+				SketchBuilder.apply( 	"sketch2", /*input*/ "sketch2_3",  /*output*/
+						sketch3.get_hashfunctions().toArray(new HashFunction[sketch3.get_hashfunctions().size()]),
+						SketchBuilder.SKETCHTYPE_CM_SKETCH,
+						new SketchBuilder.DefaultSketcherUDF(
+								",", // split line by comma
+								3,	// emit y-value
+								SketchBuilder.Fields(0,1,2)), // extract fields for hashing (i,k)
+						SketchBuilder.ReduceSketchByFields(0, 1) // group by hash
+				),
+				SketchBuilder.apply( 	"sketch2", /*input*/ "sketch2_4",  /*output*/
+						sketch4.get_hashfunctions().toArray(new HashFunction[sketch4.get_hashfunctions().size()]),
+						SketchBuilder.SKETCHTYPE_CM_SKETCH,
+						new SketchBuilder.DefaultSketcherUDF(
+								",", // split line by comma
+								3,	// emit y-value
+								SketchBuilder.Fields(0,1,2)), // extract fields for hashing (i,k)
+						SketchBuilder.ReduceSketchByFields(0, 1) // group by hash
+				),
+				SketchBuilder.apply( 	"sketch2", /*input*/ "sketch2_5",  /*output*/
+						sketch5.get_hashfunctions().toArray(new HashFunction[sketch5.get_hashfunctions().size()]),
+						SketchBuilder.SKETCHTYPE_CM_SKETCH,
+						new SketchBuilder.DefaultSketcherUDF(
+								",", // split line by comma
+								3,	// emit y-value
+								SketchBuilder.Fields(0,1,2)), // extract fields for hashing (i,k)
+						SketchBuilder.ReduceSketchByFields(0, 1) // group by hash
 				)
-
 		);
 
 
