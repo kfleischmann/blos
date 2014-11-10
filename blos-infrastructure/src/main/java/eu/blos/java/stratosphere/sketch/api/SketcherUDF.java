@@ -7,5 +7,5 @@ import eu.stratosphere.util.Collector;
 import java.io.Serializable;
 
 public interface SketcherUDF extends Serializable {
-	public void sketch(String record, Collector<Tuple3<Long, Integer, Integer>> collector, HashFunction[] hashFunctions );
+	public void sketch(String record, Collector<Tuple3<Long, Integer, Double>> collector, HashFunction[] hashFunctions );
 }

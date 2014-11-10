@@ -53,7 +53,7 @@ public class RFBuilder {
 																		new SketchBuilder.DefaultSketcherUDF(",", SketchBuilder.Fields(0, 2, 4) );
 
 																@Override
-																public void sketch(String record, Collector<Tuple3<Long, Integer, Integer>> collector, HashFunction[] hashFunctions ) {
+																public void sketch(String record, Collector<Tuple3<Long, Integer, Double>> collector, HashFunction[] hashFunctions ) {
 																	// only sketch left
 																	String[] values = record.split(",");
 																	Double featureValue = Double.parseDouble(values[3]);
@@ -75,7 +75,7 @@ public class RFBuilder {
 																private SketchBuilder.DefaultSketcherUDF defaultSketcher =
 																		new SketchBuilder.DefaultSketcherUDF(",", SketchBuilder.Fields(0, 2, 4));
 																@Override
-																public void sketch(String record, Collector<Tuple3<Long, Integer, Integer>> collector, HashFunction[] hashFunctions ) {
+																public void sketch(String record, Collector<Tuple3<Long, Integer, Double>> collector, HashFunction[] hashFunctions ) {
 																	// only sketch right
 																	String[] values = record.split(",");
 																	Double featureValue = Double.parseDouble(values[3]);
@@ -89,14 +89,7 @@ public class RFBuilder {
 															},
 															SketchBuilder.ReduceSketchByFields(0))
 
-								//SketchBuilder.apply( 	RFPreprocessing.PATH_OUTPUT_SKETCH_SAMPLE_LABELS,
-								//						FPreprocessing.PATH_OUTPUT_SKETCH_SAMPLE_LABELS,
-								//						bfSampleSketch.getHashFunctions(),
-								//						SketchBuilder.SKETCHTYPE_BLOOM_FILTER,
-								//						SketchBuilder.ReduceSketchByFields(0)
-								//					);
-
-							);
+								);
 
 		// ------------------------------------------
 		// Start Learning phase

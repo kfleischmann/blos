@@ -1,8 +1,14 @@
 package eu.blos.java.ml.linear_regression;
 
 
+import eu.blos.java.algorithms.sketches.HashFunction;
+import eu.blos.java.ml.random_forest.RFPreprocessing;
+import eu.blos.java.stratosphere.sketch.api.SketchBuilder;
+import eu.blos.java.stratosphere.sketch.api.SketcherUDF;
 import eu.blos.scala.algorithms.sketches.CMSketch;
 import eu.stratosphere.api.java.ExecutionEnvironment;
+import eu.stratosphere.api.java.tuple.Tuple3;
+import eu.stratosphere.util.Collector;
 import org.apache.commons.cli.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -41,18 +47,23 @@ public class Builder {
 		String rawInputPath	= 			cmd.getOptionValue("input-path"); //"file:///home/kay/datasets/mnist/normalized_full.txt";
 		String preprocessedDataPath=  	cmd.getOptionValue("preprocessing-path"); //"file:///home/kay/temp/rf/tree-1-test1-mnist-05/preprocessed";
 		String sketchDataPath=  		cmd.getOptionValue("sketch-path"); //"file:///home/kay/temp/rf/tree-1-test1-mnist-05/sketched";
-		String outputTreePath = 		cmd.getOptionValue("output-path"); //"file:///home/kay/temp/rf/tree-1-test1-mnist-05/tree/tree";
+		String outputPath = 			cmd.getOptionValue("output-path"); //"file:///home/kay/temp/rf/tree-1-test1-mnist-05/tree/tree";
 
 
-		// allocates 5 GB memory
-		CMSketch cmSketch = new CMSketch(0.01 /*factor*/, 0.00001 /*prob*/);
-		cmSketch.alloc();
+		CMSketch sketch1 = new CMSketch(0.01 /*factor*/, 0.001 /*prob*/);
+		CMSketch sketch2 = new CMSketch(0.01 /*factor*/, 0.001 /*prob*/);
 
-		System.out.println(cmSketch.w() );
-		System.out.println(cmSketch.d() );
-		System.out.println("size in mb:"+cmSketch.size()*4/1024/1024 );
 
-		// ------------------------------------------
+
+		System.out.println(rawInputPath);
+		System.out.println(preprocessedDataPath);
+		System.out.println(sketchDataPath);
+
+		System.out.println(sketch1.w() );
+		System.out.println(sketch1.d() );
+		System.out.println("size in mb:"+ sketch1.size()*4.0/1024.0/1024.0 );
+
+		// ------------------------------------------ls
 		// start preprocessing phase
 		// ------------------------------------------
 		Preprocessor.transform(env, rawInputPath, preprocessedDataPath);
@@ -61,12 +72,33 @@ public class Builder {
 		// -----------------------------------------
 		// start sketching phase
 		// ------------------------------------------
+		SketchBuilder.sketch(env,
+				preprocessedDataPath, sketchDataPath,
+				SketchBuilder.apply( 	"sketch1",	// input preprocessed
+										"sketch1",  // output sketch
+										sketch1.get_hashfunctions().toArray(new HashFunction[sketch1.get_hashfunctions().size()]),
+										SketchBuilder.SKETCHTYPE_CM_SKETCH,
+										new SketchBuilder.DefaultSketcherUDF(
+												",", // split line by comma
+												2,	// emit y-value
+												SketchBuilder.Fields(0,1)), // extract fields for hashing (i,k)
+										SketchBuilder.ReduceSketchByFields(0, 1) // group by hash
+				),
+				SketchBuilder.apply( 	"sketch2",	// input preprocessed
+										"sketch2",  // output sketch
+						sketch2.get_hashfunctions().toArray(new HashFunction[sketch2.get_hashfunctions().size()]),
+										SketchBuilder.SKETCHTYPE_CM_SKETCH,
+										new SketchBuilder.DefaultSketcherUDF(
+												",", // split line by comma
+												3,	// emit y-value
+												SketchBuilder.Fields(0,1,2)), // extract fields for hashing (i,k)
+										SketchBuilder.ReduceSketchByFields(0, 1) // group by hash
+				)
 
-
+		);
 
 
 	}
-
 	/**
 	 * parse the input parameters
 	 * @param args
@@ -158,6 +190,16 @@ public class Builder {
 								.withValueSeparator('=')
 								.hasArg()
 						.create("r"));
+
+
+
+		lvOptions.addOption(
+				OptionBuilder
+						.withLongOpt("execute")
+						.withDescription("describes the execution steps. p process, s setch,l learn. E.g. -E=psl")
+						.withValueSeparator('=')
+						.hasArg()
+						.create("E"));
 
 
 		withArguments(lvOptions);

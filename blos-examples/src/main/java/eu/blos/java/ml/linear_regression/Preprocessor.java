@@ -45,40 +45,40 @@ public class Preprocessor {
 		new Path(outputPath).getFileSystem().delete(new Path(outputPath), true );
 		new Path(outputPath).getFileSystem().mkdirs(new Path(outputPath));
 
-		System.out.println(inputPath);
-		System.out.println(outputPath);
-
 		// read samples
 		DataSet<String> samples = env.readTextFile(inputPath);
 
-		// output: (k, xk^i * y^i)
-		DataSet<Tuple2<Integer,Double>> sketch1 =
-				samples.flatMap(new FlatMapFunction<String, Tuple2<Integer, Double>>() {
+		// output: (i, k, xk^i * y^i)
+		DataSet<Tuple3<String, Integer,Double>> sketch1 =
+				samples.flatMap(new FlatMapFunction<String, Tuple3<String, Integer, Double>>() {
 					@Override
-					public void flatMap(String s, Collector<Tuple2<Integer, Double>> collector) throws Exception {
+					public void flatMap(String s, Collector<Tuple3<String, Integer, Double>> collector) throws Exception {
+						// format: (sampleId,y,attributes)
 						String[] fields = s.split((","));
-						String[] features = fields[1].split(" ");
-						Double label = Double.parseDouble(fields[0]);
+						String sampleId = fields[0];
+						String[] features = fields[2].split(" ");
+						Double label = Double.parseDouble(fields[1]);
 						for(int k=0; k < features.length; k++ ){
 							Double value = label*Double.parseDouble(features[k]);
-							collector.collect( new Tuple2<Integer,Double>( k, value ) );
+							collector.collect( new Tuple3<String,Integer,Double>( sampleId, k, value ) );
 						}//for
 					} // flatMap
 				});
 
-		// output: (k, xk^i * y^i)
-		DataSet<Tuple3<Integer, Integer,Double>> sketch2 =
-				samples.flatMap(new FlatMapFunction<String, Tuple3<Integer, Integer, Double>>() {
+		// output: for each index j in x (i, k, xk^i * xj^i)
+		DataSet<Tuple4<String, Integer, Integer,Double>> sketch2 =
+				samples.flatMap(new FlatMapFunction<String, Tuple4<String, Integer, Integer, Double>>() {
 					@Override
-					public void flatMap(String s, Collector<Tuple3<Integer, Integer, Double>> collector) throws Exception {
+					public void flatMap(String s, Collector<Tuple4<String, Integer, Integer, Double>> collector) throws Exception {
 						String[] fields = s.split((","));
-						String[] features = fields[1].split(" ");
+						String sampleId = fields[0];
+						String[] features = fields[2].split(" ");
 
 						for(int j=0; j < features.length; j++ ) {
 							Double value1 = Double.parseDouble(features[j]);
 							for (int k = 0; k < features.length; k++) {
 								Double value2 = Double.parseDouble(features[k]);
-								collector.collect(new Tuple3<Integer, Integer, Double>(j, k, value1*value2));
+								collector.collect(new Tuple4<String, Integer, Integer, Double>(sampleId, j, k, value1*value2));
 							}//for
 						}
 					} // flatMap
@@ -86,11 +86,12 @@ public class Preprocessor {
 
 
 
+		 /*
 		// group by dimension k
-		sketch1.groupBy(0).reduce(new ReduceFunction<Tuple2<Integer, Double>>() {
+		sketch1.groupBy(0).reduce(new ReduceFunction<Tuple3<String, Integer, Double>>() {
 			@Override
-			public Tuple2<Integer, Double> reduce(Tuple2<Integer, Double> t1, Tuple2<Integer, Double> t2) throws Exception {
-				return new Tuple2<Integer,Double>(t1.f0, t1.f1+t2.f1);
+			public Tuple3<String, Integer, Double> reduce(Tuple3<String, Integer, Double> t1, Tuple3<String, Integer, Double> t2) throws Exception {
+				return new Tuple3<String, Integer,Double>(t1.f0, t1.f1+t2.f1);
 			}
 		});
 
@@ -100,7 +101,7 @@ public class Preprocessor {
 			public Tuple3<Integer, Integer, Double> reduce(Tuple3<Integer, Integer, Double> t1, Tuple3<Integer, Integer, Double> t2) throws Exception {
 				return new Tuple3<Integer, Integer,Double>(t1.f0, t1.f1, t1.f2+t2.f2);
 			}
-		});
+		});*/
 
 		sketch1.writeAsCsv( outputPath+"/sketch1", "\n", ",", FileSystem.WriteMode.OVERWRITE );
 		sketch2.writeAsCsv( outputPath+"/sketch2", "\n", ",", FileSystem.WriteMode.OVERWRITE );

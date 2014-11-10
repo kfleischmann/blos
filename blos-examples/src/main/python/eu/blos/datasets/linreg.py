@@ -27,19 +27,21 @@ if __name__=='__main__':
 	def linear_func(x):
 		return m*x+c
 	x=0
+	counter=0
 	for s in range(0, samples):
 		y=round(linear_func(x) + np.random.uniform(-1,1)*sigma )
-		xx.append(x)
-		yy.append(y)
+		#xx.append(x)
+		#yy.append(y)
+		x = x + np.random.uniform(0,sigma)
+		print str(counter)+sep+str(x)+sep+str(y)
 
-		x = x + np.random.uniform(0,10)
-
+		counter=counter+1
 	# scale it
-	xx_max = max(xx)
-	yy_max = max(yy)
-	xx = map( lambda x : x/ xx_max, xx )
-	yy = map( lambda y : y/ yy_max, yy )
+	#xx_max = max(xx)
+	#yy_max = max(yy)
+	#xx = map( lambda x : x/ xx_max, xx )
+	#yy = map( lambda y : y/ yy_max, yy )
 
-	scaled = zip_with(lambda x,y: [x,y], xx,yy)
-	for s in scaled:
-		print str(s[0])+sep+str(s[1])
+	#scaled = zip_with(lambda x,y: [x,y], xx,yy)
+	#for s in scaled:
+	#	print str(s[0])+sep+str(s[1])
