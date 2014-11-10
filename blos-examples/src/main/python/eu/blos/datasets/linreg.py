@@ -67,9 +67,8 @@ if __name__=='__main__':
 	from argparse import RawTextHelpFormatter
 
 	argparser = argparse.ArgumentParser(description="""
-		Organize the blos experiments. You can add experiments.
+		create linear regression datasets
 	""", formatter_class=RawTextHelpFormatter)
-
 
 	# specify arguments
 	argparser.add_argument("-v", "--verbose", action="store_true", help="turns on verbosity")

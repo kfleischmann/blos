@@ -46,7 +46,7 @@ if __name__=='__main__':
 	from argparse import RawTextHelpFormatter
 
 	argparser = argparse.ArgumentParser(description="""
-		Organize the blos experiments. You can add experiments.
+		visualize the sketch
 	""", formatter_class=RawTextHelpFormatter)
 
 
