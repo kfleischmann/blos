@@ -5,6 +5,7 @@ import eu.blos.java.stratosphere.sketch.api.SketchBuilder;
 import eu.blos.java.stratosphere.sketch.api.SketcherUDF;
 import eu.stratosphere.api.java.ExecutionEnvironment;
 import eu.stratosphere.api.java.tuple.Tuple3;
+import eu.stratosphere.api.java.tuple.Tuple4;
 import eu.stratosphere.util.Collector;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -53,7 +54,7 @@ public class RFBuilder {
 																		new SketchBuilder.DefaultSketcherUDF(",", SketchBuilder.Fields(0, 2, 4) );
 
 																@Override
-																public void sketch(String record, Collector<Tuple3<Long, Integer, Double>> collector, HashFunction[] hashFunctions ) {
+																public void sketch(String record, Collector<Tuple4<Long, Integer, Integer,Double>> collector, HashFunction[] hashFunctions ) {
 																	// only sketch left
 																	String[] values = record.split(",");
 																	Double featureValue = Double.parseDouble(values[3]);
@@ -75,7 +76,7 @@ public class RFBuilder {
 																private SketchBuilder.DefaultSketcherUDF defaultSketcher =
 																		new SketchBuilder.DefaultSketcherUDF(",", SketchBuilder.Fields(0, 2, 4));
 																@Override
-																public void sketch(String record, Collector<Tuple3<Long, Integer, Double>> collector, HashFunction[] hashFunctions ) {
+																public void sketch(String record, Collector<Tuple4<Long, Integer, Integer, Double>> collector, HashFunction[] hashFunctions ) {
 																	// only sketch right
 																	String[] values = record.split(",");
 																	Double featureValue = Double.parseDouble(values[3]);

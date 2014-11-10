@@ -6,6 +6,7 @@ import eu.stratosphere.api.java.ExecutionEnvironment;
 import eu.stratosphere.api.java.functions.FlatMapFunction;
 import eu.stratosphere.api.java.functions.ReduceFunction;
 import eu.stratosphere.api.java.tuple.Tuple3;
+import eu.stratosphere.api.java.tuple.Tuple4;
 import eu.stratosphere.core.fs.FileSystem;
 import eu.stratosphere.core.fs.Path;
 import eu.stratosphere.util.Collector;
@@ -58,7 +59,7 @@ public class SketchBuilder {
 			return result.trim();
 		}
 		@Override
-		public void sketch(String record, Collector<Tuple3<Long, Integer, Double>> collector, HashFunction[] hashFunctions ) {
+		public void sketch(String record, Collector<Tuple4<Long, Integer, Integer, Double>> collector, HashFunction[] hashFunctions ) {
 			String[] fields = record.split(fieldDelimiter);
 			String key = extractFields.length==0 ? record : extractFields(fields,extractFields);
 			Double value = defaultValue;
@@ -67,7 +68,7 @@ public class SketchBuilder {
 			}
 			for( int i=0; i < hashFunctions.length; i++ ){
 				long hash = hashFunctions[i].hash(key);
-				collector.collect( new Tuple3<Long, Integer, Double>( hash, i, value ) );
+				collector.collect( new Tuple4<Long, Integer, Integer, Double>( hash, i, 1, value ) );
 			}//for
 		}
 	}
@@ -96,11 +97,11 @@ public class SketchBuilder {
 				env	.readTextFile(preprocessedDataPath+"/"+sketch.getSource())
 					.flatMap(new SketchOperator(sketch)) // do the hashing
 					.groupBy(sketch.getGroupBy())  // reduce
-					.reduce(new ReduceFunction<Tuple3<Long, Integer, Double>>() {
+					.reduce(new ReduceFunction<Tuple4<Long, Integer, Integer, Double>>() {
 						@Override
-						public Tuple3<Long, Integer, Double> reduce(Tuple3<Long, Integer, Double> left,
-																	 Tuple3<Long, Integer, Double> right) throws Exception {
-							return new Tuple3<Long, Integer, Double>(left.f0, left.f1, left.f2+right.f2 );
+						public Tuple4<Long, Integer, Integer, Double> reduce(Tuple4<Long, Integer, Integer, Double> left,
+																	Tuple4<Long, Integer, Integer, Double> right) throws Exception {
+							return new Tuple4<Long, Integer, Integer, Double>(left.f0, left.f1, left.f2+right.f2, left.f3+right.f3 );
 						}
 					})
 					.writeAsCsv(sketchDataPath + "/" + sketch.getDest(), "\n", ",", FileSystem.WriteMode.OVERWRITE);
@@ -110,10 +111,10 @@ public class SketchBuilder {
 			// execute program
 			env.execute("sketching source "+sketch.getDest() );
 		}//for
-	} // sketch
+	} // sketch5
 
 
-	public static class SketchOperator extends FlatMapFunction<String, Tuple3<Long, Integer, Double>>  implements Serializable {
+	public static class SketchOperator extends FlatMapFunction<String, Tuple4<Long, Integer, Integer, Double>>  implements Serializable {
 
 		private Sketcher sketcher;
 
@@ -122,7 +123,7 @@ public class SketchBuilder {
 		}
 
 		@Override
-		public void flatMap(String record, Collector<Tuple3<Long, Integer, Double>> collector) throws Exception {
+		public void flatMap(String record, Collector<Tuple4<Long, Integer, Integer, Double>> collector) throws Exception {
 			sketcher.getUDF().sketch(record, collector, sketcher.getHashFunctions() );
 		}
 	}
