@@ -29,6 +29,7 @@
 #
 ################################ DOCUMENTATION #################################
 #
+# This scripts helps to create / add experiments
 # see output (-h)
 #
 #
@@ -76,6 +77,6 @@ if __name__ == "__main__":
     except Exception as e:
         print "AN ERROR OCCOURED:", e
 
-        if( bool(vars(args)['verbose']) ):
+        if( bool(vars(args)['verbose'])):
             import traceback, sys
             traceback.print_exc(file=sys.stderr)

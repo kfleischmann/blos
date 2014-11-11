@@ -6,6 +6,7 @@ import eu.stratosphere.api.java.ExecutionEnvironment;
 import eu.stratosphere.api.java.functions.FlatMapFunction;
 import eu.stratosphere.api.java.functions.ReduceFunction;
 import eu.stratosphere.api.java.tuple.Tuple3;
+import eu.stratosphere.api.java.tuple.Tuple4;
 import eu.stratosphere.core.fs.FileSystem;
 import eu.stratosphere.core.fs.Path;
 import eu.stratosphere.util.Collector;
@@ -15,7 +16,6 @@ import org.apache.commons.logging.LogFactory;
 import java.io.Serializable;
 
 public class SketchBuilder {
-
 	private static final Log LOG = LogFactory.getLog(SketchBuilder.class);
 
 	public static final int SKETCHTYPE_BLOOM_FILTER 	= 1;
@@ -31,10 +31,24 @@ public class SketchBuilder {
 	public static class DefaultSketcherUDF implements SketcherUDF {
 		private String fieldDelimiter;
 		private int[] extractFields;
+		private int valueIndex;
+		private Double defaultValue=1.0;
 
-		public DefaultSketcherUDF(String fieldDelimiter, int ... extractFields ){
+		/**
+		 *
+		 * @param fieldDelimiter split each line by field-delimiter
+		 * @param valueIndex field-index that should be used as emit value. default value is 1.0
+		 * @param extractFields fields used for the hashing process
+		 */
+		public DefaultSketcherUDF(String fieldDelimiter, int valueIndex, int ... extractFields ){
 			this.fieldDelimiter = fieldDelimiter;
 			this.extractFields = extractFields;
+			this.valueIndex = valueIndex;
+
+		}
+
+		public DefaultSketcherUDF(String fieldDelimiter,int ... extractFields ){
+			this(fieldDelimiter, -1, extractFields);
 		}
 
 		private String extractFields(String[] record, int[] fields ){
@@ -45,15 +59,16 @@ public class SketchBuilder {
 			return result.trim();
 		}
 		@Override
-		public void sketch(String record, Collector<Tuple3<Long, Integer, Integer>> collector, HashFunction[] hashFunctions ) {
+		public void sketch(String record, Collector<Tuple4<Long, Integer, Integer, Double>> collector, HashFunction[] hashFunctions ) {
 			String[] fields = record.split(fieldDelimiter);
 			String key = extractFields.length==0 ? record : extractFields(fields,extractFields);
-
-
+			Double value = defaultValue;
+			if(valueIndex!=-1){
+				value=Double.parseDouble(fields[valueIndex]);
+			}
 			for( int i=0; i < hashFunctions.length; i++ ){
 				long hash = hashFunctions[i].hash(key);
-				//System.out.println("key: "+key + "=> hash: "+hash+"("+record+")" );
-				collector.collect( new Tuple3<Long, Integer, Integer>( hash, i, 1 ) );
+				collector.collect( new Tuple4<Long, Integer, Integer, Double>( hash, i, 1, value ) );
 			}//for
 		}
 	}
@@ -79,25 +94,27 @@ public class SketchBuilder {
 		new Path(sketchDataPath).getFileSystem().mkdirs(new Path(sketchDataPath));
 
 		for( Sketcher sketch : mapper ){
-			env.readTextFile(preprocessedDataPath+"/"+sketch.getSource())
+				env	.readTextFile(preprocessedDataPath+"/"+sketch.getSource())
 					.flatMap(new SketchOperator(sketch)) // do the hashing
 					.groupBy(sketch.getGroupBy())  // reduce
-					.reduce(new ReduceFunction<Tuple3<Long, Integer, Integer>>() {
+					.reduce(new ReduceFunction<Tuple4<Long, Integer, Integer, Double>>() {
 						@Override
-						public Tuple3<Long, Integer, Integer> reduce(Tuple3<Long, Integer, Integer> left,
-																	 Tuple3<Long, Integer, Integer> right) throws Exception {
-							return new Tuple3<Long, Integer, Integer>(left.f0, left.f1, left.f2+right.f2 );
+						public Tuple4<Long, Integer, Integer, Double> reduce(Tuple4<Long, Integer, Integer, Double> left,
+																	Tuple4<Long, Integer, Integer, Double> right) throws Exception {
+							return new Tuple4<Long, Integer, Integer, Double>(left.f0, left.f1, left.f2+right.f2, left.f3+right.f3 );
 						}
 					})
 					.writeAsCsv(sketchDataPath + "/" + sketch.getDest(), "\n", ",", FileSystem.WriteMode.OVERWRITE);
 
+
+
 			// execute program
 			env.execute("sketching source "+sketch.getDest() );
 		}//for
-	} // sketch
+	} // sketch5
 
 
-	public static class SketchOperator extends FlatMapFunction<String, Tuple3<Long, Integer, Integer>>  implements Serializable {
+	public static class SketchOperator extends FlatMapFunction<String, Tuple4<Long, Integer, Integer, Double>>  implements Serializable {
 
 		private Sketcher sketcher;
 
@@ -106,7 +123,7 @@ public class SketchBuilder {
 		}
 
 		@Override
-		public void flatMap(String record, Collector<Tuple3<Long, Integer, Integer>> collector) throws Exception {
+		public void flatMap(String record, Collector<Tuple4<Long, Integer, Integer, Double>> collector) throws Exception {
 			sketcher.getUDF().sketch(record, collector, sketcher.getHashFunctions() );
 		}
 	}

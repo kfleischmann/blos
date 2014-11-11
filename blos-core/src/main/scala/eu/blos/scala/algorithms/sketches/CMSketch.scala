@@ -1,14 +1,11 @@
 package eu.blos.scala.algorithms.sketches
 
 import pl.edu.icm.jlargearrays.FloatLargeArray
-import eu.blos.java.algorithms.sketches.HashFunction
-import eu.blos.java.algorithms.sketches.DigestHashFunction
+import eu.blos.java.algorithms.sketches.{Sketch, HashFunction, DigestHashFunction}
 
-class CMSketch(   var delta: Double,
-                  var epsilon: Double
-                  //var k: Int,
-                  //var hashfunctions : Option[java.util.ArrayList[HashFunction]]
-                ) {
+case class CMSketch(  var delta: Double,
+                      var epsilon: Double
+                ) extends Sketch with Serializable {
 
   def this() = {
     this(1,1/*,1, None*/ )
@@ -23,38 +20,16 @@ class CMSketch(   var delta: Double,
   def d = Math.ceil(Math.log(1 / delta)).toLong
 
   // weights -> space
-
   // number of hash functions
-
-  var count : FloatLargeArray = null; // a = new FloatLargeArray(w*d); = null
-  //var heap : PriorityQueue[(Float, String)] = null
-  //var top_k : scala.collection.mutable.HashMap[String, (Float, String)] = null
+  var count : FloatLargeArray = null;
 
   def alloc = {
-    System.out.println(w)
-    System.out.println(d)
-
-
-    //count = Array.ofDim[Float](d, w)
-    count = new FloatLargeArray(w*d)
-    //heap = new PriorityQueue[(Float, String)]()(Ordering.by(estimate))
-    //top_k = scala.collection.mutable.HashMap[String, (Float, String)]()
+    count = new FloatLargeArray(w*d, true /*init memory with zeros*/ )
   }
 
-  //def get_heap = heap
   def size = if(count == null) 0 else d*w
   def estimate(t: (Float,String)) = -get(t._2)
   def get_hashfunctions = hashfunctions
-  //def set_hashfunctions(h:Option[java.util.ArrayList[HashFunction]]) { hashfunctions = h }
-
-  /*def update( key : String, increment : Float ) = {
-    for( row <- 0 until hashfunctions.size ){
-      val col = hashfunctions.get(row).hash(Math.abs(key.hashCode)).toInt
-      count(row)(col) += increment
-    }
-    //update_heap(key)
-  }*/
-
   def array_get(row : Long ,col : Long ) : Float = {
     count.get(row*w+col)
   }
@@ -68,41 +43,11 @@ class CMSketch(   var delta: Double,
       val col = get_hashfunctions.get(row).hash(key).toInt
       array_set(row,col, array_get(row,col)+increment ) //, count(row)(col)
     }
-    //update_heap(key)
   }
 
   def +( key : String, increment : Float ) = {
     update(key,increment)
   }
-
-  /*
-  def update_heap( key : String ) = {
-    val estimate = get(key)
-
-    // heap empty or the updated value better than the head one
-    if (heap.isEmpty || estimate >= heap.head._1) {
-
-      // key exists?
-      if ( top_k.exists( {x => x._1 == key})) {
-        top_k(key) = (estimate, key)
-
-        // shoudn't i update the heap as well?
-        // maybe not, because i only care about the k top items
-      } else {
-        if (top_k.size < k) {
-
-          heap.enqueue( (estimate, key) )
-          top_k(key) = (estimate, key)
-        } else {
-          val new_pair = (estimate, key)
-          val old_pair = heap.dequeue()
-
-          heap.enqueue(new_pair)
-          top_k(key) = new_pair
-        }
-      }
-    }
-  }*/
 
   def get( key : String ) = {
     var result = Float.MaxValue
@@ -133,11 +78,6 @@ class CMSketch(   var delta: Double,
       }//for
       x += 1
     }//for
-
-    // okay i am not sure to be completely correct do find the overall top
-    // disable heap feature
-    //heap.foreach( { x => update_heap(x._2)} )
-    //s.heap.foreach( { x => update_heap(x._2)} )
   }
 
   override def toString = {
