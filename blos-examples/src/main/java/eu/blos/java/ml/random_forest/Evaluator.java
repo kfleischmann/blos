@@ -13,16 +13,15 @@ import eu.stratosphere.core.fs.FileSystem;
 import eu.stratosphere.util.Collector;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import scala.math.BigInt;
 
 import java.math.BigInteger;
 import java.util.*;
 
-public class RFEvaluation {
+public class Evaluator {
 
 	private static final BigInteger TWO = new BigInteger("2");
 
-	private static final Log LOG = LogFactory.getLog(RFEvaluation.class);
+	private static final Log LOG = LogFactory.getLog(Evaluator.class);
 
 	/*public static void main(String[] args ) throws Exception {
 		final ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
@@ -167,7 +166,7 @@ public class RFEvaluation {
 
 
 		// emit result
-		if(RFBuilder.fileOutput) {
+		if(Builder.fileOutput) {
 			forestEvaluations.writeAsCsv(outputFile, "\n", " ", FileSystem.WriteMode.OVERWRITE );
 
 		} else {

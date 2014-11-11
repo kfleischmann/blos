@@ -9,10 +9,10 @@ import org.apache.flink.api.java.ExecutionEnvironment;
 import org.apache.flink.api.java.tuple.Tuple4;
 import org.apache.flink.util.Collector;
 
-public class RFBuilder {
+public class Builder {
 	public static boolean fileOutput =  true;
 
-	private static final Log LOG = LogFactory.getLog(RFBuilder.class);
+	private static final Log LOG = LogFactory.getLog(Builder.class);
 
 	public static void main(String[] args ) throws Exception {
 		final ExecutionEnvironment env = ExecutionEnvironment.createRemoteEnvironment("localhost", 6123, "/home/kay/blos/blos.jar");
@@ -20,9 +20,9 @@ public class RFBuilder {
 		env.setDegreeOfParallelism(1);
 
 
-		final BloomFilter bfNodeLeft 	 = new BloomFilter(0.5, (int)(RFPreprocessing.NUM_SAMPLES* RFPreprocessing.NUM_SAMPLE_FEATURES * RFPreprocessing.HISTOGRAM_SPLIT_CANDIDATES*0.5) );
-		final BloomFilter bfNodeRight 	 = new BloomFilter(0.5, (int)(RFPreprocessing.NUM_SAMPLES* RFPreprocessing.NUM_SAMPLE_FEATURES * RFPreprocessing.HISTOGRAM_SPLIT_CANDIDATES*0.5) );
-		final BloomFilter bfSampleSketch = new BloomFilter(0.5, RFPreprocessing.NUM_SAMPLES );
+		final BloomFilter bfNodeLeft 	 = new BloomFilter(0.5, (int)(Preprocessor.NUM_SAMPLES* Preprocessor.NUM_SAMPLE_FEATURES * Preprocessor.HISTOGRAM_SPLIT_CANDIDATES*0.5) );
+		final BloomFilter bfNodeRight 	 = new BloomFilter(0.5, (int)(Preprocessor.NUM_SAMPLES* Preprocessor.NUM_SAMPLE_FEATURES * Preprocessor.HISTOGRAM_SPLIT_CANDIDATES*0.5) );
+		final BloomFilter bfSampleSketch = new BloomFilter(0.5, Preprocessor.NUM_SAMPLES );
 
 
 		String rawInputPath	= 			"file:///home/kay/datasets/mnist/normalized_full.txt";
@@ -34,7 +34,7 @@ public class RFBuilder {
 		// start preprocessing phase
 		// the preprocessor prepares the raw data for the sketchin phase
 		// ------------------------------------------
-		RFPreprocessing.transform(	env, rawInputPath, preprocessedDataPath);
+		Preprocessor.transform(env, rawInputPath, preprocessedDataPath);
 
 
 		// ------------------------------------------
@@ -43,8 +43,8 @@ public class RFBuilder {
 		SketchBuilder.sketch(	env,
 								preprocessedDataPath, sketchDataPath,
 
-								SketchBuilder.apply( 	RFPreprocessing.PATH_OUTPUT_SKETCH_NODE,
-													 	RFPreprocessing.PATH_OUTPUT_SKETCH_NODE+"-left",
+								SketchBuilder.apply( 	Preprocessor.PATH_OUTPUT_SKETCH_NODE,
+													 	Preprocessor.PATH_OUTPUT_SKETCH_NODE+"-left",
 														bfNodeLeft.getHashFunctions(),SketchBuilder.SKETCHTYPE_BLOOM_FILTER,
 															new SketcherUDF() {
 																private SketchBuilder.DefaultSketcherUDF defaultSketcher =
@@ -66,8 +66,8 @@ public class RFBuilder {
 															},
 														SketchBuilder.ReduceSketchByFields(0)),
 													SketchBuilder.apply(
-														RFPreprocessing.PATH_OUTPUT_SKETCH_NODE,
-														RFPreprocessing.PATH_OUTPUT_SKETCH_NODE+"-right",
+														Preprocessor.PATH_OUTPUT_SKETCH_NODE,
+														Preprocessor.PATH_OUTPUT_SKETCH_NODE+"-right",
 														bfNodeRight.getHashFunctions(), SketchBuilder.SKETCHTYPE_BLOOM_FILTER,
 															new SketcherUDF() {
 																private SketchBuilder.DefaultSketcherUDF defaultSketcher =
@@ -94,7 +94,7 @@ public class RFBuilder {
 		// ------------------------------------------
 		Sketch[] sketches = {bfNodeLeft, bfNodeRight, bfSampleSketch};
 
-		RFLearning.learn(env, preprocessedDataPath, sketchDataPath, outputTreePath, sketches, "1");
+		Learner.learn(env, preprocessedDataPath, sketchDataPath, outputTreePath, sketches, "1");
 
 	}
 }

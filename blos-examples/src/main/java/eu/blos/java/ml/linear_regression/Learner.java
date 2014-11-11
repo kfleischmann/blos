@@ -2,7 +2,6 @@ package eu.blos.java.ml.linear_regression;
 
 import eu.blos.java.algorithms.sketches.Sketch;
 import eu.blos.java.api.common.LearningFunction;
-import eu.blos.java.ml.random_forest.RFBuilder;
 import eu.blos.scala.algorithms.sketches.CMSketch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -79,7 +78,7 @@ public class Learner {
 		DataSet<Tuple1<String>> trees = SketchDataSet.mapPartition(new LineareRegressionLearningOperator(sketches)).setParallelism(1);
 
 		// emit result
-		if(RFBuilder.fileOutput) {
+		if(eu.blos.java.ml.random_forest.Builder.fileOutput) {
 			trees.writeAsCsv(outputPath, "\n", ",", FileSystem.WriteMode.OVERWRITE);
 		} else {
 			trees.print();

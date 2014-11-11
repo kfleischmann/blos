@@ -20,8 +20,8 @@ import java.math.BigInteger;
 import java.util.*;
 
 
-public class RFLearning {
-	private static final Log LOG = LogFactory.getLog(RFLearning.class);
+public class Learner {
+	private static final Log LOG = LogFactory.getLog(Learner.class);
 
 	public static int SELECT_FEATURES_PER_NODE = 5;
 
@@ -61,10 +61,10 @@ public class RFLearning {
 
 		// prepare environment, distribute the sketches to all nodes and start learning phase
 		readSketchesAndLearn(env, new String[]{
-						sketchDataPath + "/" + RFPreprocessing.PATH_OUTPUT_SKETCH_NODE+"-left",
-						sketchDataPath + "/" + RFPreprocessing.PATH_OUTPUT_SKETCH_NODE+"-right",
-						preprocessedDataPath + "/" + RFPreprocessing.PATH_OUTPUT_SKETCH_SPLIT_CANDIDATES,
-						preprocessedDataPath + "/" + RFPreprocessing.PATH_OUTPUT_SKETCH_SAMPLE_LABELS
+						sketchDataPath + "/" + Preprocessor.PATH_OUTPUT_SKETCH_NODE+"-left",
+						sketchDataPath + "/" + Preprocessor.PATH_OUTPUT_SKETCH_NODE+"-right",
+						preprocessedDataPath + "/" + Preprocessor.PATH_OUTPUT_SKETCH_SPLIT_CANDIDATES,
+						preprocessedDataPath + "/" + Preprocessor.PATH_OUTPUT_SKETCH_SAMPLE_LABELS
 						},
 						outputTreePath,
 						sketches);
@@ -100,7 +100,7 @@ public class RFLearning {
 		DataSet<Tuple1<String>> trees = SketchDataSet.mapPartition(new RFLearningOperator(sketches)).setParallelism(1);
 
 		// emit result
-		if(RFBuilder.fileOutput) {
+		if(Builder.fileOutput) {
 			trees.writeAsCsv(outputPath, "\n", ",", FileSystem.WriteMode.OVERWRITE);
 		} else {
 			trees.print();
@@ -144,15 +144,15 @@ public class RFLearning {
 
 		// Knowlege about the sample-labels.
 		// Request qj(s, l) -> {0,1}
-		//private BloomFilter sketch_qj; // = new BloomFilter( PROBABILITY_FALSE_POSITIVE , RFPreprocessing.NUM_SAMPLES );
+		//private BloomFilter sketch_qj; // = new BloomFilter( PROBABILITY_FALSE_POSITIVE , Preprocessor.NUM_SAMPLES );
 
 		// Knowlege about the feature locations according to the different candidates.
 		// Request qjL(s, f, c) -> {0,1}
-		private BloomFilter sketch_qjL; // = new BloomFilter( PROBABILITY_FALSE_POSITIVE, RFPreprocessing.NUM_SAMPLES* RFPreprocessing.NUM_SAMPLE_FEATURES * RFPreprocessing.HISTOGRAM_SPLIT_CANDIDATES);
+		private BloomFilter sketch_qjL; // = new BloomFilter( PROBABILITY_FALSE_POSITIVE, Preprocessor.NUM_SAMPLES* Preprocessor.NUM_SAMPLE_FEATURES * Preprocessor.HISTOGRAM_SPLIT_CANDIDATES);
 
 		// Knowlege about the feature locations according to the different candidates.
 		// Request qjR(s, f, c) -> {0,1}
-		private BloomFilter sketch_qjR; // = new BloomFilter( PROBABILITY_FALSE_POSITIVE, RFPreprocessing.NUM_SAMPLES* RFPreprocessing.NUM_SAMPLE_FEATURES * RFPreprocessing.HISTOGRAM_SPLIT_CANDIDATES );
+		private BloomFilter sketch_qjR; // = new BloomFilter( PROBABILITY_FALSE_POSITIVE, Preprocessor.NUM_SAMPLES* Preprocessor.NUM_SAMPLE_FEATURES * Preprocessor.HISTOGRAM_SPLIT_CANDIDATES );
 
 		private Collector<Tuple1<String>> output;
 
@@ -272,7 +272,7 @@ public class RFLearning {
 
 			for( int tree=0; tree < NUMBER_TREES_PER_NODE; tree++ ){
 				List<Integer> featureSpace = new ArrayList<Integer>();
-				for(int i=0; i < RFPreprocessing.NUM_SAMPLE_FEATURES; i++ ) featureSpace.add(i);
+				for(int i=0; i < Preprocessor.NUM_SAMPLE_FEATURES; i++ ) featureSpace.add(i);
 				BigInteger nodeId = BigInteger.valueOf(0);
 				List<Integer> features = selectRandomFeatures(featureSpace, SELECT_FEATURES_PER_NODE );
 				Integer featureSplit = -1;
@@ -390,11 +390,11 @@ public class RFLearning {
 		 * @return
 		 */
 		public SplitCandidate computeNodeFeaturDistribution( int feature, String candidate, TreeNode node ){
-			Double[] qj  = new Double[RFPreprocessing.NUM_SAMPLE_LABELS];
-			Double[] qjL = new Double[RFPreprocessing.NUM_SAMPLE_LABELS];
-			Double[] qjR = new Double[RFPreprocessing.NUM_SAMPLE_LABELS];
+			Double[] qj  = new Double[Preprocessor.NUM_SAMPLE_LABELS];
+			Double[] qjL = new Double[Preprocessor.NUM_SAMPLE_LABELS];
+			Double[] qjR = new Double[Preprocessor.NUM_SAMPLE_LABELS];
 
-			for(int i=0; i < RFPreprocessing.NUM_SAMPLE_LABELS; i++ ){
+			for(int i=0; i < Preprocessor.NUM_SAMPLE_LABELS; i++ ){
 				qj[i] = new Double(0);
 				qjR[i] = new Double(0);
 				qjL[i] = new Double(0);
@@ -413,7 +413,7 @@ public class RFLearning {
 				qj[sample.f1.intValue()]++;
 
 				// find the labels from sketch
-				/*for(int i=0; i < RFPreprocessing.NUM_SAMPLE_LABELS; i++ ){
+				/*for(int i=0; i < Preprocessor.NUM_SAMPLE_LABELS; i++ ){
 					if( this.sketch_qjL.contains( (""+sample.f0+" "+i).getBytes()) ){
 						qj[i]++;
 					}
@@ -431,7 +431,7 @@ public class RFLearning {
 				}
 			}
 
-			for(int i=0; i < RFPreprocessing.NUM_SAMPLE_LABELS; i++ ){
+			for(int i=0; i < Preprocessor.NUM_SAMPLE_LABELS; i++ ){
 				qj[i] = qj[i] / totalSamples;
 				qjR[i] = qjR[i] / totalSamples;
 				qjL[i] = qjL[i] / totalSamples;

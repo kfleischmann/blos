@@ -19,9 +19,9 @@ import org.apache.flink.util.Collector;
 import java.util.Iterator;
 
 
-public class RFPreprocessing {
+public class Preprocessor {
 
-	private static final Log LOG = LogFactory.getLog(RFPreprocessing.class);
+	private static final Log LOG = LogFactory.getLog(Preprocessor.class);
 
 	public static final String PATH_OUTPUT_SKETCH_SPLIT_CANDIDATES = "feature-split-candidates";
 	public static final String PATH_OUTPUT_SKETCH_NODE = "rf-sketch";
@@ -155,7 +155,7 @@ public class RFPreprocessing {
 				});
 
 		// emit result
-		if(RFBuilder.fileOutput) {
+		if(Builder.fileOutput) {
 			outputFormat.writeAsCsv(outputPath, "\n", ",", FileSystem.WriteMode.OVERWRITE );
 		} else {
 			outputFormat.print();
@@ -247,7 +247,7 @@ public class RFPreprocessing {
 		});
 
 		// emit result
-		if(RFBuilder.fileOutput) {
+		if(Builder.fileOutput) {
 			cout.writeAsCsv(outputPathSketch, "\n", ",", FileSystem.WriteMode.OVERWRITE );
 			sampleLabels.writeAsCsv(outputPathBaggingTable, "\n", ",", FileSystem.WriteMode.OVERWRITE );
 		} else {
