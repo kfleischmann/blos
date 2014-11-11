@@ -3,7 +3,7 @@ package eu.blos.java.ml.linear_regression;
 
 import eu.blos.java.algorithms.sketches.HashFunction;
 import eu.blos.java.algorithms.sketches.Sketch;
-import eu.blos.java.stratosphere.sketch.api.SketchBuilder;
+import eu.blos.java.flink.sketch.sketch.api.SketchBuilder;
 import eu.blos.scala.algorithms.sketches.CMSketch;
 
 import org.apache.commons.cli.*;

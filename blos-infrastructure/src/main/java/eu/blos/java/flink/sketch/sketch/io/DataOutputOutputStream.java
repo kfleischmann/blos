@@ -1,4 +1,4 @@
-package eu.blos.java.stratosphere.sketch.io;
+package eu.blos.java.flink.sketch.sketch.io;
 
 import java.io.DataOutput;
 import java.io.IOException;

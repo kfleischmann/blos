@@ -1,15 +1,13 @@
 package eu.blos.java.ml.random_forest;
 
 import eu.blos.java.algorithms.sketches.*;
-import eu.blos.java.stratosphere.sketch.api.SketchBuilder;
-import eu.blos.java.stratosphere.sketch.api.SketcherUDF;
+import eu.blos.java.flink.sketch.sketch.api.SketchBuilder;
+import eu.blos.java.flink.sketch.sketch.api.SketcherUDF;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.flink.api.java.ExecutionEnvironment;
 import org.apache.flink.api.java.tuple.Tuple4;
 import org.apache.flink.util.Collector;
-
-import java.security.MessageDigest;
 
 public class RFBuilder {
 	public static boolean fileOutput =  true;

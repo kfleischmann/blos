@@ -1,4 +1,4 @@
-package eu.blos.java.stratosphere.sketch.api;
+package eu.blos.java.flink.sketch.sketch.api;
 
 
 import eu.blos.java.algorithms.sketches.HashFunction;
