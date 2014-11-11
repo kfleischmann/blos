@@ -45,10 +45,10 @@ public class Builder {
 		CommandLine cmd = parseArguments(args);
 		final ExecutionEnvironment env = getEnv(cmd);
 
-		String rawInputPath	= 			cmd.getOptionValue("input-path"); //"file:///home/kay/datasets/mnist/normalized_full.txt";
-		String preprocessedDataPath=  	cmd.getOptionValue("preprocessing-path"); //"file:///home/kay/temp/rf/tree-1-test1-mnist-05/preprocessed";
-		String sketchDataPath=  		cmd.getOptionValue("sketch-path"); //"file:///home/kay/temp/rf/tree-1-test1-mnist-05/sketched";
-		String outputPath = 			cmd.getOptionValue("output-path"); //"file:///home/kay/temp/rf/tree-1-test1-mnist-05/tree/tree";
+		String rawInputPath	= 			cmd.getOptionValue("input-path");
+		String preprocessedDataPath=  	cmd.getOptionValue("preprocessing-path");
+		String sketchDataPath=  		cmd.getOptionValue("sketch-path");
+		String outputPath = 			cmd.getOptionValue("output-path");
 
 		CMSketch sketch_labels = new CMSketch(0.1 /*factor*/, 0.1 /*prob*/);
 		CMSketch sketch_samples = new CMSketch(0.1 /*factor*/, 0.01 /*prob*/);

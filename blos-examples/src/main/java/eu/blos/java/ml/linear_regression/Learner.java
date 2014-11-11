@@ -157,14 +157,6 @@ public class Learner {
 			sketch_labels.alloc();
 			sketch_samples.alloc();
 
-			LOG.info("finished reading sketches into memory");
-
-			LOG.info("sketch size left-node distribution:" + sketch_labels.size());
-			LOG.info("sketch size right-node distribution:" + sketch_samples.size());
-
-			int left = 0;
-			int right = 0;
-
 			while (sketch.hasNext()) {
 				Tuple2<String, String> sketchData = sketch.next();
 
