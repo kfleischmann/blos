@@ -1,4 +1,4 @@
-package eu.blos.java.flink.sketch.sketch.api;
+package eu.blos.java.flink.sketch.api;
 
 import eu.blos.java.api.common.LearningFunction;
 import org.apache.flink.api.common.functions.MapPartitionFunction;

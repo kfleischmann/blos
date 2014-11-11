@@ -1,4 +1,4 @@
-package eu.blos.java.flink.sketch.sketch.api;
+package eu.blos.java.flink.sketch.api;
 
 import eu.blos.java.algorithms.sketches.HashFunction;
 import org.apache.flink.api.java.tuple.Tuple4;

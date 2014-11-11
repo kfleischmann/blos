@@ -1,8 +1,8 @@
 package eu.blos.java.ml.random_forest;
 
 import eu.blos.java.algorithms.sketches.*;
-import eu.blos.java.flink.sketch.sketch.api.SketchBuilder;
-import eu.blos.java.flink.sketch.sketch.api.SketcherUDF;
+import eu.blos.java.flink.sketch.api.SketchBuilder;
+import eu.blos.java.flink.sketch.api.SketcherUDF;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.flink.api.java.ExecutionEnvironment;

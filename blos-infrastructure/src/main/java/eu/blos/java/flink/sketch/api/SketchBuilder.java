@@ -1,4 +1,4 @@
-package eu.blos.java.flink.sketch.sketch.api;
+package eu.blos.java.flink.sketch.api;
 
 
 import eu.blos.java.algorithms.sketches.HashFunction;
@@ -11,7 +11,6 @@ import org.apache.flink.api.java.tuple.Tuple4;
 import org.apache.flink.core.fs.FileSystem;
 import org.apache.flink.core.fs.Path;
 import org.apache.flink.util.Collector;
-
 import java.io.Serializable;
 
 public class SketchBuilder {
