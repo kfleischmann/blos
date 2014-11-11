@@ -2,6 +2,8 @@ package eu.blos.java.ml.linear_regression;
 
 
 import eu.blos.java.algorithms.sketches.HashFunction;
+import eu.blos.java.algorithms.sketches.Sketch;
+import eu.blos.java.ml.random_forest.RFLearning;
 import eu.blos.java.ml.random_forest.RFPreprocessing;
 import eu.blos.java.stratosphere.sketch.api.SketchBuilder;
 import eu.blos.java.stratosphere.sketch.api.SketcherUDF;
@@ -48,22 +50,17 @@ public class Builder {
 		String sketchDataPath=  		cmd.getOptionValue("sketch-path"); //"file:///home/kay/temp/rf/tree-1-test1-mnist-05/sketched";
 		String outputPath = 			cmd.getOptionValue("output-path"); //"file:///home/kay/temp/rf/tree-1-test1-mnist-05/tree/tree";
 
-		CMSketch sketch1 = new CMSketch(0.1 /*factor*/, 0.1 /*prob*/);
-		CMSketch sketch2 = new CMSketch(0.1 /*factor*/, 0.01 /*prob*/);
-		CMSketch sketch3 = new CMSketch(0.001 /*factor*/, 0.001 /*prob*/);
-		CMSketch sketch4 = new CMSketch(0.01 /*factor*/, 0.0001 /*prob*/);
-		CMSketch sketch5 = new CMSketch(0.01 /*factor*/, 0.00001 /*prob*/);
+		CMSketch sketch_labels = new CMSketch(0.1 /*factor*/, 0.1 /*prob*/);
+		CMSketch sketch_samples = new CMSketch(0.1 /*factor*/, 0.01 /*prob*/);
 
-		//sketch1.alloc();
-		//sketch2.alloc();
 
 		System.out.println(rawInputPath);
 		System.out.println(preprocessedDataPath);
 		System.out.println(sketchDataPath);
 
-		System.out.println(sketch1.w() );
-		System.out.println(sketch1.d() );
-		System.out.println("size in mb:"+ sketch1.size()*4.0/1024.0/1024.0 );
+		System.out.println(sketch_samples.w() );
+		System.out.println(sketch_samples.d() );
+		System.out.println("size in mb:"+ sketch_samples.size()*4.0/1024.0/1024.0 );
 
 		// ------------------------------------------ls
 		// start preprocessing phase
@@ -76,54 +73,18 @@ public class Builder {
 		// ------------------------------------------
 		SketchBuilder.sketch(env,
 				preprocessedDataPath, sketchDataPath,
-				/*SketchBuilder.apply( 	"sketch1",	// input preprocessed
-										"sketch1",  // output sketch
-										sketch1.get_hashfunctions().toArray(new HashFunction[sketch1.get_hashfunctions().size()]),
-										SketchBuilder.SKETCHTYPE_CM_SKETCH,
-										new SketchBuilder.DefaultSketcherUDF(
-												",", // split line by comma
-												2,	// emit y-value
-												SketchBuilder.Fields(0,1)), // extract fields for hashing (i,k)
-										SketchBuilder.ReduceSketchByFields(0, 1) // group by hash
-				),*/
-				SketchBuilder.apply( 	"sketch2", /*input*/ "sketch2_1",  /*output*/
-						sketch1.get_hashfunctions().toArray(new HashFunction[sketch1.get_hashfunctions().size()]),
+				SketchBuilder.apply(
+						"sketch_labels",/*input preprocessed*/ "sketch_labels",  /* output sketch */
+						sketch_labels.get_hashfunctions().toArray(new HashFunction[sketch_labels.get_hashfunctions().size()]),
 						SketchBuilder.SKETCHTYPE_CM_SKETCH,
 						new SketchBuilder.DefaultSketcherUDF(
 								",", // split line by comma
-								3,	// emit y-value
-								SketchBuilder.Fields(0,1,2)), // extract fields for hashing (i,k)
+								2,	// emit y-value
+								SketchBuilder.Fields(0,1)), // extract fields for hashing (i,k)
 						SketchBuilder.ReduceSketchByFields(0, 1) // group by hash
 				),
-				SketchBuilder.apply( 	"sketch2", /*input*/ "sketch2_2",  /*output*/
-						sketch2.get_hashfunctions().toArray(new HashFunction[sketch2.get_hashfunctions().size()]),
-						SketchBuilder.SKETCHTYPE_CM_SKETCH,
-						new SketchBuilder.DefaultSketcherUDF(
-								",", // split line by comma
-								3,	// emit y-value
-								SketchBuilder.Fields(0,1,2)), // extract fields for hashing (i,k)
-						SketchBuilder.ReduceSketchByFields(0, 1) // group by hash
-				),
-				SketchBuilder.apply( 	"sketch2", /*input*/ "sketch2_3",  /*output*/
-						sketch3.get_hashfunctions().toArray(new HashFunction[sketch3.get_hashfunctions().size()]),
-						SketchBuilder.SKETCHTYPE_CM_SKETCH,
-						new SketchBuilder.DefaultSketcherUDF(
-								",", // split line by comma
-								3,	// emit y-value
-								SketchBuilder.Fields(0,1,2)), // extract fields for hashing (i,k)
-						SketchBuilder.ReduceSketchByFields(0, 1) // group by hash
-				),
-				SketchBuilder.apply( 	"sketch2", /*input*/ "sketch2_4",  /*output*/
-						sketch4.get_hashfunctions().toArray(new HashFunction[sketch4.get_hashfunctions().size()]),
-						SketchBuilder.SKETCHTYPE_CM_SKETCH,
-						new SketchBuilder.DefaultSketcherUDF(
-								",", // split line by comma
-								3,	// emit y-value
-								SketchBuilder.Fields(0,1,2)), // extract fields for hashing (i,k)
-						SketchBuilder.ReduceSketchByFields(0, 1) // group by hash
-				),
-				SketchBuilder.apply( 	"sketch2", /*input*/ "sketch2_5",  /*output*/
-						sketch5.get_hashfunctions().toArray(new HashFunction[sketch5.get_hashfunctions().size()]),
+				SketchBuilder.apply( 	"sketch_samples", /*input*/ "sketch_samples",  /*output*/
+						sketch_samples.get_hashfunctions().toArray(new HashFunction[sketch_samples.get_hashfunctions().size()]),
 						SketchBuilder.SKETCHTYPE_CM_SKETCH,
 						new SketchBuilder.DefaultSketcherUDF(
 								",", // split line by comma
@@ -133,6 +94,10 @@ public class Builder {
 				)
 		);
 
+
+		Sketch[] sketches = {sketch_labels, sketch_samples };
+
+		Learner.learn(env, preprocessedDataPath, sketchDataPath, outputPath, sketches, "1");
 
 	}
 	/**

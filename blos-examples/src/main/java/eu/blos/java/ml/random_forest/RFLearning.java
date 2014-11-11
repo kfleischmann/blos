@@ -43,7 +43,12 @@ public class RFLearning {
 	 * @param args
 	 * @throws Exception
 	 */
-    public static void learn(final ExecutionEnvironment env, String preprocessedDataPath, String sketchDataPath, String outputTreePath, Sketch[] sketches, String ... args ) throws Exception {
+    public static void learn(	final ExecutionEnvironment env,
+							 	String preprocessedDataPath,
+								String sketchDataPath,
+								String outputTreePath,
+								Sketch[] sketches,
+								String ... args ) throws Exception {
 
 		LOG.info("start learning phase");
 

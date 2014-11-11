@@ -61,6 +61,10 @@ def run(**kwargs):
 	white = (255,255,255)
 	img = Image.new("RGB", [max_w+1,max_d+1], white)
 
+	print "Max w:", max_w
+	print "Max d:", max_d
+	print "Max count:", max_count
+
 	# read statistics
 	with open(kwargs['sketch']) as f:
 		for line in f:
@@ -96,7 +100,7 @@ if __name__=='__main__':
 	argparser.add_argument("-v", "--verbose", action="store_true", help="turns on verbosity")
 	argparser.add_argument("-s", "--sketch", action="store", required=True, help="sketch file")
 	argparser.add_argument("-o", "--output_dir", action="store", required=True, help="Path to output directory")
-	argparser.add_argument("-S", "--output_size", action="store", required=False, help="output image format", default="1000x500")
+	argparser.add_argument("-S", "--output_size", action="store", required=False, help="output image format", default="1000x100")
 	argparser.add_argument("-f", "--output_format", action="store", required=False, help="output image format", default="jpg")
 	argparser.add_argument("-d", "--display", action="store_true", required=False, help="display image" )
 

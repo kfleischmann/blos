@@ -103,8 +103,8 @@ public class Preprocessor {
 			}
 		});*/
 
-		sketch1.writeAsCsv( outputPath+"/sketch1", "\n", ",", FileSystem.WriteMode.OVERWRITE );
-		sketch2.writeAsCsv( outputPath+"/sketch2", "\n", ",", FileSystem.WriteMode.OVERWRITE );
+		sketch1.writeAsCsv( outputPath+"/sketch_labels", "\n", ",", FileSystem.WriteMode.OVERWRITE );
+		sketch2.writeAsCsv( outputPath+"/sketch_samples", "\n", ",", FileSystem.WriteMode.OVERWRITE );
 
 		// execute program
 		env.execute("Preprocessing");
