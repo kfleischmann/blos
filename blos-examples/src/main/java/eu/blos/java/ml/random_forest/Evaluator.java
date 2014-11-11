@@ -1,18 +1,16 @@
 package eu.blos.java.ml.random_forest;
 
-import eu.stratosphere.api.java.DataSet;
-import eu.stratosphere.api.java.ExecutionEnvironment;
-import eu.stratosphere.api.java.functions.FilterFunction;
-import eu.stratosphere.api.java.functions.GroupReduceFunction;
-import eu.stratosphere.api.java.functions.MapFunction;
-import eu.stratosphere.api.java.operators.ReduceGroupOperator;
-import eu.stratosphere.api.java.tuple.Tuple1;
-import eu.stratosphere.api.java.tuple.Tuple2;
-import eu.stratosphere.api.java.tuple.Tuple3;
-import eu.stratosphere.core.fs.FileSystem;
-import eu.stratosphere.util.Collector;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.flink.api.common.functions.GroupReduceFunction;
+import org.apache.flink.api.common.functions.MapFunction;
+import org.apache.flink.api.java.DataSet;
+import org.apache.flink.api.java.ExecutionEnvironment;
+import org.apache.flink.api.java.tuple.Tuple1;
+import org.apache.flink.api.java.tuple.Tuple2;
+import org.apache.flink.api.java.tuple.Tuple3;
+import org.apache.flink.core.fs.FileSystem;
+import org.apache.flink.util.Collector;
 
 import java.math.BigInteger;
 import java.util.*;
@@ -23,15 +21,6 @@ public class Evaluator {
 
 	private static final Log LOG = LogFactory.getLog(Evaluator.class);
 
-	/*public static void main(String[] args ) throws Exception {
-		final ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
-		env.setDegreeOfParallelism(1);
-
-		String outputTreePath 	= "file:///home/kay/temp/rf/tree-1-test1-mnist-05/tree";
-		String inputTestPath 	= "file:///home/kay/datasets/mnist/normalized_test.txt";
-
-		evaluate(env, outputTreePath, inputTestPath, "file:///home/kay/temp/rf/tree-1-test1-mnist-05/results");
-	}*/
 	/**
 	 * evaluate the testset on the learned trees. write the result back to outputPath
 	 *
@@ -57,17 +46,18 @@ public class Evaluator {
 			.groupBy(0)
 			.reduceGroup(new GroupReduceFunction<Tuple2<Integer, String>, Tuple1<String>>() {
 				@Override
-				public void reduce(Iterator<Tuple2<Integer, String>> nodes, Collector<Tuple1<String>> output) throws Exception {
+				public void reduce(Iterable<Tuple2<Integer, String>> nodes, Collector<Tuple1<String>> output) throws Exception {
 					String tree="";
-					while (nodes.hasNext()) {
-						Tuple2<Integer, String> n = nodes.next();
-						tree+=n.f1; if(nodes.hasNext()) tree+=";";
+					Iterator<Tuple2<Integer,String>> it = nodes.iterator();
+					while (it.hasNext()) {
+						Tuple2<Integer, String> n = it.next();
+						tree+=n.f1; if(it.hasNext()) tree+=";";
 					}
 					output.collect(new Tuple1<String>(tree));
 				}
 			});
 
-		DataSet<Tuple3 <Integer, Integer, Integer>> treeEvaluations = testSamples
+		DataSet<Tuple3<Integer, Integer, Integer>> treeEvaluations = testSamples
 					.cross(treeNodes)
 					.map(new MapFunction<Tuple2<String, Tuple1<String>>, Tuple3<Integer, Integer, Integer>>() {
 						@Override
@@ -135,15 +125,15 @@ public class Evaluator {
 					new GroupReduceFunction<Tuple3<Integer, Integer, Integer>, Tuple2<Integer,Integer>>(){
 
 						@Override
-						public void reduce(Iterator<Tuple3<Integer, Integer, Integer>> prediction, Collector<Tuple2<Integer, Integer>> output) throws Exception {
-
+						public void reduce(Iterable<Tuple3<Integer, Integer, Integer>> prediction, Collector<Tuple2<Integer, Integer>> output) throws Exception {
+							Iterator<Tuple3<Integer, Integer, Integer>> it = prediction.iterator();
 							Map<Integer, Integer> vote = new HashMap<Integer, Integer>();
 							int bestVoteLabel=-1;
 							int bestVoteCount=0;
 							int totalVotes=0;
 							int sampleId=0;
-							while( prediction.hasNext() ){
-								Tuple3<Integer, Integer, Integer> p = prediction.next();
+							while( it.hasNext() ){
+								Tuple3<Integer, Integer, Integer> p = it.next();
 								sampleId = p.f0;
 								if(vote.containsKey(p.f1)) {
 									vote.put(p.f1, vote.get(p.f1)+1 );
