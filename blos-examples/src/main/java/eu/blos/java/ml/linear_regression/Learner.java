@@ -19,6 +19,7 @@ import java.io.Serializable;
 import java.util.*;
 
 public class Learner {
+
 	private static final Log LOG = LogFactory.getLog(Learner.class);
 
 	/**
@@ -90,7 +91,8 @@ public class Learner {
 
 
 	/**
-	 *
+	 * add the sketch-type-name to each tuple. this is an important step to allow the sketch-reading put the tuples
+	 * into the right sketch
 	 */
 	static class MapSketchType implements Serializable, MapFunction<String, Tuple2<String, String>> {
 		private String sketchType;
@@ -194,7 +196,6 @@ public class Learner {
 		@Override
 		public void learn(Collector<Tuple1<String>> output) {
 			System.out.println("learn");
-
 
 		}
 

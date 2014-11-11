@@ -3,6 +3,8 @@ package eu.blos.java.ml.linear_regression;
 
 import eu.blos.java.algorithms.sketches.HashFunction;
 import eu.blos.java.algorithms.sketches.Sketch;
+import eu.blos.java.flink.helper.DatasetStatistics;
+import eu.blos.java.flink.helper.SampleFormat;
 import eu.blos.java.flink.sketch.api.SketchBuilder;
 import eu.blos.scala.algorithms.sketches.CMSketch;
 
@@ -50,6 +52,8 @@ public class Builder {
 		CMSketch sketch_samples = new CMSketch(0.1 /*factor*/, 0.01 /*prob*/);
 
 
+		DatasetStatistics.run(env, rawInputPath, outputPath+"/statistics", new SampleFormat(",", " ", -1, 2 ) );
+
 		System.out.println(rawInputPath);
 		System.out.println(preprocessedDataPath);
 		System.out.println(sketchDataPath);
@@ -93,7 +97,7 @@ public class Builder {
 
 		Sketch[] sketches = {sketch_labels, sketch_samples };
 
-		Learner.learn(env, preprocessedDataPath, sketchDataPath, outputPath, sketches, "1");
+		Learner.learn(env, preprocessedDataPath, sketchDataPath, outputPath+"/results", sketches, "1");
 
 	}
 	/**

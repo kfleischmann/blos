@@ -80,24 +80,6 @@ public class Preprocessor {
 				});
 
 
-
-		 /*
-		// group by dimension k
-		sketch1.groupBy(0).reduce(new ReduceFunction<Tuple3<String, Integer, Double>>() {
-			@Override
-			public Tuple3<String, Integer, Double> reduce(Tuple3<String, Integer, Double> t1, Tuple3<String, Integer, Double> t2) throws Exception {
-				return new Tuple3<String, Integer,Double>(t1.f0, t1.f1+t2.f1);
-			}
-		});
-
-		// group by dimension j,k
-		sketch2.groupBy(0,1).reduce(new ReduceFunction<Tuple3<Integer, Integer, Double>>() {
-			@Override
-			public Tuple3<Integer, Integer, Double> reduce(Tuple3<Integer, Integer, Double> t1, Tuple3<Integer, Integer, Double> t2) throws Exception {
-				return new Tuple3<Integer, Integer,Double>(t1.f0, t1.f1, t1.f2+t2.f2);
-			}
-		});*/
-
 		sketch1.writeAsCsv( outputPath+"/sketch_labels", "\n", ",", FileSystem.WriteMode.OVERWRITE );
 		sketch2.writeAsCsv( outputPath+"/sketch_samples", "\n", ",", FileSystem.WriteMode.OVERWRITE );
 
