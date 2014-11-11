@@ -2,16 +2,15 @@ package eu.blos.java.stratosphere.sketch.api;
 
 
 import eu.blos.java.algorithms.sketches.HashFunction;
-import eu.stratosphere.api.java.ExecutionEnvironment;
-import eu.stratosphere.api.java.functions.FlatMapFunction;
-import eu.stratosphere.api.java.functions.ReduceFunction;
-import eu.stratosphere.api.java.tuple.Tuple3;
-import eu.stratosphere.api.java.tuple.Tuple4;
-import eu.stratosphere.core.fs.FileSystem;
-import eu.stratosphere.core.fs.Path;
-import eu.stratosphere.util.Collector;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.flink.api.common.functions.FlatMapFunction;
+import org.apache.flink.api.common.functions.ReduceFunction;
+import org.apache.flink.api.java.ExecutionEnvironment;
+import org.apache.flink.api.java.tuple.Tuple4;
+import org.apache.flink.core.fs.FileSystem;
+import org.apache.flink.core.fs.Path;
+import org.apache.flink.util.Collector;
 
 import java.io.Serializable;
 
@@ -114,7 +113,7 @@ public class SketchBuilder {
 	} // sketch5
 
 
-	public static class SketchOperator extends FlatMapFunction<String, Tuple4<Long, Integer, Integer, Double>>  implements Serializable {
+	public static class SketchOperator implements Serializable, FlatMapFunction<String, Tuple4<Long, Integer, Integer, Double>> {
 
 		private Sketcher sketcher;
 
@@ -126,5 +125,6 @@ public class SketchBuilder {
 		public void flatMap(String record, Collector<Tuple4<Long, Integer, Integer, Double>> collector) throws Exception {
 			sketcher.getUDF().sketch(record, collector, sketcher.getHashFunctions() );
 		}
+
 	}
 }

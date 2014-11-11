@@ -3,12 +3,11 @@ package eu.blos.java.ml.random_forest;
 import eu.blos.java.algorithms.sketches.*;
 import eu.blos.java.stratosphere.sketch.api.SketchBuilder;
 import eu.blos.java.stratosphere.sketch.api.SketcherUDF;
-import eu.stratosphere.api.java.ExecutionEnvironment;
-import eu.stratosphere.api.java.tuple.Tuple3;
-import eu.stratosphere.api.java.tuple.Tuple4;
-import eu.stratosphere.util.Collector;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.flink.api.java.ExecutionEnvironment;
+import org.apache.flink.api.java.tuple.Tuple4;
+import org.apache.flink.util.Collector;
 
 import java.security.MessageDigest;
 

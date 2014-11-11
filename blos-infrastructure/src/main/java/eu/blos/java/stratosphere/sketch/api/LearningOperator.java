@@ -1,13 +1,11 @@
 package eu.blos.java.stratosphere.sketch.api;
 
 import eu.blos.java.api.common.LearningFunction;
-import eu.stratosphere.api.java.functions.MapPartitionFunction;
-import eu.stratosphere.util.Collector;
-
+import org.apache.flink.api.common.functions.MapPartitionFunction;
+import org.apache.flink.util.Collector;
 import java.io.Serializable;
-import java.util.Iterator;
 
-abstract class LearningOperator<IN,OUT> extends MapPartitionFunction<IN, OUT> implements Serializable {
+abstract class LearningOperator<IN,OUT> implements Serializable, MapPartitionFunction<IN, OUT> {
 
 	private LearningFunction<OUT> func;
 
@@ -17,7 +15,7 @@ abstract class LearningOperator<IN,OUT> extends MapPartitionFunction<IN, OUT> im
 	}
 
 	@Override
-	public void mapPartition(Iterator<IN> sketch, Collector<OUT> output ) throws Exception {
+	public void mapPartition(Iterable<IN> sketch, Collector<OUT> output ) throws Exception {
 		func.learn(output );
 	}
 }

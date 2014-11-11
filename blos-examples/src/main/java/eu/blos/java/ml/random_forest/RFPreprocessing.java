@@ -1,16 +1,20 @@
 package eu.blos.java.ml.random_forest;
 
 import eu.blos.scala.algorithms.Histogram;
-import eu.stratosphere.api.java.DataSet;
-import eu.stratosphere.api.java.ExecutionEnvironment;
-import eu.stratosphere.api.java.functions.*;
-import eu.stratosphere.api.java.operators.*;
-import eu.stratosphere.api.java.tuple.*;
-import eu.stratosphere.core.fs.FileSystem;
-import eu.stratosphere.core.fs.Path;
-import eu.stratosphere.util.Collector;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.flink.api.common.functions.*;
+import org.apache.flink.api.java.DataSet;
+import org.apache.flink.api.java.ExecutionEnvironment;
+import org.apache.flink.api.java.operators.FlatMapOperator;
+import org.apache.flink.api.java.operators.MapOperator;
+import org.apache.flink.api.java.operators.ReduceOperator;
+import org.apache.flink.api.java.tuple.Tuple2;
+import org.apache.flink.api.java.tuple.Tuple4;
+import org.apache.flink.api.java.tuple.Tuple5;
+import org.apache.flink.core.fs.FileSystem;
+import org.apache.flink.core.fs.Path;
+import org.apache.flink.util.Collector;
 
 import java.util.Iterator;
 
@@ -83,15 +87,15 @@ public class RFPreprocessing {
 
 				samples.mapPartition(new MapPartitionFunction<String, Tuple2<Integer, String>>() {
 					@Override
-					public void mapPartition(Iterator<String> samples, Collector<Tuple2<Integer, String>> histogramCollector) throws Exception {
+					public void mapPartition(Iterable<String> samples, Collector<Tuple2<Integer, String>> histogramCollector) throws Exception {
 						Histogram[] histograms = new Histogram[NUM_SAMPLE_FEATURES];
-
+						Iterator<String> it = samples.iterator();
 						for (int i = 0; i < NUM_SAMPLE_FEATURES; i++) {
 							histograms[i] = new Histogram(i, HISTOGRAM_MAX_BINS);
 						}//for
 
-						while (samples.hasNext()) {
-							String[] values = samples.next().split(" ");
+						while (it.hasNext()) {
+							String[] values = it.next().split(" ");
 							String lineId = values[0];
 							String label = values[1];
 
@@ -231,9 +235,6 @@ public class RFPreprocessing {
 			}
 		});
 
-
-
-
 		// construct output
 		MapOperator<String, Tuple2<String, String>> sampleLabels = samples.map( new MapFunction<String, Tuple2<String, String>>() {
 			@Override
@@ -244,7 +245,6 @@ public class RFPreprocessing {
 				return new Tuple2<String, String>( lineId, label );
 			}
 		});
-
 
 		// emit result
 		if(RFBuilder.fileOutput) {

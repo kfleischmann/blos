@@ -1,21 +1,16 @@
 package eu.blos.java.ml.linear_regression;
 
-import eu.blos.java.ml.random_forest.RFBuilder;
-import eu.stratosphere.api.java.DataSet;
-import eu.stratosphere.api.java.ExecutionEnvironment;
-import eu.stratosphere.api.java.functions.FlatMapFunction;
-import eu.stratosphere.api.java.functions.MapFunction;
-import eu.stratosphere.api.java.functions.ReduceFunction;
-import eu.stratosphere.api.java.tuple.Tuple2;
-import eu.stratosphere.api.java.tuple.Tuple3;
-import eu.stratosphere.api.java.tuple.Tuple4;
-import eu.stratosphere.core.fs.FileSystem;
-import eu.stratosphere.core.fs.Path;
-import eu.stratosphere.util.Collector;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.flink.api.common.functions.FlatMapFunction;
+import org.apache.flink.api.java.DataSet;
+import org.apache.flink.api.java.ExecutionEnvironment;
+import org.apache.flink.api.java.tuple.Tuple3;
+import org.apache.flink.api.java.tuple.Tuple4;
+import org.apache.flink.core.fs.FileSystem;
+import org.apache.flink.core.fs.Path;
+import org.apache.flink.util.Collector;
 
-import java.util.List;
 
 public class Preprocessor {
 

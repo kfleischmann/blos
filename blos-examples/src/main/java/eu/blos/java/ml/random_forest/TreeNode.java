@@ -1,6 +1,6 @@
 package eu.blos.java.ml.random_forest;
 
-import eu.stratosphere.api.java.tuple.Tuple2;
+import org.apache.flink.api.java.tuple.Tuple2;
 
 import java.io.Serializable;
 import java.math.BigInteger;

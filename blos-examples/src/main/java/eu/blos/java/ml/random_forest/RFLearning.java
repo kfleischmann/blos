@@ -3,17 +3,17 @@ package eu.blos.java.ml.random_forest;
 import eu.blos.java.algorithms.sketches.BloomFilter;
 import eu.blos.java.algorithms.sketches.Sketch;
 import eu.blos.java.api.common.LearningFunction;
-import eu.stratosphere.api.java.DataSet;
-import eu.stratosphere.api.java.ExecutionEnvironment;
-import eu.stratosphere.api.java.functions.MapFunction;
-import eu.stratosphere.api.java.functions.MapPartitionFunction;
-import eu.stratosphere.api.java.tuple.Tuple1;
-import eu.stratosphere.api.java.tuple.Tuple2;
-import eu.stratosphere.core.fs.FileSystem;
-import eu.stratosphere.core.fs.Path;
-import eu.stratosphere.util.Collector;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.flink.api.common.functions.MapFunction;
+import org.apache.flink.api.common.functions.MapPartitionFunction;
+import org.apache.flink.api.java.DataSet;
+import org.apache.flink.api.java.ExecutionEnvironment;
+import org.apache.flink.api.java.tuple.Tuple1;
+import org.apache.flink.api.java.tuple.Tuple2;
+import org.apache.flink.core.fs.FileSystem;
+import org.apache.flink.core.fs.Path;
+import org.apache.flink.util.Collector;
 import org.jblas.util.Random;
 import java.io.Serializable;
 import java.math.BigInteger;
@@ -114,7 +114,7 @@ public class RFLearning {
 	/**
 	 *
 	 */
-	static class MapSketchType extends MapFunction<String, Tuple2<String,String>> implements Serializable {
+	static class MapSketchType implements Serializable, MapFunction<String, Tuple2<String, String>> {
 		private String sketchType;
 
 		public MapSketchType(String sketchType){
@@ -134,7 +134,7 @@ public class RFLearning {
 	 * this operator reads the sketch into memory built in the previous phase and starts the learning process
 	 * output: final trees
 	 */
-	static class RFLearningOperator extends  MapPartitionFunction<Tuple2<String,String>, Tuple1<String>> implements Serializable, LearningFunction<Tuple1<String>> {
+	static class RFLearningOperator implements Serializable, LearningFunction<Tuple1<String>>, MapPartitionFunction<Tuple2<String, String>, Tuple1<String>> {
 		private static final Log LOG = LogFactory.getLog(RFLearningOperator.class);
 
 		// --------------------------------------------------
@@ -183,7 +183,8 @@ public class RFLearning {
 		 * @throws Exception
 		 */
 		@Override
-		public void mapPartition(Iterator<Tuple2<String,String>> sketch, Collector<Tuple1<String>> output) throws Exception {
+		public void mapPartition(Iterable<Tuple2<String,String>> sketch, Collector<Tuple1<String>> output) throws Exception {
+			Iterator<Tuple2<String,String>> it = sketch.iterator();
 			this.output = output;
 
 			//sketch_qj.allocate();
@@ -198,8 +199,8 @@ public class RFLearning {
 			int left=0;
 			int right=0;
 
-			while(sketch.hasNext()){
-				Tuple2<String,String> sketchData = sketch.next();
+			while(it.hasNext()){
+				Tuple2<String,String> sketchData = it.next();
 
 				String sketchType = sketchData.f0;
 				String sketchFields = sketchData.f1;

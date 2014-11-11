@@ -3,17 +3,13 @@ package eu.blos.java.ml.linear_regression;
 
 import eu.blos.java.algorithms.sketches.HashFunction;
 import eu.blos.java.algorithms.sketches.Sketch;
-import eu.blos.java.ml.random_forest.RFLearning;
-import eu.blos.java.ml.random_forest.RFPreprocessing;
 import eu.blos.java.stratosphere.sketch.api.SketchBuilder;
-import eu.blos.java.stratosphere.sketch.api.SketcherUDF;
 import eu.blos.scala.algorithms.sketches.CMSketch;
-import eu.stratosphere.api.java.ExecutionEnvironment;
-import eu.stratosphere.api.java.tuple.Tuple3;
-import eu.stratosphere.util.Collector;
+
 import org.apache.commons.cli.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.flink.api.java.ExecutionEnvironment;
 
 public class Builder {
 	private static final Log LOG = LogFactory.getLog(Builder.class);

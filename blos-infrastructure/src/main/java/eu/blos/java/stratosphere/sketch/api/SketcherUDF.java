@@ -1,8 +1,8 @@
 package eu.blos.java.stratosphere.sketch.api;
 
 import eu.blos.java.algorithms.sketches.HashFunction;
-import eu.stratosphere.api.java.tuple.Tuple4;
-import eu.stratosphere.util.Collector;
+import org.apache.flink.api.java.tuple.Tuple4;
+import org.apache.flink.util.Collector;
 
 import java.io.Serializable;
 
