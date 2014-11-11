@@ -40,54 +40,54 @@ public class Builder {
 		// ------------------------------------------
 		// start sketching phase
 		// ------------------------------------------
-		SketchBuilder.sketch(	env,
-								preprocessedDataPath, sketchDataPath,
+		SketchBuilder.sketch(
+			env, preprocessedDataPath, sketchDataPath,
+				SketchBuilder.apply(
+					Preprocessor.PATH_OUTPUT_SKETCH_NODE,
+					Preprocessor.PATH_OUTPUT_SKETCH_NODE+"-left",
+					bfNodeLeft.getHashFunctions(),SketchBuilder.SKETCHTYPE_BLOOM_FILTER,
+						new SketcherUDF() {
+							private SketchBuilder.DefaultSketcherUDF defaultSketcher =
+									new SketchBuilder.DefaultSketcherUDF(",", SketchBuilder.Fields(0, 2, 4) );
 
-								SketchBuilder.apply( 	Preprocessor.PATH_OUTPUT_SKETCH_NODE,
-													 	Preprocessor.PATH_OUTPUT_SKETCH_NODE+"-left",
-														bfNodeLeft.getHashFunctions(),SketchBuilder.SKETCHTYPE_BLOOM_FILTER,
-															new SketcherUDF() {
-																private SketchBuilder.DefaultSketcherUDF defaultSketcher =
-																		new SketchBuilder.DefaultSketcherUDF(",", SketchBuilder.Fields(0, 2, 4) );
+							@Override
+							public void sketch(String record, Collector<Tuple4<Long, Integer, Integer,Double>> collector, HashFunction[] hashFunctions ) {
+								// only sketch left
+								String[] values = record.split(",");
+								Double featureValue = Double.parseDouble(values[3]);
+								Double splitCandidate = Double.parseDouble(values[4]);
 
-																@Override
-																public void sketch(String record, Collector<Tuple4<Long, Integer, Integer,Double>> collector, HashFunction[] hashFunctions ) {
-																	// only sketch left
-																	String[] values = record.split(",");
-																	Double featureValue = Double.parseDouble(values[3]);
-																	Double splitCandidate = Double.parseDouble(values[4]);
+								if(featureValue<=splitCandidate){
+									defaultSketcher.sketch(record, collector, hashFunctions );
 
-																	if(featureValue<=splitCandidate){
-																		defaultSketcher.sketch(record, collector, hashFunctions );
+								} else {
+								}
+							}
+						},
+					SketchBuilder.ReduceSketchByFields(0)),
+				SketchBuilder.apply(
+					Preprocessor.PATH_OUTPUT_SKETCH_NODE,
+					Preprocessor.PATH_OUTPUT_SKETCH_NODE+"-right",
+					bfNodeRight.getHashFunctions(), SketchBuilder.SKETCHTYPE_BLOOM_FILTER,
+						new SketcherUDF() {
+							private SketchBuilder.DefaultSketcherUDF defaultSketcher =
+									new SketchBuilder.DefaultSketcherUDF(",", SketchBuilder.Fields(0, 2, 4));
+							@Override
+							public void sketch(String record, Collector<Tuple4<Long, Integer, Integer, Double>> collector, HashFunction[] hashFunctions ) {
+								// only sketch right
+								String[] values = record.split(",");
+								Double featureValue = Double.parseDouble(values[3]);
+								Double splitCandidate = Double.parseDouble(values[4]);
 
-																	} else {
-																	}
-																}
-															},
-														SketchBuilder.ReduceSketchByFields(0)),
-													SketchBuilder.apply(
-														Preprocessor.PATH_OUTPUT_SKETCH_NODE,
-														Preprocessor.PATH_OUTPUT_SKETCH_NODE+"-right",
-														bfNodeRight.getHashFunctions(), SketchBuilder.SKETCHTYPE_BLOOM_FILTER,
-															new SketcherUDF() {
-																private SketchBuilder.DefaultSketcherUDF defaultSketcher =
-																		new SketchBuilder.DefaultSketcherUDF(",", SketchBuilder.Fields(0, 2, 4));
-																@Override
-																public void sketch(String record, Collector<Tuple4<Long, Integer, Integer, Double>> collector, HashFunction[] hashFunctions ) {
-																	// only sketch right
-																	String[] values = record.split(",");
-																	Double featureValue = Double.parseDouble(values[3]);
-																	Double splitCandidate = Double.parseDouble(values[4]);
+								if(featureValue>splitCandidate){
+									defaultSketcher.sketch(record, collector, hashFunctions );
+								}else {
+								}
+							}
+						},
+						SketchBuilder.ReduceSketchByFields(0))
 
-																	if(featureValue>splitCandidate){
-																		defaultSketcher.sketch(record, collector, hashFunctions );
-																	}else {
-																	}
-																}
-															},
-															SketchBuilder.ReduceSketchByFields(0))
-
-								);
+					);
 
 		// ------------------------------------------
 		// Start Learning phase
