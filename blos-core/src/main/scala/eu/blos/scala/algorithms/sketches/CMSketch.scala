@@ -82,12 +82,10 @@ case class CMSketch(  var delta: Double,
 
   override def toString = {
     var out : String = ""+d+","+w+"\n"
-    //out = out + count.map( x => x.mkString(" ") ).mkString("\n")
     out
   }
 
   def print {
     System.out.println(toString)
-    //count.foreach({ x => println(x.mkString(" ")) })
   }
 }
