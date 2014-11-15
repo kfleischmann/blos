@@ -5,16 +5,17 @@ import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.common.functions.ReduceFunction;
 import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.ExecutionEnvironment;
-import org.apache.flink.api.java.aggregation.AggregationFunction;
 import org.apache.flink.api.java.tuple.Tuple3;
 import org.apache.flink.core.fs.FileSystem;
+import org.apache.flink.core.fs.Path;
 
-import java.io.Serializable;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class DatasetStatistics implements Serializable {
+
+public class StatisticsBuilder implements Serializable {
 
 	public static void run(final ExecutionEnvironment env, String inputPath, String outputPath, final SampleFormat format ) throws Exception {
 
@@ -38,7 +39,7 @@ public class DatasetStatistics implements Serializable {
 					List<String> list = new ArrayList<String>(Arrays.asList(a));
 					list.addAll(Arrays.asList(b));
 					Object[] c = list.toArray();
-					labels = StringUtils.join(c, " ");;
+					labels = StringUtils.join(c, " ");
 				}
 				return new Tuple3<String, Integer, Integer>(labels, Math.max(value1.f1, value2.f1), value1.f2 + value2.f2);
 			}
@@ -48,5 +49,30 @@ public class DatasetStatistics implements Serializable {
 
 		// execute program
 		env.execute("reading statistics");
+	}
+
+
+	public static DataSetStatistics read(final ExecutionEnvironment env, String filePath ) throws IOException {
+		Path f = new Path(filePath);
+		FileSystem fs = FileSystem.get(f.toUri());
+
+		InputStream is = fs.open(f);
+		BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+		DataSetStatistics statistics = new DataSetStatistics();
+
+		String line;
+		while ((line = reader.readLine()) != null) {
+			String[] values = line.split(",");
+			String[] labels = values[0].split(" ");
+
+
+			statistics.setLabels(labels);
+			statistics.setFeatureCount(Integer.parseInt(values[1]));
+			statistics.setSampleCount(Integer.parseInt(values[2]));
+		}
+		reader.close();
+		is.close();
+
+		return statistics;
 	}
 }

@@ -3,7 +3,8 @@ package eu.blos.java.ml.linear_regression;
 
 import eu.blos.java.algorithms.sketches.HashFunction;
 import eu.blos.java.algorithms.sketches.Sketch;
-import eu.blos.java.flink.helper.DatasetStatistics;
+import eu.blos.java.flink.helper.DataSetStatistics;
+import eu.blos.java.flink.helper.StatisticsBuilder;
 import eu.blos.java.flink.helper.SampleFormat;
 import eu.blos.java.flink.sketch.api.SketchBuilder;
 import eu.blos.scala.algorithms.sketches.CMSketch;
@@ -48,11 +49,13 @@ public class Builder {
 		String sketchDataPath=  		cmd.getOptionValue("sketch-path");
 		String outputPath = 			cmd.getOptionValue("output-path");
 
-		CMSketch sketch_labels = new CMSketch(0.1 /*factor*/, 0.1 /*prob*/);
-		CMSketch sketch_samples = new CMSketch(0.1 /*factor*/, 0.01 /*prob*/);
+		CMSketch sketch_labels = new CMSketch(0.1 /*factor*/, 0.0001 /*prob*/);
+		CMSketch sketch_samples = new CMSketch(0.1 /*factor*/, 0.0001 /*prob*/);
 
 
-		DatasetStatistics.run(env, rawInputPath, outputPath+"/statistics", new SampleFormat(",", " ", -1, 2 ) );
+
+		StatisticsBuilder.run(env, rawInputPath, outputPath + "/statistics", new SampleFormat(",", " ", -1, 2));
+		Learner.statistics = StatisticsBuilder.read(env, outputPath + "/statistics");
 
 		System.out.println(rawInputPath);
 		System.out.println(preprocessedDataPath);
@@ -60,7 +63,7 @@ public class Builder {
 
 		System.out.println(sketch_samples.w() );
 		System.out.println(sketch_samples.d() );
-		System.out.println("size in mb:"+ sketch_samples.size()*4.0/1024.0/1024.0 );
+		System.out.println("size in mb:"+ (sketch_samples.w()*sketch_samples.d())*4.0/1024.0/1024.0 );
 
 		// ------------------------------------------ls
 		// start preprocessing phase

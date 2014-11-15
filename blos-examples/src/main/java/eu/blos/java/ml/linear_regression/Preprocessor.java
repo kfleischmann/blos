@@ -53,8 +53,11 @@ public class Preprocessor {
 						String sampleId = fields[0];
 						String[] features = fields[2].split(" ");
 						Double label = Double.parseDouble(fields[1]);
-						for(int k=0; k < features.length; k++ ){
-							Double value = label*Double.parseDouble(features[k]);
+
+						collector.collect( new Tuple3<String,Integer,Double>( sampleId, 0, label ) );
+
+						for(int k=1; k <= features.length; k++ ){
+							Double value = label*Double.parseDouble(features[k-1]);
 							collector.collect( new Tuple3<String,Integer,Double>( sampleId, k, value ) );
 						}//for
 					} // flatMap
@@ -71,15 +74,16 @@ public class Preprocessor {
 
 						for(int j=0; j < features.length; j++ ) {
 							Double value1 = Double.parseDouble(features[j]);
-							for (int k = 0; k < features.length; k++) {
-								Double value2 = Double.parseDouble(features[k]);
+
+							collector.collect(new Tuple4<String, Integer, Integer, Double>(sampleId, j, 0, value1 ));
+
+							for (int k = 1; k <= features.length; k++) {
+								Double value2 = Double.parseDouble(features[k-1]);
 								collector.collect(new Tuple4<String, Integer, Integer, Double>(sampleId, j, k, value1*value2));
 							}//for
 						}
 					} // flatMap
 				});
-
-
 		sketch1.writeAsCsv( outputPath+"/sketch_labels", "\n", ",", FileSystem.WriteMode.OVERWRITE );
 		sketch2.writeAsCsv( outputPath+"/sketch_samples", "\n", ",", FileSystem.WriteMode.OVERWRITE );
 

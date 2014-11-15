@@ -18,6 +18,7 @@ public class SketchBuilder {
 
 	public static final int SKETCHTYPE_BLOOM_FILTER 	= 1;
 	public static final int SKETCHTYPE_CM_SKETCH 		= 2;
+	public static final String KEY_DELIMITER			= " ";
 
 	public static int[] ReduceSketchByFields(int ... keys ){
 		return keys;
@@ -52,7 +53,7 @@ public class SketchBuilder {
 		private String extractFields(String[] record, int[] fields ){
 			String result="";
 			for(int i=0; i < fields.length; i++) {
-				result+=record[fields[i]]+" ";
+				result+=record[fields[i]]+KEY_DELIMITER;
 			}//for
 			return result.trim();
 		}

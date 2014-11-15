@@ -2,6 +2,7 @@ package eu.blos.java.ml.linear_regression;
 
 import eu.blos.java.algorithms.sketches.Sketch;
 import eu.blos.java.api.common.LearningFunction;
+import eu.blos.java.flink.helper.DataSetStatistics;
 import eu.blos.scala.algorithms.sketches.CMSketch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -19,6 +20,8 @@ import java.io.Serializable;
 import java.util.*;
 
 public class Learner {
+
+	public static DataSetStatistics statistics;
 
 	private static final Log LOG = LogFactory.getLog(Learner.class);
 
@@ -56,7 +59,10 @@ public class Learner {
 	 * @param outputPath
 	 * @throws Exception
 	 */
-	public static void readSketchesAndLearn( final ExecutionEnvironment env, String[] sketchSources, String outputPath, final Sketch[] sketches ) throws Exception {
+	public static void readSketchesAndLearn( final ExecutionEnvironment env,
+											 String[] sketchSources,
+											 String outputPath,
+											 final Sketch[] sketches ) throws Exception {
 
 		LOG.info("start reading sketches into memory ");
 
@@ -195,8 +201,45 @@ public class Learner {
 
 		@Override
 		public void learn(Collector<Tuple1<String>> output) {
-			System.out.println("learn");
+			// m*x+b
+			Double alpha=0.5;
+			Double[] model = {1.0, 1.0};
+			Double[] model_ = {1.0, 1.0};
 
+			for( int i=0; i < 10; i++ ) {
+				model_[0] = model_[0] + alpha*nextStep(0, model);
+				model_[1] = model_[1] + alpha*nextStep(1, model);
+
+				model[0] = model_[0];
+				model[1] = model_[1];
+			}
+
+			System.out.println("model: "+model[0]+" "+model[1]);
+		}
+
+		private Double nextStep( int k, Double[] model ){
+			int d = model.length;
+			Double value=0.0;
+			for( int i=0; i < statistics.getSampleCount(); i++ ){
+				value += sketch_labels.get(i+" "+k);
+			}
+			value *= 1.0/statistics.getSampleCount();
+			System.out.println(value);
+
+			Double value2=0.0;
+			for( int j=0; j < d; j++ ){
+				Double value3=0.0;
+				for( int i=0; i < statistics.getSampleCount(); i++ ) {
+					value3 += sketch_labels.get(i + " "+ j +" " + k);
+				}
+				value2 += model[j]*value3;
+				System.out.println(value3);
+			}
+			value2 *= 1.0/statistics.getSampleCount();
+
+			System.out.println(value2);
+
+			return value - value2;
 		}
 
 	}
