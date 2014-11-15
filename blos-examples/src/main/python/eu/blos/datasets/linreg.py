@@ -48,6 +48,8 @@ def run(**kwargs):
 	m = float(kwargs['m'])
 	b = float(kwargs['b'])
 	sep=","
+	range_start=float(kwargs['range'].split(":")[0])
+	range_end=float(kwargs['range'].split(":")[1])
 
 	def linear_func(x):
 		return m*x+b
@@ -55,8 +57,8 @@ def run(**kwargs):
 	x = 0
 	counter = 0
 	for s in range(0, samples):
-		y = round(linear_func(x) + np.random.uniform(-1,1)*sigma )
-		x = x + np.random.uniform(0, sigma)
+		x = np.random.uniform(range_start,range_end)
+		y = linear_func(x) + np.random.uniform(-1,1)*sigma
 		print str(counter)+sep+str(x)+sep+str(y)
 		counter += 1
 
@@ -75,7 +77,8 @@ if __name__=='__main__':
 	argparser.add_argument("-s", "--sigma", action="store", required=True, help="variance")
 	argparser.add_argument("-c", "--count", action="store", required=True, help="number of samples")
 	argparser.add_argument("-m", "--m", action="store", required=True, help="m*x + b")
-	argparser.add_argument("-b", "--b", action="store", required=True, help="m*x + ")
+	argparser.add_argument("-b", "--b", action="store", required=True, help="m*x + b")
+	argparser.add_argument("-r", "--range", action="store", required=True, help="x1:x2")
 
 	# validate arguments
 	args = argparser.parse_args()
