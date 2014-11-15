@@ -19,7 +19,7 @@ import eu.blos.scala.algorithms.sketches.CMSketch
 // sample_2 - X-value
 // sample_3 - Y-value
 
-class TestGradientDecentOnCMSketch( dataset : List[(Int,List[Double],Double)] ) {
+class TestGradientDecentOnCMSketch( dataset : Array[(Int,List[Double],Double)] ) {
   var model : Array[Double] = new Array[Double](2)
 
   def getY( i : Integer ) ={
@@ -33,19 +33,26 @@ class TestGradientDecentOnCMSketch( dataset : List[(Int,List[Double],Double)] ) 
     dataset(i)._2
   }
 
-  def gradient_decent( model : Array[Double], dataset :List[(Int,List[Double],Double)] ) = {
+  def gradient_decent( model : Array[Double], dataset :Array[(Int,List[Double],Double)] ) = {
     val new_model = new Array[Double](2)
 
-    val alpha = 0.05
+    val alpha = 0.0005
     var errors_x1=0.0
     var errors_x2=0.0
 
     for( i <- Range(0,dataset.length)){
-      errors_x1 += (model.zip(getX(i)).map(x=>x._1*x._2).sum - getY(i)) *getX(i,0)
-      errors_x2 += (model.zip(getX(i)).map(x=>x._1*x._2).sum - getY(i)) *getX(i,1)
+      //errors_x1 += (model.zip(getX(i)).map(x=>x._1*x._2).sum - getY(i)) *getX(i,0)
+      //errors_x2 += (model.zip(getX(i)).map(x=>x._1*x._2).sum - getY(i)) *getX(i,1)
+
+      errors_x1 += -getY(i) * getX(i, 0)
+      errors_x2 += -getY(i) * getX(i, 1)
+
+      for( j <- Range(0,new_model.length)) {
+         errors_x1 += model(j)*getX(i,j)*getX(i, 0)
+       errors_x2 += model(j)*getX(i,j)*getX(i, 1)
+      }
+
     }
-
-
     model(0)  = model(0) - alpha * (1.0/dataset.length) * errors_x1
     model(1)  = model(1) - alpha * (1.0/dataset.length) * errors_x2
 
@@ -56,18 +63,22 @@ class TestGradientDecentOnCMSketch( dataset : List[(Int,List[Double],Double)] ) 
     val sketch1 = new CMSketch(0.1, 0.0001)
     val sketch2 = new CMSketch(0.1, 0.0001)
 
-    //sketch1.alloc
-    //sketch2.alloc
+    sketch1.alloc
+    sketch2.alloc
 
     // y = m*x +b
     var model = new Array[Double](2)
-    model(0) = 0  // b
-    model(1) = 0  // m
+    model(0) = 1.5// b
+    model(1) = 3  // m
 
-    for(x <- Range(0,500)) {
+    for(x <- Range(0,30000)) {
       model = gradient_decent(model, dataset)
       println( model(0)+","+model(1) )
     }//for
+  }
+
+  def create_sketch = {
+
   }
 }
 
@@ -78,8 +89,8 @@ object TestGradientDecentOnCMSketch extends Serializable {
       val fields = x.split(",")
       //(SampleId, X-Values, Y
       (fields(0).toInt, List(1.0) ++ fields(1).split(" ").map(x=>x.toDouble), fields(2).toDouble )
-    }).toList
-
+    }).toArray
+    println("dataset loaded")
 
 
     new TestGradientDecentOnCMSketch(dataset).run
