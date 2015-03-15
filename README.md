@@ -36,6 +36,7 @@ blos stream add dataset2; blos generators poly --sigma 0.01 -f 1:1,2:1 --range="
 Linear-regression with visualization
 ```
 blos generators poly --sigma 0.1 -f 1:1 --range="-1:1" --count 1000 | blos regression linear | blos visualize curve2d
+blos generators poly --sigma 0.035 -f 1:0.2 --range="-1:1" --count 1000 | blos visualize scatter2d
 ```
 
 Usage
