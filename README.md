@@ -18,7 +18,7 @@ Function: f(x) = 1*x^1 + 1*X^2 +... (more are possible)
  blos generators poly --sigma 0.05 -f "0:100,1:0.5" --range="-1:1" --count 10000 | blos visualize scatter2d
  ```
 
-Transformat data into a valid data-schema
+Read data do regression and visualize data and show 2dcurve
 ```
 cat data | blos regression linear | blos visualize curve2d
 cat data | blos regression poly | blos visualize curve2d
