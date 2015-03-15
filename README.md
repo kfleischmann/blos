@@ -50,7 +50,7 @@ blos ml-sketcher linear-regression --input hdfs:///dataset --output hdfs:///resu
 Workflow
 =============
 ```
-dataset -> preprocess -> preprocessed-data
+dataset -> linreg.prepare -> preprocessed-data
 preprocessed-data -> linreg.sketcher -> sketched-data
 sketched-data -> linreg.learner -> learn parameters
 
