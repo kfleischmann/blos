@@ -24,5 +24,11 @@ cat data | blos format csv --input="\n" --output="," | blos regression linear | 
 cat data | blos format csv --input="\n" --output="," | blos regression poly | blos visualize curve2d
 ```
 
+```
+cat data | blos ml-sketcher linear-regression --input stdin --output stdout | blos visualize curve2d
+
+```
+
+
 Examples
 =============
