@@ -14,10 +14,14 @@ Samples 10.000 datapoints from a polynomial function within the range from -1 to
 OutputFormat: CSV
 Function: f(x) = 1*x^1 + 1*X^2 +... (more are possible)
 ```
- blos generators poly --sigma 0.01 -f 1:1,2:1 --range="-1:1" --count 10000 | blos visualize vis2d
- blos generators poly --sigma 0.05 -f "0:100,1:0.5" --range="-1:1" --count 10000 | blos visualize vis2d
+ blos generators poly --sigma 0.01 -f 1:1,2:1 --range="-1:1" --count 10000 | blos visualize scatter2d
+ blos generators poly --sigma 0.05 -f "0:100,1:0.5" --range="-1:1" --count 10000 | blos visualize scatter2d
  ```
 
+Transformat data into a valid data-schema
+```
+cat data | blos format csv --input="\n" --output="," | blos regression linear | blos visualize curve2d
+```
 
 Examples
 =============
