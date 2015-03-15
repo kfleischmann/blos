@@ -1,12 +1,23 @@
 #!/usr/bin/env Rscript
+args <- commandArgs(trailingOnly = TRUE)
+args_contains <- function(str){
+  for( a in args ){
+    if( a == str ) return (TRUE)
+  }
+  FALSE
+}
 
 data <- read.table( file("stdin"), sep=",", header=TRUE)
 fm <- lm( data$y ~ data$x)
-plot( data$x, data$y)
-abline(fm, col = "red")
-
 inter <- coef(fm)[1] 
 coef1 <-  coef(fm)[2]
-
+a <- inter
+b <- coef1
 
 write( paste(inter,coef1,sep=" ") , stdout()) 
+
+if( args_contains("-plot") ){
+ plot( data$x, data$y)
+ abline(fm, col = "red")
+ title(main="Show linear function: a+b*x", sub=paste(c("a=",toString(a),"b=",toString(b)), collapse = ' '))
+}
