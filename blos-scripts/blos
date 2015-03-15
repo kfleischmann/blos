@@ -1,5 +1,6 @@
 #!/bin/bash
 #BLOS_PATH=/home/kay/Dropbox/kay-rep/Uni-Berlin/Masterarbeit/Sources/blos
+
 FOLDER=$1
 CMD=$2
 INCLUDE_LNG=(python R)
