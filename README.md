@@ -47,8 +47,14 @@ cat data | blos ml-sketcher linear-regression --input stdin --output stdout | bl
 blos ml-sketcher linear-regression --input hdfs:///dataset --output hdfs:///results
 ```
 
-Examples
+Workflow
 =============
+```
+dataset -> preprocess -> preprocessed-data
+preprocessed-data -> linreg.sketcher -> sketched-data
+sketched-data -> linreg.learner -> learn parameters
+
+```
 
 
 Examples
