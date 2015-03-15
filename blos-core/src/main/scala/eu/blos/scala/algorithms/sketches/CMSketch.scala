@@ -11,16 +11,12 @@ case class CMSketch(  var delta: Double,
     this(1,1/*,1, None*/ )
   }
 
-  var hashfunctions = generate_hashfunctions
-
-
+  var hashfunctions = create_hashfunctions
   val BIG_PRIME : Long = 9223372036854775783L
-
   def w = Math.ceil(Math.exp(1) /epsilon).toLong
   def d = Math.ceil(Math.log(1 / delta)).toLong
 
-  // weights -> space
-  // number of hash functions
+  // memory contianing the sketch data
   var count : FloatLargeArray = null;
 
   def alloc = {
@@ -58,7 +54,7 @@ case class CMSketch(  var delta: Double,
     result
   }
 
-  def generate_hashfunctions = {
+  def create_hashfunctions = {
     val hf = new java.util.ArrayList[HashFunction]()
     for ( x <- 0 until d.toInt ){
       hf.add( new DigestHashFunction(w.toLong, x) )
@@ -81,8 +77,7 @@ case class CMSketch(  var delta: Double,
   }
 
   override def toString = {
-    var out : String = ""+d+","+w+"\n"
-    out
+    ""+d+","+w+"\n"
   }
 
   def print {
