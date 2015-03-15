@@ -21,6 +21,7 @@ Function: f(x) = 1*x^1 + 1*X^2 +... (more are possible)
 Transformat data into a valid data-schema
 ```
 cat data | blos format csv --input="\n" --output="," | blos regression linear | blos visualize curve2d
+cat data | blos format csv --input="\n" --output="," | blos regression poly | blos visualize curve2d
 ```
 
 Examples
