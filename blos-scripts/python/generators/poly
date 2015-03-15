@@ -27,8 +27,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-################################ DOCUMENTATION #################################
-#
+################################ DOCUMENTATION ##################################
 # see output (-h)
 #
 #
@@ -43,7 +42,7 @@ from sklearn import datasets, linear_model
 import numpy as np
 import sys
 def run(**kwargs):
-	sigma = float(kwargs['sigma'])
+	variance = float(kwargs['sigma'])
 	samples = int(kwargs['count'])
 	f = kwargs['function'].split(",")
 	sep=","
@@ -63,7 +62,7 @@ def run(**kwargs):
 	counter = 0
 	for s in range(0, samples):
 		x = np.random.uniform(range_start,range_end)
-		y = reg_func(x) + np.random.uniform(-1,1)*sigma
+		y = reg_func(x) + np.random.uniform(-1,1)*variance
 		print str(counter)+sep+str(x)+sep+str(y)
 		counter += 1
 

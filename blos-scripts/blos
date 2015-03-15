@@ -4,7 +4,7 @@
 FOLDER=$1
 CMD=$2
 INCLUDE_LNG=(python R)
-ARGUMENTS="${*:2}"
+ARGUMENTS="${*:3}"
 FOUND=false
 for LNG in "${INCLUDE_LNG[@]}"
   do
