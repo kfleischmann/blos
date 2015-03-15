@@ -30,7 +30,7 @@ Merge datasets
 blos stream add dataset1; blos generators poly --sigma 0.01 -f 1:1,2:1 --range="-1:1" --count 10000 ;
 blos stream add dataset2; blos generators poly --sigma 0.01 -f 1:1,2:1 --range="-1:1" --count 10000 ;
 }
-| blos visualize scatter2d-steam
+| blos visualize scatter2d-stream
 ```
 
 
