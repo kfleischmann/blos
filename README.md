@@ -26,7 +26,7 @@ cat data | blos format csv --input="\n" --output="," | blos regression poly | bl
 
 Comapre datasets
 ```
-blos compare datasets --method difference << cat dataset1 << blos with << cat dataset2
+blos compare datasets --method difference --dataset1 file1 --dataset2 file2
 ```
 
 
