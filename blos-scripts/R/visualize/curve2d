@@ -7,7 +7,9 @@ for (i in 1:length(linn)){
   func <- unlist(strsplit( unlist(linn[i]), " "));
   a <- as.double( func[1] )
   b <- as.double( func[2] )
+ 
   curve( a+b*x, -2, 2)
 
+  title(main="Show linear function: a+b*x", sub=paste(c("a=",toString(a),"b=",toString(b)), collapse = ' '), 
+   xlab="x-axis label", ylab="y-axis label")
 }
-close(conn)
