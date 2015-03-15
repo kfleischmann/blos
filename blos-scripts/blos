@@ -3,7 +3,7 @@
 
 FOLDER=$1
 CMD=$2
-INCLUDE_LNG=(python R)
+INCLUDE_LNG=(sh python R)
 ARGUMENTS="${*:3}"
 FOUND=false
 for LNG in "${INCLUDE_LNG[@]}"
