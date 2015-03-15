@@ -26,7 +26,11 @@ cat data | blos format csv --input="\n" --output="," | blos regression poly | bl
 
 Comapre datasets
 ```
-blos compare datasets --method difference --dataset1 file1 --dataset2 file2
+{
+blos stream add dataset1; blos generators poly --sigma 0.01 -f 1:1,2:1 --range="-1:1" --count 10000 ;
+blos stream add dataset2; blos generators poly --sigma 0.01 -f 1:1,2:1 --range="-1:1" --count 10000 ;
+}
+| blos compare datasets --method difference <stream:dataset1> <stream:dataset2>
 ```
 
 
