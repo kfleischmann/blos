@@ -52,8 +52,6 @@ public class Builder {
 		CMSketch sketch_labels = new CMSketch(0.1 /*factor*/, 0.0001 /*prob*/);
 		CMSketch sketch_samples = new CMSketch(0.1 /*factor*/, 0.0001 /*prob*/);
 
-
-
 		StatisticsBuilder.run(env, rawInputPath, outputPath + "/statistics", new SampleFormat(",", " ", -1, 2));
 		Learner.statistics = StatisticsBuilder.read(env, outputPath + "/statistics");
 
@@ -77,7 +75,8 @@ public class Builder {
 		SketchBuilder.sketch(env,
 				preprocessedDataPath, sketchDataPath,
 				SketchBuilder.apply(
-						"sketch_labels",/*input preprocessed*/ "sketch_labels",  /* output sketch */
+						"sketch_labels",/*input preprocessed*/
+						"sketch_labels",  /* output sketch */
 						sketch_labels.get_hashfunctions().toArray(new HashFunction[sketch_labels.get_hashfunctions().size()]),
 						SketchBuilder.SKETCHTYPE_CM_SKETCH,
 						new SketchBuilder.DefaultSketcherUDF(
@@ -86,7 +85,9 @@ public class Builder {
 								SketchBuilder.Fields(0,1)), // extract fields for hashing (i,k)
 						SketchBuilder.ReduceSketchByFields(0, 1) // group by hash
 				),
-				SketchBuilder.apply( 	"sketch_samples", /*input*/ "sketch_samples",  /*output*/
+				SketchBuilder.apply(
+							"sketch_samples", /*input*/
+							"sketch_samples",  /*output*/
 						sketch_samples.get_hashfunctions().toArray(new HashFunction[sketch_samples.get_hashfunctions().size()]),
 						SketchBuilder.SKETCHTYPE_CM_SKETCH,
 						new SketchBuilder.DefaultSketcherUDF(
@@ -97,7 +98,7 @@ public class Builder {
 				)
 		);
 
-
+		// build sketches which are distributed
 		Sketch[] sketches = {sketch_labels, sketch_samples };
 
 		Learner.learn(env, preprocessedDataPath, sketchDataPath, outputPath+"/results", sketches, "1");

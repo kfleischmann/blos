@@ -3,7 +3,7 @@ package eu.blos.scala.ml.gradient_decent
 
 /**
  * This class loads a dataset into an count-min sketch and
- * applies and linear-regresion with gradient-decent using
+ * applies and linear-regression with gradient-decent using
  * the count min sketch
  *
  *

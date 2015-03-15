@@ -1,0 +1,27 @@
+#!/bin/bash
+#BLOS_PATH=/home/kay/Dropbox/kay-rep/Uni-Berlin/Masterarbeit/Sources/blos
+FOLDER=$1
+CMD=$2
+INCLUDE_LNG=(python R)
+ARGUMENTS="${*:2}"
+FOUND=false
+for LNG in "${INCLUDE_LNG[@]}"
+  do
+	FILE="$BLOS_PATH/blos-scripts/$LNG/$FOLDER/$CMD"
+	if [ -f $FILE ]
+	then
+		FOUND=true
+    		$FILE $ARGUMENTS
+	fi
+  done
+
+if [ "$FOUND" = false ]
+then
+  echo "Unknown command. Available commands: "
+  
+  for LNG in "${INCLUDE_LNG[@]}"
+   do
+    find "$BLOS_PATH/blos-scripts/$LNG" -type f
+  done 
+fi
+

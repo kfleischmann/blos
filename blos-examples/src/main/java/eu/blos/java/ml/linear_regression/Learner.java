@@ -82,6 +82,7 @@ public class Learner {
 		}
 
 		// do the learning
+		// TODO: remove setParallelism. Flink does not support on full stream
 		DataSet<Tuple1<String>> trees = SketchDataSet.mapPartition(new LineareRegressionLearningOperator(sketches)).setParallelism(1);
 
 		// emit result
