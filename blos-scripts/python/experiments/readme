@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 ################################################################################
 #
 # Authors:       Fleischmann, Kay (fleischmann.kay@googlemail.com)
@@ -36,4 +34,11 @@
 # blos sketch {params}
 # blos learn -c cfg
 #
+# This scripts helps to create / add experiments
+# see output (-h)
+#
+#
+# blos-experiment create {PARAMS} >> store to file
+# blos-experiment run {file}
+# blos-experiment
 ################################################################################

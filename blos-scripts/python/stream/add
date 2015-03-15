@@ -28,8 +28,15 @@
 # SOFTWARE.
 #
 ################################ DOCUMENTATION ##################################
-# see output (-h)
 #
+#
+# only adds a line on top of the "stream" with its name. This is important if you want
+# two different datasets into next command using pipes
+#
+# stream dataset1
+# field1,field2
+# 0,1
+# 2,1
 #
 #
 ################################################################################
