@@ -24,6 +24,12 @@ cat data | blos format csv --input="\n" --output="," | blos regression linear | 
 cat data | blos format csv --input="\n" --output="," | blos regression poly | blos visualize curve2d
 ```
 
+Comapre datasets
+```
+blos compare datasets --method difference << cat dataset1 << blos with << cat dataset2
+```
+
+
 Usage
 =============
 Regression with Sketching techniques
