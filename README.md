@@ -29,7 +29,7 @@ Usage
 Regression with Sketching techniques
 ```
 cat data | blos ml-sketcher linear-regression --input stdin --output stdout | blos visualize curve2d
-
+blos ml-sketcher linear-regression --input hdfs:///dataset --output hdfs:///results
 ```
 
 
