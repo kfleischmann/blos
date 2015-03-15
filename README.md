@@ -24,7 +24,7 @@ cat data | blos format csv --input="\n" --output="," | blos regression linear | 
 cat data | blos format csv --input="\n" --output="," | blos regression poly | blos visualize curve2d
 ```
 
-Comapre datasets
+Compare datasets
 ```
 {
 blos stream add dataset1; blos generators poly --sigma 0.01 -f 1:1,2:1 --range="-1:1" --count 10000 ;
