@@ -1,0 +1,12 @@
+#!/usr/bin/env Rscript
+
+data <- read.table( file("stdin"), sep=",", header=TRUE)
+fm <- lm( data$y ~ data$x)
+plot( data$x, data$y)
+abline(fm, col = "red")
+
+inter <- coef(fm)[1] 
+coef1 <-  coef(fm)[2]
+
+
+write( paste(inter,coef1,sep=" ") , stdout()) 

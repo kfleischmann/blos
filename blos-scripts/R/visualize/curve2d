@@ -1,0 +1,13 @@
+#!/usr/bin/env Rscript
+
+conn=file("stdin")
+linn=readLines(conn)
+for (i in 1:length(linn)){
+  print(linn[i])
+  func <- unlist(strsplit( unlist(linn[i]), " "));
+  a <- as.double( func[1] )
+  b <- as.double( func[2] )
+  curve( a+b*x, -2, 2)
+
+}
+close(conn)

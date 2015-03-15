@@ -1,0 +1,19 @@
+#!/usr/bin/env Rscript
+
+
+#data <- read.table( file("stdin"), sep=",", header=TRUE)
+#plot(data$x, data$y, type='p', cex=0.5, col="red")
+lines <- c()
+pos <- 1
+conn=file("stdin")
+linn=readLines(conn)
+for (i in 1:length(linn)){
+   if( strsplit( linn[i], " ")[[1]] == "stream" ){
+     	
+	pos <- i
+   }
+   lines <- c(lines, c(print(linn[i])))
+}
+close(conn)
+
+
