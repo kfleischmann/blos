@@ -1,5 +1,6 @@
 package eu.blos.java.ml.linear_regression;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.flink.api.common.functions.FlatMapFunction;
@@ -11,13 +12,18 @@ import org.apache.flink.core.fs.FileSystem;
 import org.apache.flink.core.fs.Path;
 import org.apache.flink.util.Collector;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
+
 
 public class Preprocessor {
 
 	private static final Log LOG = LogFactory.getLog(Preprocessor.class);
 
 	/**
-	 * do the preprocessing for the sketching phase. reads the data from hdfs and prepare the data for the
+	 * do the preprocessing for the sketching phase.
+	 * reads the data from hdfs and prepare the data for the
 	 * sketching phase
 	 *
 	 * expected input format
@@ -36,12 +42,25 @@ public class Preprocessor {
 	public static void transform(final ExecutionEnvironment env, String inputPath, String outputPath, String ... args ) throws Exception {
 		LOG.info("start preprocessing phase");
 
-		// prepare
-		new Path(outputPath).getFileSystem().delete(new Path(outputPath), true );
-		new Path(outputPath).getFileSystem().mkdirs(new Path(outputPath));
+		if(!outputPath.equals("stdout")) {
+			new Path(outputPath).getFileSystem().delete(new Path(outputPath), true );
+			new Path(outputPath).getFileSystem().mkdirs(new Path(outputPath));
+		}
+
+		DataSet<String> samples;
 
 		// read samples
-		DataSet<String> samples = env.readTextFile(inputPath);
+		if(!inputPath.equals("stdin")) {
+			samples = env.readTextFile(inputPath);
+		} else {
+			Scanner input = new Scanner(System.in);
+			List<String> stdinDataset = new ArrayList<String>();
+			while(input.hasNext()) stdinDataset.add( input.next() );
+
+			// get input data
+			samples = env.fromElements(stdinDataset.toArray(new String[stdinDataset.size()]));
+		}
+
 
 		// output: (i, k, xk^i * y^i)
 		DataSet<Tuple3<String, Integer,Double>> sketch1 =
@@ -86,6 +105,8 @@ public class Preprocessor {
 				});
 		sketch1.writeAsCsv( outputPath+"/sketch_labels", "\n", ",", FileSystem.WriteMode.OVERWRITE );
 		sketch2.writeAsCsv( outputPath+"/sketch_samples", "\n", ",", FileSystem.WriteMode.OVERWRITE );
+
+		// writing to std-output make no sense right now.
 
 		// execute program
 		env.execute("Preprocessing");

@@ -31,6 +31,8 @@ public class Builder {
 		} else {
 			env = ExecutionEnvironment.getExecutionEnvironment();
 		}
+
+		// TODO: replace that.
 		env.setDegreeOfParallelism(1);
 
 		return env;
@@ -44,40 +46,75 @@ public class Builder {
 		CommandLine cmd = parseArguments(args);
 		final ExecutionEnvironment env = getEnv(cmd);
 
-		String rawInputPath	= 			cmd.getOptionValue("input-path");
-		String preprocessedDataPath=  	cmd.getOptionValue("preprocessing-path");
-		String sketchDataPath=  		cmd.getOptionValue("sketch-path");
-		String outputPath = 			cmd.getOptionValue("output-path");
+		String inputPath		= 			cmd.getOptionValue("input-path");
+		String preprocessPath	=  			cmd.getOptionValue("preprocess-path");
+		String sketchPath		=  			cmd.getOptionValue("sketch-path");
+		String outputPath 		= 			cmd.getOptionValue("output-path");
 
 		CMSketch sketch_labels = new CMSketch(0.1 /*factor*/, 0.0001 /*prob*/);
 		CMSketch sketch_samples = new CMSketch(0.1 /*factor*/, 0.0001 /*prob*/);
 
-		StatisticsBuilder.run(env, rawInputPath, outputPath + "/statistics", new SampleFormat(",", " ", -1, 2));
+		StatisticsBuilder.run(env, inputPath, outputPath + "/statistics", new SampleFormat(",", " ", -1, 2));
 		Learner.statistics = StatisticsBuilder.read(env, outputPath + "/statistics");
 
-		System.out.println(rawInputPath);
-		System.out.println(preprocessedDataPath);
-		System.out.println(sketchDataPath);
+		System.out.println(inputPath);
+		System.out.println(preprocessPath);
+		System.out.println(sketchPath);
 
 		System.out.println(sketch_samples.w() );
 		System.out.println(sketch_samples.d() );
 		System.out.println("size in mb:"+ (sketch_samples.w()*sketch_samples.d())*4.0/1024.0/1024.0 );
 
-		// ------------------------------------------ls
+		// ------------------------------------------
 		// start preprocessing phase
 		// ------------------------------------------
-		Preprocessor.transform(env, rawInputPath, preprocessedDataPath);
-
+		if(cmd.hasOption("preprocessor")){
+			preprocess( env, inputPath, preprocessPath );
+		}
+		/*
 
 		// -----------------------------------------
 		// start sketching phase
 		// ------------------------------------------
+		HashFunction[] hashfunctions = sketch_labels.get_hashfunctions().toArray(new HashFunction[sketch_labels.get_hashfunctions().size()]);
+
+		sketch(env, preprocessPath, sketchPath, hashfunctions, )
+
+
+		// build sketches which are distributed
+		Sketch[] sketches = {sketch_labels, sketch_samples };
+
+		Learner.learn(env, preprocessPath, sketchPath, outputPath+"/results", sketches, "1");
+		*/
+	}
+
+
+	/**
+	 * preapre the raw input dataset for the sketching phase
+	 * @param env
+	 * @param input
+	 * @param preprocessPath
+	 */
+	public static void preprocess(final ExecutionEnvironment env, String input, String preprocessPath ) throws Exception {
+		Preprocessor.transform(env, input, preprocessPath);
+	}
+
+	/**
+	 * sketch the preprocessed data. this output can be used for the
+	 * learning phase.
+	 * @param env
+	 * @param preprocessPath
+	 * @param sketchPath
+	 * @param hashfunctions
+	 * @throws Exception
+	 */
+	public static void sketch(final ExecutionEnvironment env, String preprocessPath, String sketchPath, HashFunction[] hashfunctions ) throws Exception {
 		SketchBuilder.sketch(env,
-				preprocessedDataPath, sketchDataPath,
+				preprocessPath, sketchPath,
 				SketchBuilder.apply(
 						"sketch_labels",/*input preprocessed*/
 						"sketch_labels",  /* output sketch */
-						sketch_labels.get_hashfunctions().toArray(new HashFunction[sketch_labels.get_hashfunctions().size()]),
+						hashfunctions,
 						SketchBuilder.SKETCHTYPE_CM_SKETCH,
 						new SketchBuilder.DefaultSketcherUDF(
 								",", // split line by comma
@@ -86,9 +123,9 @@ public class Builder {
 						SketchBuilder.ReduceSketchByFields(0, 1) // group by hash
 				),
 				SketchBuilder.apply(
-							"sketch_samples", /*input*/
-							"sketch_samples",  /*output*/
-						sketch_samples.get_hashfunctions().toArray(new HashFunction[sketch_samples.get_hashfunctions().size()]),
+						"sketch_samples", /*input*/
+						"sketch_samples",  /*output*/
+						hashfunctions,
 						SketchBuilder.SKETCHTYPE_CM_SKETCH,
 						new SketchBuilder.DefaultSketcherUDF(
 								",", // split line by comma
@@ -97,13 +134,12 @@ public class Builder {
 						SketchBuilder.ReduceSketchByFields(0, 1) // group by hash
 				)
 		);
+	}
 
-		// build sketches which are distributed
-		Sketch[] sketches = {sketch_labels, sketch_samples };
-
-		Learner.learn(env, preprocessedDataPath, sketchDataPath, outputPath+"/results", sketches, "1");
+	public static void learn(){
 
 	}
+
 	/**
 	 * parse the input parameters
 	 * @param args
@@ -117,7 +153,7 @@ public class Builder {
 		lvOptions.addOption(
 				OptionBuilder
 						.withLongOpt("input-path")
-						.withDescription("raw input-data path. necessary for preporcessing")
+						.withDescription("dataset input path. necessary for preporcessing")
 						//.isRequired()
 						.withValueSeparator('=')
 						.hasArg()
@@ -218,4 +254,5 @@ public class Builder {
 	}
 
 	public static void withArguments(Options options){}
+
 }
