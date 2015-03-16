@@ -39,6 +39,23 @@ blos generators poly --sigma 0.1 -f 1:1 --range="-1:1" --count 1000 | blos regre
 blos generators poly --sigma 0.035 -f 1:0.2 --range="-1:1" --count 1000 | blos visualize scatter2d
 ```
 
+Export data from mongodb apply mapreduce job and store it back to mongo. Very nice to test MapReducer withoutput hadoop jobs.
+This makes hadoop streaming very efficient
+```
+mongoexport -h localhost -d dbout -c mycollection 
+| head -n 200  
+| ./blos format string2bson 
+| ./mapper.py
+| ./blos format bson2string 
+| sort
+| ./blos format string2bson 
+| ./reducer.py 
+| ./blos format bson2string
+| mongoimport -h localhost -d test -c ucr_group_by_path --upsert
+```
+
+
+
 Usage
 =============
 Regression with Sketching techniques
