@@ -1,6 +1,7 @@
 package eu.blos.java.ml.random_forest;
 
 import eu.blos.scala.algorithms.Histogram;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.flink.api.common.functions.*;

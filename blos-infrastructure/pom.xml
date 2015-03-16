@@ -8,9 +8,9 @@
         <artifactId>blos</artifactId>
         <version>0.1-SNAPSHOT</version>
     </parent>
-    <artifactId>blos-core</artifactId>
+    <artifactId>blos-infrastructure</artifactId>
     <packaging>jar</packaging>
-    <name>blos-core</name>
+    <name>blos-infrastructure</name>
     <repositories>
         <repository>
             <id>scala-tools.org</id>
@@ -36,6 +36,11 @@
             <artifactId>junit</artifactId>
             <version>3.8.1</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>eu.tu-berlin.blos</groupId>
+            <artifactId>blos-core</artifactId>
+            <version>0.1-SNAPSHOT</version>
         </dependency>
     </dependencies>
     <build>

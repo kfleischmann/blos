@@ -6,9 +6,13 @@
     <version>0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>blos</name>
+
     <modules>
         <module>blos-core</module>
+        <module>blos-infrastructure</module>
+        <module>blos-examples</module>
     </modules>
+
     <repositories>
         <repository>
             <id>snapshots-repo</id>
@@ -23,6 +27,7 @@
             <url>http://maven.icm.edu.pl/artifactory/repo</url>
         </repository>
     </repositories>
+
     <dependencies>
         <dependency>
             <groupId>net.sourceforge.argparse4j</groupId>
@@ -66,4 +71,5 @@
             <version>1.1</version>
         </dependency>
     </dependencies>
+
 </project>
