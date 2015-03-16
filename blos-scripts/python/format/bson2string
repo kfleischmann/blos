@@ -1,0 +1,27 @@
+#!/usr/bin/python
+
+import sys
+import os
+import collections
+import bson
+from pymongo_hadoop import BSONOutput
+from pymongo_hadoop import BSONInput
+import json
+import pymongo_hadoop
+
+sys.path.append(".")
+
+def process(target ):
+  output = BSONOutput()
+  binput = BSONInput()
+
+  generator = target(binput)
+  for mapped in generator:
+    sys.stdout.write( json.dumps( mapped, ensure_ascii=False, sort_keys=True)  )
+    sys.stdout.write("\n")
+
+def mapper(documents):
+  for doc in documents:
+    yield doc
+
+process(mapper)
