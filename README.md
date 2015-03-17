@@ -43,23 +43,19 @@ blos generators poly --sigma 0.1 -f 1:1 --range="-1:1" --count 1000 | blos regre
 blos generators poly --sigma 0.035 -f 1:0.2 --range="-1:1" --count 1000 | blos visualize scatter2d
 ```
 
-Usage
-=============
-Regression with Sketching techniques
-```
-cat data | blos ml-sketcher linear-regression --input stdin --output stdout | blos visualize curve2d
-blos ml-sketcher linear-regression --input hdfs:///dataset --output hdfs:///results
-```
-
-Workflow
-=============
-```
-dataset -> linreg.prepare -> preprocessed-data
-preprocessed-data -> linreg.sketcher -> sketched-data
-sketched-data -> linreg.learner -> learn parameters
-
-```
-
 
 Examples
+=============
+linear regression
+```
+blos run-examples linear-regression-on-sketches --preprocessor --input-path /dataset --output-path hdfs://blos/linreg1
+blos run-examples linear-regression-on-sketches --sketcher --input-path hdfs:///blos/dataset --output-path hdfs:///blos/linreg1
+blos run-examples linear-regression-on-sketches --learner --input-path hdfs:///blos/dataset --output-path hdfs:///blos/linreg1 
+cat lin-reg-model | blos visualize curve2d
+
+# Run preprocessor sketcher and learner
+blos run-examples linear-regression-on-sketches  -p -s -l --input-path hdfs:///blos/dataset --output-path hdfs://blos/linreg1
+```
+
+Generic Usage
 =============
