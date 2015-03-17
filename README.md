@@ -48,9 +48,9 @@ Examples
 =============
 linear regression
 ```
-blos run-examples linear-regression-on-sketches --preprocessor --input-path dataset  | >> preprocessed
-blos run-examples linear-regression-on-sketches --sketcher --input-path preprocessed | >> sketched 
-blos run-examples linear-regression-on-sketches --learner --input-path sketched | >> lin-reg-model 
+blos run-examples linear-regression-on-sketches --preprocessor --input-path dataset   > preprocessed
+blos run-examples linear-regression-on-sketches --sketcher --input-path preprocessed  > sketched 
+blos run-examples linear-regression-on-sketches --learner --input-path sketched > lin-reg-model 
 cat lin-reg-model | blos visualize curve2d
 ```
 
