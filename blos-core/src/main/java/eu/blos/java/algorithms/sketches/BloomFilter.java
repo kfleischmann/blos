@@ -115,7 +115,7 @@ public class BloomFilter<E> implements Sketch {
 		this.bitset = new BitSet(bitSetSize);
 	}
 
-	public HashFunction[] getHashFunctions(){ return this.hashFunctions; }
+	public HashFunction[] getHashfunctions(){ return this.hashFunctions; }
 
     /**
      * Generates digests based on the contents of an array of bytes and splits the result into 4-byte int's and store them in an array. The

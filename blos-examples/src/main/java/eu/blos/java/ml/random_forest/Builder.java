@@ -45,7 +45,7 @@ public class Builder {
 				SketchBuilder.apply(
 					Preprocessor.PATH_OUTPUT_SKETCH_NODE,
 					Preprocessor.PATH_OUTPUT_SKETCH_NODE+"-left",
-					bfNodeLeft.getHashFunctions(),SketchBuilder.SKETCHTYPE_BLOOM_FILTER,
+					bfNodeLeft.getHashfunctions(),SketchBuilder.SKETCHTYPE_BLOOM_FILTER,
 						new SketcherUDF() {
 							private SketchBuilder.DefaultSketcherUDF defaultSketcher =
 									new SketchBuilder.DefaultSketcherUDF(",", SketchBuilder.Fields(0, 2, 4) );
@@ -68,7 +68,7 @@ public class Builder {
 				SketchBuilder.apply(
 					Preprocessor.PATH_OUTPUT_SKETCH_NODE,
 					Preprocessor.PATH_OUTPUT_SKETCH_NODE+"-right",
-					bfNodeRight.getHashFunctions(), SketchBuilder.SKETCHTYPE_BLOOM_FILTER,
+					bfNodeRight.getHashfunctions(), SketchBuilder.SKETCHTYPE_BLOOM_FILTER,
 						new SketcherUDF() {
 							private SketchBuilder.DefaultSketcherUDF defaultSketcher =
 									new SketchBuilder.DefaultSketcherUDF(",", SketchBuilder.Fields(0, 2, 4));

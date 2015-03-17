@@ -26,6 +26,7 @@ case class CMSketch(  var delta: Double,
   def size = if(count == null) 0 else d*w
   def estimate(t: (Float,String)) = -get(t._2)
   def get_hashfunctions = hashfunctions
+  def getHashfunctions = hashfunctions.toArray( new Array[HashFunction]( hashfunctions.size() ) )
   def array_get(row : Long ,col : Long ) : Float = {
     count.get(row*w+col)
   }

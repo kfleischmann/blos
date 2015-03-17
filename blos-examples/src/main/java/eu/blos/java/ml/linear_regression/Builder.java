@@ -1,9 +1,7 @@
 package eu.blos.java.ml.linear_regression;
 
 
-import eu.blos.java.algorithms.sketches.HashFunction;
 import eu.blos.java.algorithms.sketches.Sketch;
-import eu.blos.java.flink.helper.DataSetStatistics;
 import eu.blos.java.flink.helper.StatisticsBuilder;
 import eu.blos.java.flink.helper.SampleFormat;
 import eu.blos.java.flink.sketch.api.SketchBuilder;
@@ -16,7 +14,6 @@ import org.apache.flink.api.java.ExecutionEnvironment;
 
 public class Builder {
 	public static final String NAME = "Linear Regression Builder";
-
 	private static final Log LOG = LogFactory.getLog(Builder.class);
 
 	/**
@@ -55,8 +52,6 @@ public class Builder {
 		final ExecutionEnvironment env = getEnv(cmd);
 
 		String inputPath		= 			cmd.getOptionValue("input-path");
-		String preprocessPath	=  			cmd.getOptionValue("preprocess-path");
-		String sketchPath		=  			cmd.getOptionValue("sketch-path");
 		String outputPath 		= 			cmd.getOptionValue("output-path");
 
 		CMSketch sketch_labels = new CMSketch(0.1 /*factor*/, 0.0001 /*prob*/);
@@ -65,35 +60,50 @@ public class Builder {
 		StatisticsBuilder.run(env, inputPath, outputPath + "/statistics", new SampleFormat(",", " ", -1, 2));
 		Learner.statistics = StatisticsBuilder.read(env, outputPath + "/statistics");
 
+
+		// build sketches which are distributed
+		Sketch[] sketches = {sketch_labels, sketch_samples };
+
+
 		System.out.println(inputPath);
-		System.out.println(preprocessPath);
-		System.out.println(sketchPath);
+		System.out.println(outputPath+"/preprocesse");
+		System.out.println(outputPath+"/sketched");
 
 		System.out.println(sketch_samples.w() );
 		System.out.println(sketch_samples.d() );
 		System.out.println("size in mb:"+ (sketch_samples.w()*sketch_samples.d())*4.0/1024.0/1024.0 );
 
 		// ------------------------------------------
-		// start preprocessing phase
+		// preprocessing phase
 		// ------------------------------------------
 		if(cmd.hasOption("preprocessor")){
-			preprocess( env, inputPath, preprocessPath );
+			preprocess( env, inputPath, outputPath+"/preprocessed" );
 		}
-		/*
 
-		// -----------------------------------------
-		// start sketching phase
 		// ------------------------------------------
-		HashFunction[] hashfunctions = sketch_labels.get_hashfunctions().toArray(new HashFunction[sketch_labels.get_hashfunctions().size()]);
+		// sketcher phase
+		// ------------------------------------------
+		if(cmd.hasOption("sketcher")){
+			sketch(env, outputPath + "/preprocessed", outputPath + "/sketched", sketches);
+		}
 
-		sketch(env, preprocessPath, sketchPath, hashfunctions, )
 
+		// ------------------------------------------
+		// learner phase
+		// ------------------------------------------
+		if(cmd.hasOption("learner")){
+			learn( env, inputPath, outputPath, sketches );
+		}
+	}
 
-		// build sketches which are distributed
-		Sketch[] sketches = {sketch_labels, sketch_samples };
-
-		Learner.learn(env, preprocessPath, sketchPath, outputPath+"/results", sketches, "1");
-		*/
+	/**
+	 * learn from preprocessed data and write model into output path
+	 * @param env
+	 * @param input
+	 * @param outputPath
+	 */
+	public static void learn( final ExecutionEnvironment env, String input, String outputPath, Sketch[] sketches ) throws Exception {
+		Learner.learn(env, input+"/preprocessed", input+"/sketched", outputPath+"/results", sketches, "1");
 	}
 
 
@@ -113,16 +123,19 @@ public class Builder {
 	 * @param env
 	 * @param preprocessPath
 	 * @param sketchPath
-	 * @param hashfunctions
+	 * @param sketches containing details about how tho sketch the output
 	 * @throws Exception
 	 */
-	public static void sketch(final ExecutionEnvironment env, String preprocessPath, String sketchPath, HashFunction[] hashfunctions ) throws Exception {
+	public static void sketch(final ExecutionEnvironment env,
+							  String preprocessPath,
+							  String sketchPath,
+							  Sketch[] sketches ) throws Exception {
 		SketchBuilder.sketch(env,
 				preprocessPath, sketchPath,
 				SketchBuilder.apply(
 						"sketch_labels",/*input preprocessed*/
 						"sketch_labels",  /* output sketch */
-						hashfunctions,
+						sketches[0].getHashfunctions(),
 						SketchBuilder.SKETCHTYPE_CM_SKETCH,
 						new SketchBuilder.DefaultSketcherUDF(
 								",", // split line by comma
@@ -133,7 +146,7 @@ public class Builder {
 				SketchBuilder.apply(
 						"sketch_samples", /*input*/
 						"sketch_samples",  /*output*/
-						hashfunctions,
+						sketches[1].getHashfunctions(),
 						SketchBuilder.SKETCHTYPE_CM_SKETCH,
 						new SketchBuilder.DefaultSketcherUDF(
 								",", // split line by comma
@@ -144,10 +157,6 @@ public class Builder {
 		);
 	}
 
-	public static void learn(){
-
-	}
-
 	/**
 	 * parse the input parameters
 	 * @param args
@@ -155,9 +164,7 @@ public class Builder {
 	 */
 	public static Options lvOptions = new Options();
 	public static CommandLine parseArguments(String[] args ) throws Exception {
-
 		lvOptions.addOption("h", "help", false, "shows valid arguments and options");
-
 		lvOptions.addOption(
 				OptionBuilder
 						.withLongOpt("input-path")
@@ -175,33 +182,6 @@ public class Builder {
 						.withValueSeparator('=')
 						.hasArg()
 						.create("o"));
-
-		lvOptions.addOption(
-				OptionBuilder
-						.withLongOpt("preprocessing-path")
-						.withDescription("preprocessor results path")
-						//.isRequired()
-						.withValueSeparator('=')
-						.hasArg()
-						.create("P"));
-
-		lvOptions.addOption(
-				OptionBuilder
-						.withLongOpt("sketch-path")
-						.withDescription("sketcher results path")
-						//.isRequired()
-						.withValueSeparator('=')
-						.hasArg()
-						.create("S"));
-
-		lvOptions.addOption(
-				OptionBuilder
-						.withLongOpt("learn-path")
-						.withDescription("Learner result path")
-						//.isRequired()
-						.withValueSeparator('=')
-						.hasArg()
-						.create("L"));
 
 		lvOptions.addOption(
 				OptionBuilder
@@ -230,7 +210,6 @@ public class Builder {
 								//.hasArg()
 						.create("l"));
 
-
 		lvOptions.addOption(
 				OptionBuilder
 						.withLongOpt("remote")
@@ -240,24 +219,10 @@ public class Builder {
 								.hasArg()
 						.create("r"));
 
-
-
-		lvOptions.addOption(
-				OptionBuilder
-						.withLongOpt("execute")
-						.withDescription("describes the execution steps. p process, s setch,l learn. E.g. -E=psl")
-						.withValueSeparator('=')
-						.hasArg()
-						.create("E"));
-
-
 		withArguments(lvOptions);
-
 		CommandLineParser lvParser = new BasicParser();
 		CommandLine cmd = null;
-
 		cmd = lvParser.parse(lvOptions, args);
-
 		return cmd;
 	}
 

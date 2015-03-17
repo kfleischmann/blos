@@ -11,6 +11,7 @@ package eu.blos.scala.algorithms.sketches
  */
 import java.security._
 import java.math.BigInteger
+import eu.blos.java.algorithms.sketches.HashFunction
 
 
 /**
@@ -35,6 +36,10 @@ class BloomFilter(private val initialCapacity: Int,
     catch {case e: NoSuchAlgorithmException => null }
   }
 
+
+  def getHashfunctions() : Array[HashFunction] = {
+    null
+  }
 
   /**
    * Adds an array of elements to this filter.
