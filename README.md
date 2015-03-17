@@ -49,12 +49,12 @@ Examples
 linear regression
 ```
 blos run-examples linear-regression-on-sketches --preprocessor --input-path /dataset --output-path hdfs://blos/linreg1
-blos run-examples linear-regression-on-sketches --sketcher --input-path /dataset --output-path hdfs://blos/linreg1
-blos run-examples linear-regression-on-sketches --learner --input-path /dataset --output-path hdfs://blos/linreg1 
+blos run-examples linear-regression-on-sketches --sketcher --input-path hdfs:///blos/dataset --output-path hdfs:///blos/linreg1
+blos run-examples linear-regression-on-sketches --learner --input-path hdfs:///blos/dataset --output-path hdfs:///blos/linreg1 
 cat lin-reg-model | blos visualize curve2d
 
 # Run preprocessor sketcher and learner
-blos run-examples linear-regression-on-sketches  -p -s -l --input-path dataset --output-path hdfs://blos/linreg1
+blos run-examples linear-regression-on-sketches  -p -s -l --input-path hdfs:///blos/dataset --output-path hdfs://blos/linreg1
 ```
 
 Generic Usage
