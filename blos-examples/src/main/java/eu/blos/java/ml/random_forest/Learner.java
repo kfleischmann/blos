@@ -14,7 +14,7 @@ import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.core.fs.FileSystem;
 import org.apache.flink.core.fs.Path;
 import org.apache.flink.util.Collector;
-import org.jblas.util.Random;
+
 import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.*;
@@ -475,7 +475,7 @@ public class Learner {
 			List<Integer> features= new ArrayList<Integer>();
 			while(features.size() < num ){
 				//for( int f=0; f < num; f++ ){
-				Integer feature = tmpFeatureSpace.get( Random.nextInt(tmpFeatureSpace.size()-1));
+				Integer feature = tmpFeatureSpace.get( new java.util.Random().nextInt(tmpFeatureSpace.size()-1));
 
 				if(this.splitCandidates.containsKey(feature) ) {
 					features.add(feature);
