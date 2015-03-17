@@ -46,6 +46,7 @@ blos generators poly --sigma 0.035 -f 1:0.2 --range="-1:1" --count 1000 | blos v
 
 Examples
 =============
+linear regression
 ```
 blos run-examples linear-regression-on-sketches --preprocessor --input-path dataset  | >> preprocessed
 blos run-examples linear-regression-on-sketches --sketcher --input-path preprocessed | >> sketched 
