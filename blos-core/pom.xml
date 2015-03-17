@@ -23,13 +23,11 @@
             <releases><enabled>false</enabled></releases>
             <snapshots><enabled>true</enabled></snapshots>
         </repository>
-
         <repository>
             <id>icm</id>
             <name>ICM project repository</name>
             <url>http://maven.icm.edu.pl/artifactory/repo</url>
         </repository>
-
     </repositories>
     <pluginRepositories>
         <pluginRepository>

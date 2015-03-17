@@ -15,6 +15,8 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.flink.api.java.ExecutionEnvironment;
 
 public class Builder {
+	public static final String NAME = "Linear Regression Builder";
+
 	private static final Log LOG = LogFactory.getLog(Builder.class);
 
 	/**
@@ -39,11 +41,17 @@ public class Builder {
 	}
 
 	/**
-	 *
+	 * Main class
 	 * @param args
 	 */
 	public static void main(String[] args ) throws Exception {
+		HelpFormatter lvFormater = new HelpFormatter();
 		CommandLine cmd = parseArguments(args);
+		if (cmd.hasOption('h') || cmd.getArgs().length == 0 ) {
+			lvFormater.printHelp( NAME, lvOptions );
+			return;
+		}
+
 		final ExecutionEnvironment env = getEnv(cmd);
 
 		String inputPath		= 			cmd.getOptionValue("input-path");
@@ -145,8 +153,8 @@ public class Builder {
 	 * @param args
 	 * @return
 	 */
+	public static Options lvOptions = new Options();
 	public static CommandLine parseArguments(String[] args ) throws Exception {
-		Options lvOptions = new Options();
 
 		lvOptions.addOption("h", "help", false, "shows valid arguments and options");
 
