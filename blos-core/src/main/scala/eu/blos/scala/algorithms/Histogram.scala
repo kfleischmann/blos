@@ -143,21 +143,4 @@ case class Histogram( feature : Int , maxBins : Int, var bins : java.util.List[(
       System.out.println("    ("+b._2+") \n");
     }//for
   }
-
-}
-
-object Histogram extends Serializable {
-  def fromString(str:String) = {
-    val values = str.split(";")
-    val feature=values(0).toInt
-    val maxBins=values(1).toInt
-    val bins = values(2).split(",").map( x=> (x.split(" ")(0).toDouble, x.split(" ")(1).toInt ) )
-    val h = new Histogram(feature,maxBins)
-    bins.foreach( b => h.update(b._1, b._2) )
-    h
-  }
-
-  def main(args:Array[String]){
-    var h : Histogram = new Histogram(5, 5)
-  }
 }

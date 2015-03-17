@@ -61,13 +61,6 @@
                         </goals>
                     </execution>
                 </executions>
-                <configuration>
-                    <sourceDir>src/main/java</sourceDir>
-                    <jvmArgs>
-                        <jvmArg>-Xms64m</jvmArg>
-                        <jvmArg>-Xmx1024m</jvmArg>
-                    </jvmArgs>
-                </configuration>
             </plugin>
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
