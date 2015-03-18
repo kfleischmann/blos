@@ -16,6 +16,19 @@ public class Builder {
 	public static final String NAME = "Linear Regression Builder";
 	private static final Log LOG = LogFactory.getLog(Builder.class);
 
+	public static String getPreprocessedPath(String path){
+		return path+"/preprocessed";
+	}
+	public static String getSketchedPath(String path){
+		return path+"/sketched";
+	}
+	public static String getStatisticsPath(String path){
+		return path+"/statistics";
+	}
+	public static String getResultsPath(String path){
+		return path+"/results";
+	}
+
 	/**
 	 * find the execution environment
 	 * @param cmd
@@ -60,8 +73,8 @@ public class Builder {
 		CMSketch sketch_labels = new CMSketch(0.1 /*factor*/, 0.0001 /*prob*/);
 		CMSketch sketch_samples = new CMSketch(0.1 /*factor*/, 0.0001 /*prob*/);
 
-		StatisticsBuilder.run(env, inputPath, outputPath + "/statistics", new SampleFormat(",", " ", -1, 2));
-		Learner.statistics = StatisticsBuilder.read(env, outputPath + "/statistics");
+		StatisticsBuilder.run(env, inputPath, getStatisticsPath(outputPath), new SampleFormat(",", " ", -1, 2));
+		Learner.statistics = StatisticsBuilder.read(env, getStatisticsPath(outputPath) );
 
 
 		// build sketches which are distributed
@@ -80,35 +93,37 @@ public class Builder {
 		// preprocessing phase
 		// ------------------------------------------
 		if(cmd.hasOption("preprocessor")){
-			preprocess( env, inputPath, outputPath+"/preprocessed" );
+			preprocess( env, inputPath, getPreprocessedPath( outputPath) );
 		}
 
 		// ------------------------------------------
 		// sketcher phase
 		// ------------------------------------------
 		if(cmd.hasOption("sketcher")){
-			sketch(env, outputPath + "/preprocessed", outputPath + "/sketched", sketches);
+			sketch(env, getPreprocessedPath(outputPath), getSketchedPath(outputPath), sketches);
 		}
-
 
 		// ------------------------------------------
 		// learner phase
 		// ------------------------------------------
 		if(cmd.hasOption("learner")){
-			learn( env, inputPath, outputPath, sketches );
+			learn( env, outputPath, sketches );
 		}
 	}
 
 	/**
 	 * learn from preprocessed data and write model into output path
-	 * @param env
-	 * @param input
-	 * @param outputPath
+	 * @param env apache flink environement
+	 * @param path where to find the data?
+	 * @param sketches list of sketches to be build
+	 * @throws Exception
 	 */
-	public static void learn( final ExecutionEnvironment env, String input, String outputPath, Sketch[] sketches ) throws Exception {
-		Learner.learn(env, input+"/preprocessed", input+"/sketched", outputPath+"/results", sketches, "1");
+	public static void learn( final ExecutionEnvironment env, String path, Sketch[] sketches ) throws Exception {
+		Learner.learn(env,
+				getPreprocessedPath(path),
+				getSketchedPath(path),
+				getResultsPath(path), sketches, "1");
 	}
-
 
 	/**
 	 * preapre the raw input dataset for the sketching phase

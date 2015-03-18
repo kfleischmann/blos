@@ -27,29 +27,28 @@ public class Learner {
 
 	/**
 	 * Run the Learning phase
-	 *
 	 * @param env
-	 * @param sketchDataPath
-	 * @param outputTreePath
+	 * @param preprocessedPath
+	 * @param sketchedPath
+	 * @param outputPath
 	 * @param sketches
 	 * @param args
 	 * @throws Exception
 	 */
 	public static void learn(final ExecutionEnvironment env,
-							 String preprocessedDataPath,
-							 String sketchDataPath,
-							 String outputTreePath,
+							 String preprocessedPath,
+							 String sketchedPath,
+							 String outputPath,
 							 Sketch[] sketches,
 							 String ... args ) throws Exception {
 
 		// prepare environment, distribute the sketches to all nodes and start learning phase
 		readSketchesAndLearn(env, new String[]{
-						sketchDataPath + "/sketch_labels",
-						sketchDataPath + "/sketch_samples",
+						sketchedPath + "/sketch_labels",
+						sketchedPath + "/sketch_samples",
 				},
-				outputTreePath,
+				outputPath,
 				sketches);
-
 	}
 
 	/**
