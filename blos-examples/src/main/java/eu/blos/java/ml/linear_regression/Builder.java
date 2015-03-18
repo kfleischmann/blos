@@ -42,9 +42,12 @@ public class Builder {
 	 * @param args
 	 */
 	public static void main(String[] args ) throws Exception {
+		LOG.info("starting");
+
 		HelpFormatter lvFormater = new HelpFormatter();
 		CommandLine cmd = parseArguments(args);
-		if (cmd.hasOption('h') || cmd.getArgs().length == 0 ) {
+
+		if (cmd.hasOption('h') || (cmd.getArgs().length == 0 && cmd.getOptions().length == 0) ) {
 			lvFormater.printHelp( NAME, lvOptions );
 			return;
 		}
@@ -66,7 +69,7 @@ public class Builder {
 
 
 		System.out.println(inputPath);
-		System.out.println(outputPath+"/preprocesse");
+		System.out.println(outputPath+"/preprocessed");
 		System.out.println(outputPath+"/sketched");
 
 		System.out.println(sketch_samples.w() );
