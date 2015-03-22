@@ -1,6 +1,6 @@
 package eu.blos.java.ml.linear_regression;
 
-import org.apache.commons.lang3.ArrayUtils;
+import eu.blos.java.flink.helper.DataSetReader;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.flink.api.common.functions.FlatMapFunction;
@@ -20,6 +20,9 @@ import java.util.Scanner;
 public class Preprocessor {
 
 	private static final Log LOG = LogFactory.getLog(Preprocessor.class);
+
+	public static String FIELD_SEPARATOR = ",";
+	public static String VALUE_SEPARATOR = " ";
 
 	/**
 	 * do the preprocessing for the sketching phase.
@@ -53,12 +56,7 @@ public class Preprocessor {
 		if(!inputPath.equals("stdin")) {
 			samples = env.readTextFile(inputPath);
 		} else {
-			Scanner input = new Scanner(System.in);
-			List<String> stdinDataset = new ArrayList<String>();
-			while(input.hasNext()) stdinDataset.add( input.next() );
-
-			// get input data
-			samples = env.fromElements(stdinDataset.toArray(new String[stdinDataset.size()]));
+			samples = DataSetReader.fromStdin(env);
 		}
 
 
@@ -68,9 +66,9 @@ public class Preprocessor {
 					@Override
 					public void flatMap(String s, Collector<Tuple3<String, Integer, Double>> collector) throws Exception {
 						// format: (sampleId,y,attributes)
-						String[] fields = s.split((","));
+						String[] fields = s.split(( FIELD_SEPARATOR ));
 						String sampleId = fields[0];
-						String[] features = fields[2].split(" ");
+						String[] features = fields[2].split( VALUE_SEPARATOR );
 						Double label = Double.parseDouble(fields[1]);
 
 						collector.collect( new Tuple3<String,Integer,Double>( sampleId, 0, label ) );
@@ -88,9 +86,9 @@ public class Preprocessor {
 				samples.flatMap(new FlatMapFunction<String, Tuple4<String, Integer, Integer, Double>>() {
 					@Override
 					public void flatMap(String s, Collector<Tuple4<String, Integer, Integer, Double>> collector) throws Exception {
-						String[] fields = s.split((","));
+						String[] fields = s.split(( FIELD_SEPARATOR ));
 						String sampleId = fields[0];
-						String[] features = fields[2].split(" ");
+						String[] features = fields[2].split( VALUE_SEPARATOR );
 
 						for(int j=0; j < features.length; j++ ) {
 							Double value1 = Double.parseDouble(features[j]);
@@ -101,11 +99,12 @@ public class Preprocessor {
 								Double value2 = Double.parseDouble(features[k-1]);
 								collector.collect(new Tuple4<String, Integer, Integer, Double>(sampleId, j, k, value1*value2));
 							}//for
-						}
+						}//for
+
 					} // flatMap
 				});
-		sketch1.writeAsCsv( outputPath+"/sketch_labels", "\n", ",", FileSystem.WriteMode.OVERWRITE );
-		sketch2.writeAsCsv( outputPath+"/sketch_samples", "\n", ",", FileSystem.WriteMode.OVERWRITE );
+		sketch1.writeAsCsv( outputPath+"/sketch_labels", "\n", FIELD_SEPARATOR, FileSystem.WriteMode.OVERWRITE );
+		sketch2.writeAsCsv( outputPath+"/sketch_samples", "\n", FIELD_SEPARATOR, FileSystem.WriteMode.OVERWRITE );
 
 		// writing to std-output make no sense right now.
 

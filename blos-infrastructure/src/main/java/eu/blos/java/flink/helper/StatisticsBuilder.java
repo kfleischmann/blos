@@ -1,6 +1,8 @@
 package eu.blos.java.flink.helper;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.common.functions.ReduceFunction;
 import org.apache.flink.api.java.DataSet;
@@ -16,11 +18,21 @@ import java.util.List;
 
 
 public class StatisticsBuilder implements Serializable {
+	private static final Log LOG = LogFactory.getLog(StatisticsBuilder.class);
 
 	public static void run(final ExecutionEnvironment env, String inputPath, String outputPath, final SampleFormat format ) throws Exception {
 
+		DataSet<String> samples;
+
 		// read samples
-		DataSet<Tuple3<String, Integer, Integer>> statistics = env.readTextFile(inputPath).map(new MapFunction<String, Tuple3<String, Integer, Integer>>() {
+		if(!inputPath.equals("stdin")) {
+			samples = env.readTextFile(inputPath);
+		} else {
+			samples = DataSetReader.fromStdin(env);
+		}
+
+		// read samples
+		DataSet<Tuple3<String, Integer, Integer>> statistics = samples.map(new MapFunction<String, Tuple3<String, Integer, Integer>>() {
 			@Override
 			public Tuple3<String, Integer, Integer> map(String value) throws Exception {
 				String[] values = value.split(format.getFieldDelimiter());
@@ -45,7 +57,12 @@ public class StatisticsBuilder implements Serializable {
 			}
 		});
 
-		statistics.writeAsCsv(outputPath, "\n", ",", FileSystem.WriteMode.OVERWRITE);
+		// read samples
+		if(!outputPath.equals("stdout")) {
+			statistics.writeAsCsv(outputPath, "\n", ",", FileSystem.WriteMode.OVERWRITE);
+		} else {
+			LOG.error("not supported");
+		}
 
 		// execute program
 		env.execute("reading statistics");
@@ -64,7 +81,6 @@ public class StatisticsBuilder implements Serializable {
 		while ((line = reader.readLine()) != null) {
 			String[] values = line.split(",");
 			String[] labels = values[0].split(" ");
-
 
 			statistics.setLabels(labels);
 			statistics.setFeatureCount(Integer.parseInt(values[1]));
