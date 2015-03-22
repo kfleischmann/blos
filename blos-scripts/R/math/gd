@@ -5,7 +5,7 @@ args_contains <- function(str){
   for( a in args ){
     if( a == str ) return (TRUE)
   }
-  FALSE
+  return (FALSE)
 }
 
 data <- read.table( file("stdin"), sep=",", header=TRUE)
@@ -13,14 +13,21 @@ data <- read.table( file("stdin"), sep=",", header=TRUE)
 
 
 m <- nrow(data)
-datay <- data[2]
-datax0 <- rep( c(1), m ) 
-datax1 <- data[3] 
+datay <- data[2]^1
+datax <- data[3]^1
 
 # define the gradient function dJ/dtheata: 1/m * (h(x)-y))*x where h(x) = x*theta
 # in matrix form this is as follows:
 grad <- function(x, y, theta) {
   gradient <- (1/m)* (t(x) %*% ((x %*% t(theta)) - y))
+  
+  if( args_contains("-plot") ){
+
+    if( args_contains("-all-theta")){
+       write( paste(theta[1], theta[2],sep=" ") , stdout())
+       abline( theta, col = "#C00000")
+    }
+  }
   return(t(gradient))
 }
 
@@ -36,10 +43,26 @@ grad.descent <- function(x, y, maxit){
  return(theta)
 }
 
-x <- as.matrix( cbind( datax0, datax1 ) )
+x <- as.matrix( cbind( datax^0, datax^1 ) )
 y <- as.matrix( datay )
 
 
-# results without feature scaling
-print(grad.descent(x,y,20000))
+if( args_contains("-plot") ){
+ plot( datax^1, datay^1  )
+}
 
+
+# results without feature scaling
+result <- grad.descent(x,y,200)
+x0 <- result[1]
+x1 <- result[2]
+fm <- c(x0,x1)
+
+write( paste(x0,x1,sep=" ") , stdout())
+
+
+
+if( args_contains("-plot") ){
+ abline( fm, col = "red")
+ title(main="Show linear function: a+b*x", sub=paste(c("a=",toString(fm[0]),"b=",toString(fm[1])), collapse = ' '))
+}
