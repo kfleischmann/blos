@@ -2,12 +2,13 @@ Install & Build
 =============
 Environement variables needed
 ```
-BLOS_PATH=/direct-me-to-blospath/
+BLOS_PATH=/direct-me-to-blospath
 ```
 
 For scripts framework
 ```
 sudo apt-get install jshon
+mvn clean package
 ```
 
 Scripts
