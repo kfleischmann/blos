@@ -75,6 +75,7 @@ public class Preprocessor {
 
 						collector.collect( new Tuple3<String,Integer,Double>( sampleId, 0, label ) );
 
+						// for each sample i, feature k emit y^i * x_k^i
 						for(int k=1; k <= features.length; k++ ){
 							Double value = label*Double.parseDouble(features[k-1]);
 							collector.collect( new Tuple3<String,Integer,Double>( sampleId, k, value ) );

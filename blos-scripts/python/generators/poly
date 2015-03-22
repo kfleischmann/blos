@@ -45,7 +45,8 @@ def run(**kwargs):
 	variance = float(kwargs['sigma'])
 	samples = int(kwargs['count'])
 	f = kwargs['function'].split(",")
-	sep=","
+	field_sep=","
+	value_sep=" "
 	range_start=float(kwargs['range'].split(":")[0])
 	range_end=float(kwargs['range'].split(":")[1])
 
@@ -53,17 +54,17 @@ def run(**kwargs):
 	def reg_func(x):
 		sum=0
 		for i, fk in enumerate(f):
-			sum+=float( fk.split(":")[1] ) * pow( x, float(fk.split(":")[0]) )
+			sum+=float( fk.split(":")[0] ) * pow( x, float(fk.split(":")[1]) )
 		return sum
 	if kwargs['header'].lower() == 'true':
-		print 'index'+sep+'x'+sep+'y'
+		print 'index'+field_sep+'y'+field_sep+'x'
 
 	x = 0
 	counter = 0
 	for s in range(0, samples):
 		x = np.random.uniform(range_start,range_end)
 		y = reg_func(x) + np.random.normal(-1,1)*variance
-		print str(counter)+sep+str(x)+sep+str(y)
+		print str(counter)+field_sep+str(y)+field_sep+str(x)
 		counter += 1
 
 if __name__=='__main__':

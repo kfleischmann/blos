@@ -222,6 +222,7 @@ public class Learner {
 			Double value=0.0;
 			for( int i=0; i < statistics.getSampleCount(); i++ ){
 				value += sketch_labels.get(i+" "+k);
+				System.out.println(value);
 			}
 			value *= 1.0/statistics.getSampleCount();
 			System.out.println(value);

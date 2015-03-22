@@ -70,16 +70,8 @@ public class Builder {
 		String inputPath		= 			cmd.getOptionValue("input-path");
 		String outputPath 		= 			cmd.getOptionValue("output-path");
 
-		CMSketch sketch_labels = new CMSketch(0.1 /*factor*/, 0.0001 /*prob*/);
-		CMSketch sketch_samples = new CMSketch(0.1 /*factor*/, 0.0001 /*prob*/);
-
-		StatisticsBuilder.run(env, inputPath, getStatisticsPath(outputPath), new SampleFormat(",", " ", -1, 2));
-		Learner.statistics = StatisticsBuilder.read(env, getStatisticsPath(outputPath) );
-
-
-		// build sketches which are distributed
-		Sketch[] sketches = {sketch_labels, sketch_samples };
-
+		CMSketch sketch_labels = new CMSketch(0.5 /*factor*/, 0.000001 /*prob*/);
+		CMSketch sketch_samples = new CMSketch(0.5 /*factor*/, 0.000001 /*prob*/);
 
 		System.out.println(inputPath);
 		System.out.println(outputPath+"/preprocessed");
@@ -88,6 +80,15 @@ public class Builder {
 		System.out.println(sketch_samples.w() );
 		System.out.println(sketch_samples.d() );
 		System.out.println("size in mb:"+ (sketch_samples.w()*sketch_samples.d())*4.0/1024.0/1024.0 );
+
+
+		StatisticsBuilder.run(env, inputPath, getStatisticsPath(outputPath), new SampleFormat(",", " ", -1, 2));
+		Learner.statistics = StatisticsBuilder.read(env, getStatisticsPath(outputPath) );
+
+
+		// build sketches which are distributed
+		Sketch[] sketches = {sketch_labels, sketch_samples };
+
 
 		// ------------------------------------------
 		// preprocessing phase
