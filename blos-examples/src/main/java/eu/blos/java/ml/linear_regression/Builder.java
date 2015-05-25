@@ -70,8 +70,8 @@ public class Builder {
 		String inputPath		= 			cmd.getOptionValue("input-path");
 		String outputPath 		= 			cmd.getOptionValue("output-path");
 
-		CMSketch sketch_labels = new CMSketch(0.5 /*factor*/, 0.000001 /*prob*/);
-		CMSketch sketch_samples = new CMSketch(0.5 /*factor*/, 0.000001 /*prob*/);
+		CMSketch sketch_labels = new CMSketch(0.05 /*factor*/, 0.000005 /*prob*/);
+		CMSketch sketch_samples = new CMSketch(0.005 /*factor*/, 0.000005 /*prob*/);
 
 		LOG.info("input-path: "+inputPath);
 		LOG.info("preprocessor-path: "+outputPath+"/preprocessed");
@@ -79,8 +79,10 @@ public class Builder {
 
 		LOG.info("w="+sketch_samples.w() );
 		LOG.info("d="+sketch_samples.d() );
-		LOG.info("size in mb:"+ (sketch_samples.w()*sketch_samples.d())*4.0/1024.0/1024.0 );
+		LOG.info("sketch samples size in mb:"+ (sketch_samples.w()*sketch_samples.d())*4.0/1024.0/1024.0 );
+		LOG.info("sketch label size in mb:"+ (sketch_labels.w()*sketch_labels.d())*4.0/1024.0/1024.0 );
 
+		//System.exit(0);
 
 		StatisticsBuilder.run(env, inputPath, getStatisticsPath(outputPath), new SampleFormat(",", " ", -1, 2));
 		Learner.statistics = StatisticsBuilder.read(env, getStatisticsPath(outputPath) );

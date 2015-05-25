@@ -222,9 +222,9 @@ public class Learner {
 			// m*x+b
 			Double alpha=0.05;
 			Double[] theta = {0.0, 0.0};
-			Double[] theta_old = {0.0, 0.0};
+			Double[] theta_old ={0.0, 0.0};
 
-			for( int i=0; i < 5; i++ ) {
+			for( int i=0; i < 100; i++ ) {
 				LOG.info("learned model (iteration "+i+"): "+theta[0]+" "+theta[1]);
 
 				theta[0] = theta_old[0] - alpha*nextStep(0, theta_old);
