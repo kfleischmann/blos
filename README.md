@@ -3,6 +3,7 @@ Install & Build
 Environement variables needed
 ```
 BLOS_PATH=/direct-me-to-blospath
+FLINK_PATH=/direct-me-to-flinkpath
 ```
 
 For scripts framework
@@ -10,6 +11,9 @@ For scripts framework
 sudo apt-get install jshon
 mvn clean package
 ```
+
+This library is built on link:https://flink.apache.org/[Apache Flink] 
+
 
 Scripts
 =============
