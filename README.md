@@ -12,7 +12,7 @@ sudo apt-get install jshon
 mvn clean package
 ```
 
-This library is built on link:https://flink.apache.org/[Apache Flink] 
+This library is built on link:https://flink.apache.org[Apache Flink] 
 
 
 Scripts
