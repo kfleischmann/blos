@@ -169,11 +169,8 @@ public class Learner {
 			sketch_samples.alloc();
 
 			Iterator<Tuple2<String, String>> it = sketch.iterator();
-
 			while (it.hasNext()) {
 				Tuple2<String, String> sketchData = it.next();
-
-				//System.out.println( sketchData );
 
 				String sketchType = sketchData.f0;
 				String sketchFields = sketchData.f1;
@@ -183,7 +180,6 @@ public class Learner {
 					Long w = Long.parseLong(fields[0]);
 					Long d = Long.parseLong(fields[1]);
 					Float count = Float.parseFloat(fields[3]);
-					//System.out.println(""+w+" "+d+" "+count);
 
 					sketch_labels.array_set(d,w,count);
 				}
@@ -193,7 +189,6 @@ public class Learner {
 					Long w = Long.parseLong(fields[0]);
 					Long d = Long.parseLong(fields[1]);
 					Float count = Float.parseFloat(fields[3]);
-					//System.out.println(""+w+" "+d+" "+count);
 
 					sketch_samples.array_set(d,w,count);
 				}
@@ -201,41 +196,6 @@ public class Learner {
 
 			LOG.info("finished reading sketches into memory");
 
-
-			/*
-			System.out.println( sketch_labels.get( SketchBuilder.constructKey(0,0) ) );
-			System.out.println( sketch_labels.get( SketchBuilder.constructKey(0,1) ) );
-			System.out.println( sketch_labels.get( SketchBuilder.constructKey(1,0) ) );
-			System.out.println( sketch_labels.get( SketchBuilder.constructKey(1,1) ) );
-			System.out.println( sketch_labels.get( SketchBuilder.constructKey(2,0) ) );
-			System.out.println( sketch_labels.get( SketchBuilder.constructKey(2,1) ) );
-
-			System.out.println( sketch_labels.get( SketchBuilder.constructKey(5,1)) );
-			System.out.println( sketch_labels.get( SketchBuilder.constructKey(9,0)) );*/
-
-
-			// ---------------------------------------
-			// START LEARNING PHASE
-			// ---------------------------------------
-			/*Double value=0.0;
-			for( int i=0; i < statistics.getSampleCount(); i++ ){
-				for( int k=0; k < 2; k++ ) {
-					value = (double)sketch_labels.get(SketchBuilder.constructKey(i, k));
-					System.out.println(value);
-				}//for
-			}
-			System.out.println("----");
-			for( int i=0; i < statistics.getSampleCount(); i++ ){
-				for( int j=0; j < 1; j++ ) {
-					for (int k = 0; k < 2; k++) {
-						value = (double) sketch_samples.get(SketchBuilder.constructKey(i, j, k));
-						System.out.println(""+i+","+j+","+k+"="+value);
-					}//for
-				}
-			}*/
-
-
-			System.out.println("----");
 
 			learn(output);
 		}
@@ -257,22 +217,22 @@ public class Learner {
 
 		@Override
 		public void learn(Collector<Tuple1<String>> output) {
+			LOG.info("start learning phase");
 
 			// m*x+b
 			Double alpha=0.05;
 			Double[] theta = {0.0, 0.0};
 			Double[] theta_old = {0.0, 0.0};
 
-			for( int i=0; i < 200; i++ ) {
+			for( int i=0; i < 5; i++ ) {
+				LOG.info("learned model (iteration "+i+"): "+theta[0]+" "+theta[1]);
+
 				theta[0] = theta_old[0] - alpha*nextStep(0, theta_old);
 				theta[1] = theta_old[1] - alpha*nextStep(1, theta_old);
 
 				theta_old[0] = theta[0];
 				theta_old[1] = theta[1];
 			}
-
-
-			System.out.println("learned model: "+theta[0]+" "+theta[1]);
 		}
 
 		private List<Tuple2<Double,Double[] >> dataset = testLinRegDataSet();
@@ -283,13 +243,14 @@ public class Learner {
 				//result+= - dataset.get(i).f0*dataset.get(i).f1[k];
 				sum+= - sketch_labels.get( SketchBuilder.constructKey(i,k) );
 
-			}
+			}//for
+
 			for( int j=0; j < d; j++ ) {
 				for (int i = 0; i < statistics.getSampleCount(); i++) {
 					//sum += theta[j] * dataset.get(i).f1[j] * dataset.get(i).f1[k];
 					sum += theta[j] * sketch_samples.get(SketchBuilder.constructKey(i,j,k) );
-				}
-			}
+				}//for
+			}//for
 
 			return sum / (double) statistics.getSampleCount();
 		}
