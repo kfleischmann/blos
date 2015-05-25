@@ -3,6 +3,7 @@ package eu.blos.java.ml.linear_regression;
 import eu.blos.java.algorithms.sketches.Sketch;
 import eu.blos.java.api.common.LearningFunction;
 import eu.blos.java.flink.helper.DataSetStatistics;
+import eu.blos.java.flink.sketch.api.SketchBuilder;
 import eu.blos.scala.algorithms.sketches.CMSketch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -12,6 +13,7 @@ import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.ExecutionEnvironment;
 import org.apache.flink.api.java.tuple.Tuple1;
 import org.apache.flink.api.java.tuple.Tuple2;
+import org.apache.flink.api.java.tuple.Tuple3;
 import org.apache.flink.core.fs.FileSystem;
 import org.apache.flink.core.fs.Path;
 import org.apache.flink.util.Collector;
@@ -73,7 +75,8 @@ public class Learner {
 				SketchDataSet = env.readTextFile( source ).map(new MapSketchType(new Path(source).getName()));
 			} else {
 				// read new source
-				DataSet<Tuple2<String,String>> sketchDataSet = env.readTextFile( source ).map(new MapSketchType(new Path(source).getName()));
+				DataSet<Tuple2<String,String>> sketchDataSet = env.readTextFile( source ).map(
+											new MapSketchType(new Path(source).getName()));
 
 				// append reading
 				SketchDataSet = SketchDataSet.union( sketchDataSet  );
@@ -82,7 +85,8 @@ public class Learner {
 
 		// do the learning
 		// TODO: remove setParallelism. Flink does not support on full stream
-		DataSet<Tuple1<String>> trees = SketchDataSet.mapPartition(new LineareRegressionLearningOperator(sketches)).setParallelism(1);
+		DataSet<Tuple1<String>> trees = SketchDataSet.mapPartition(
+					new LineareRegressionLearningOperator(sketches)).setParallelism(1);
 
 		// emit result
 		if(eu.blos.java.ml.random_forest.Builder.fileOutput) {
@@ -116,12 +120,13 @@ public class Learner {
 
 
 	/**
-	 * LinearRegression LearningOprator
+	 * LinearRegression LearningOperator
 	 *
 	 * this operator reads the sketch into memory built in the previous phase and starts the learning process
 	 * output: final trees
 	 */
-	static class LineareRegressionLearningOperator implements Serializable, LearningFunction<Tuple1<String>>, MapPartitionFunction<Tuple2<String, String>, Tuple1<String>> {
+	static class LineareRegressionLearningOperator implements Serializable, LearningFunction<Tuple1<String>>,
+						MapPartitionFunction<Tuple2<String, String>, Tuple1<String>> {
 		private static final Log LOG = LogFactory.getLog(LineareRegressionLearningOperator.class);
 
 		// --------------------------------------------------
@@ -155,7 +160,8 @@ public class Learner {
 		 * @throws Exception
 		 */
 		@Override
-		public void mapPartition(Iterable<Tuple2<String, String>> sketch, Collector<Tuple1<String>> output) throws Exception {
+		public void mapPartition(Iterable<Tuple2<String, String>> sketch, Collector<Tuple1<String>> output)
+					throws Exception {
 			this.output = output;
 
 			//sketch_qj.allocate();
@@ -167,6 +173,8 @@ public class Learner {
 			while (it.hasNext()) {
 				Tuple2<String, String> sketchData = it.next();
 
+				//System.out.println( sketchData );
+
 				String sketchType = sketchData.f0;
 				String sketchFields = sketchData.f1;
 
@@ -175,6 +183,7 @@ public class Learner {
 					Long w = Long.parseLong(fields[0]);
 					Long d = Long.parseLong(fields[1]);
 					Float count = Float.parseFloat(fields[3]);
+					//System.out.println(""+w+" "+d+" "+count);
 
 					sketch_labels.array_set(d,w,count);
 				}
@@ -184,6 +193,7 @@ public class Learner {
 					Long w = Long.parseLong(fields[0]);
 					Long d = Long.parseLong(fields[1]);
 					Float count = Float.parseFloat(fields[3]);
+					//System.out.println(""+w+" "+d+" "+count);
 
 					sketch_samples.array_set(d,w,count);
 				}
@@ -191,56 +201,97 @@ public class Learner {
 
 			LOG.info("finished reading sketches into memory");
 
+
+			/*
+			System.out.println( sketch_labels.get( SketchBuilder.constructKey(0,0) ) );
+			System.out.println( sketch_labels.get( SketchBuilder.constructKey(0,1) ) );
+			System.out.println( sketch_labels.get( SketchBuilder.constructKey(1,0) ) );
+			System.out.println( sketch_labels.get( SketchBuilder.constructKey(1,1) ) );
+			System.out.println( sketch_labels.get( SketchBuilder.constructKey(2,0) ) );
+			System.out.println( sketch_labels.get( SketchBuilder.constructKey(2,1) ) );
+
+			System.out.println( sketch_labels.get( SketchBuilder.constructKey(5,1)) );
+			System.out.println( sketch_labels.get( SketchBuilder.constructKey(9,0)) );*/
+
+
 			// ---------------------------------------
 			// START LEARNING PHASE
 			// ---------------------------------------
+			/*Double value=0.0;
+			for( int i=0; i < statistics.getSampleCount(); i++ ){
+				for( int k=0; k < 2; k++ ) {
+					value = (double)sketch_labels.get(SketchBuilder.constructKey(i, k));
+					System.out.println(value);
+				}//for
+			}
+			System.out.println("----");
+			for( int i=0; i < statistics.getSampleCount(); i++ ){
+				for( int j=0; j < 1; j++ ) {
+					for (int k = 0; k < 2; k++) {
+						value = (double) sketch_samples.get(SketchBuilder.constructKey(i, j, k));
+						System.out.println(""+i+","+j+","+k+"="+value);
+					}//for
+				}
+			}*/
 
+
+			System.out.println("----");
 
 			learn(output);
 		}
 
-		@Override
-		public void learn(Collector<Tuple1<String>> output) {
-			// m*x+b
-			Double alpha=0.5;
-			Double[] model = {1.0, 1.0};
-			Double[] model_ = {1.0, 1.0};
-
-			for( int i=0; i < 10; i++ ) {
-				model_[0] = model_[0] + alpha*nextStep(0, model);
-				model_[1] = model_[1] + alpha*nextStep(1, model);
-
-				model[0] = model_[0];
-				model[1] = model_[1];
-			}
-
-			System.out.println("model: "+model[0]+" "+model[1]);
+		public static List<Tuple2<Double,Double[]>> testLinRegDataSet(){
+			List<Tuple2<Double,Double[]>> dataset = new ArrayList<Tuple2<Double,Double[]>>();
+			dataset.add(new Tuple2(-0.955629435186,  new Double[] {1.0, -0.75121113185}) );
+			dataset.add(new Tuple2(0.490889720885,  new Double[] {1.0, 0.585311356523})) ;
+			dataset.add(new Tuple2(-1.07238545278,  new Double[] {1.0, -0.925939426578}));
+			dataset.add(new Tuple2(-0.390171914177,  new Double[] {1.0, -0.272969938626}));
+			dataset.add(new Tuple2(0.782689711998,  new Double[] {1.0, 0.828812491524} ));
+			dataset.add(new Tuple2(0.637338224205,  new Double[] {1.0, 0.78592062834} ));
+			dataset.add(new Tuple2(-0.227083652156,  new Double[] {1.0, -0.0966025660222} ));
+			dataset.add(new Tuple2(0.309557927922,  new Double[] {1.0, 0.4713667385} ));
+			dataset.add(new Tuple2(-0.38246690061,  new Double[] {1.0, -0.229493696328} ));
+			dataset.add(new Tuple2(-0.399638414267, new Double[] { 1.0, -0.194375304678} ));
+			return dataset;
 		}
 
-		private Double nextStep( int k, Double[] model ){
-			int d = model.length;
-			Double value=0.0;
-			for( int i=0; i < statistics.getSampleCount(); i++ ){
-				value += sketch_labels.get(i+" "+k);
-				System.out.println(value);
-			}
-			value *= 1.0/statistics.getSampleCount();
-			System.out.println(value);
+		@Override
+		public void learn(Collector<Tuple1<String>> output) {
 
-			Double value2=0.0;
-			for( int j=0; j < d; j++ ){
-				Double value3=0.0;
-				for( int i=0; i < statistics.getSampleCount(); i++ ) {
-					value3 += sketch_labels.get(i + " "+ j +" " + k);
+			// m*x+b
+			Double alpha=0.05;
+			Double[] theta = {0.0, 0.0};
+			Double[] theta_old = {0.0, 0.0};
+
+			for( int i=0; i < 200; i++ ) {
+				theta[0] = theta_old[0] - alpha*nextStep(0, theta_old);
+				theta[1] = theta_old[1] - alpha*nextStep(1, theta_old);
+
+				theta_old[0] = theta[0];
+				theta_old[1] = theta[1];
+			}
+
+
+			System.out.println("learned model: "+theta[0]+" "+theta[1]);
+		}
+
+		private List<Tuple2<Double,Double[] >> dataset = testLinRegDataSet();
+		private Double nextStep( int k, Double[] theta ){
+			int d = theta.length;
+			Double sum=0.0;
+			for( int i=0; i < statistics.getSampleCount(); i++ ) {
+				//result+= - dataset.get(i).f0*dataset.get(i).f1[k];
+				sum+= - sketch_labels.get( SketchBuilder.constructKey(i,k) );
+
+			}
+			for( int j=0; j < d; j++ ) {
+				for (int i = 0; i < statistics.getSampleCount(); i++) {
+					//sum += theta[j] * dataset.get(i).f1[j] * dataset.get(i).f1[k];
+					sum += theta[j] * sketch_samples.get(SketchBuilder.constructKey(i,j,k) );
 				}
-				value2 += model[j]*value3;
-				System.out.println(value3);
 			}
-			value2 *= 1.0/statistics.getSampleCount();
 
-			System.out.println(value2);
-
-			return value - value2;
+			return sum / (double) statistics.getSampleCount();
 		}
 
 	}

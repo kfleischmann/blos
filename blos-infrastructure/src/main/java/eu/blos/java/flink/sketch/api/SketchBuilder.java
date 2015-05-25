@@ -18,13 +18,22 @@ public class SketchBuilder {
 
 	public static final int SKETCHTYPE_BLOOM_FILTER 	= 1;
 	public static final int SKETCHTYPE_CM_SKETCH 		= 2;
-	public static final String KEY_DELIMITER			= " ";
+	public static final String FIELD_DELIMITER			= ",";
 
 	public static int[] ReduceSketchByFields(int ... keys ){
 		return keys;
 	}
 	public static int[] Fields(int ... index  ){
 		return index;
+	}
+
+	public static String constructKey( Object... fields ){
+		String result="";
+		for(int i=0; i < fields.length; i++) {
+			result+=""+fields[i]+FIELD_DELIMITER;
+		}//for
+		// cleanup sketch field key (remove last delimiter if exists?)
+		return result.trim().replaceAll(FIELD_DELIMITER+"$", "");
 	}
 
 	public static class DefaultSketcherUDF implements SketcherUDF {
@@ -53,15 +62,18 @@ public class SketchBuilder {
 		private String extractFields(String[] record, int[] fields ){
 			String result="";
 			for(int i=0; i < fields.length; i++) {
-				result+=record[fields[i]]+KEY_DELIMITER;
+				result+=record[fields[i]]+FIELD_DELIMITER;
 			}//for
-			return result.trim();
+
+			// cleanup sketch field key (remove last delimiter if exists?)
+			return result.trim().replaceAll(FIELD_DELIMITER+"$", "");
 		}
 		@Override
 		public void sketch(String record, Collector<Tuple4<Long, Integer, Integer, Double>> collector, HashFunction[] hashFunctions ) {
 			String[] fields = record.split(fieldDelimiter);
 			String key = extractFields.length==0 ? record : extractFields(fields,extractFields);
 			Double value = defaultValue;
+
 			if(valueIndex!=-1){
 				value=Double.parseDouble(fields[valueIndex]);
 			}
@@ -72,7 +84,7 @@ public class SketchBuilder {
 		}
 	}
 	public static Sketcher apply( String source, String dest, HashFunction[] hashfunction, int type, int[] groupBy ){
-		return new Sketcher( source, dest, hashfunction, new DefaultSketcherUDF(","), type, groupBy );
+		return new Sketcher( source, dest, hashfunction, new DefaultSketcherUDF( FIELD_DELIMITER ), type, groupBy );
 	}
 
 	public static Sketcher apply( String source, String dest, HashFunction[] hashfunctions, int type, SketcherUDF udf, int[] groupBy ){
@@ -103,7 +115,7 @@ public class SketchBuilder {
 							return new Tuple4<Long, Integer, Integer, Double>(left.f0, left.f1, left.f2+right.f2, left.f3+right.f3 );
 						}
 					})
-					.writeAsCsv(sketchDataPath + "/" + sketch.getDest(), "\n", ",", FileSystem.WriteMode.OVERWRITE);
+					.writeAsCsv(sketchDataPath + "/" + sketch.getDest(), "\n", FIELD_DELIMITER, FileSystem.WriteMode.OVERWRITE);
 
 
 

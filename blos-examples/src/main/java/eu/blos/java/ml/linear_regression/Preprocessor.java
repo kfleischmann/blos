@@ -12,11 +12,6 @@ import org.apache.flink.core.fs.FileSystem;
 import org.apache.flink.core.fs.Path;
 import org.apache.flink.util.Collector;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Scanner;
-
-
 public class Preprocessor {
 
 	private static final Log LOG = LogFactory.getLog(Preprocessor.class);
@@ -71,8 +66,10 @@ public class Preprocessor {
 						String[] features = fields[2].split( VALUE_SEPARATOR );
 						Double label = Double.parseDouble(fields[1]);
 
+						//k==0
 						collector.collect( new Tuple3<String,Integer,Double>( sampleId, 0, label ) );
 
+						//k>0
 						// for each sample i, feature k emit y^i * x_k^i
 						for(int k=1; k <= features.length; k++ ){
 							Double value = label*Double.parseDouble(features[k-1]);
@@ -81,7 +78,7 @@ public class Preprocessor {
 					} // flatMap
 				});
 
-		// output: for each index j in x (i, k, xk^i * xj^i)
+		// output: for each index (i, k, j,) =>  xk^i * xj^i
 		DataSet<Tuple4<String, Integer, Integer,Double>> sketch2 =
 				samples.flatMap(new FlatMapFunction<String, Tuple4<String, Integer, Integer, Double>>() {
 					@Override
@@ -90,17 +87,32 @@ public class Preprocessor {
 						String sampleId = fields[0];
 						String[] features = fields[2].split( VALUE_SEPARATOR );
 
-						for(int j=0; j < features.length; j++ ) {
-							Double value1 = Double.parseDouble(features[j]);
+						for(int j=0; j <= features.length; j++ ) {
+							//Double jvalue = Double.parseDouble(features[j]);
 
-							collector.collect(new Tuple4<String, Integer, Integer, Double>(sampleId, j, 0, value1 ));
 
-							for (int k = 1; k <= features.length; k++) {
-								Double value2 = Double.parseDouble(features[k-1]);
-								collector.collect(new Tuple4<String, Integer, Integer, Double>(sampleId, j, k, value1*value2));
+							for (int k = 0; k <= features.length; k++) {
+								//Double kvalue = Double.parseDouble(features[k]);
+								collector.collect(
+											new Tuple4<String, Integer, Integer, Double>(sampleId, j, k,
+													(j==0? 1.0 : Double.parseDouble(features[j-1]) )*(k == 0? 1.0 :  Double.parseDouble(features[k-1]) )
+											));
 							}//for
-						}//for
 
+
+
+							/*
+							// k==0
+							collector.collect(new Tuple4<String, Integer, Integer, Double>(sampleId, j, 0, jvalue ));
+
+							// k>0
+							for (int k = 1; k <= features.length; k++) {
+								Double kvalue = Double.parseDouble(features[k-1]);
+								collector.collect(new Tuple4<String, Integer, Integer, Double>(sampleId, j, k, jvalue*kvalue));
+							}//for*/
+
+
+						}//for
 					} // flatMap
 				});
 		sketch1.writeAsCsv( outputPath+"/sketch_labels", "\n", FIELD_SEPARATOR, FileSystem.WriteMode.OVERWRITE );

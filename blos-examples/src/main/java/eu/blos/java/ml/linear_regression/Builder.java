@@ -73,13 +73,13 @@ public class Builder {
 		CMSketch sketch_labels = new CMSketch(0.5 /*factor*/, 0.000001 /*prob*/);
 		CMSketch sketch_samples = new CMSketch(0.5 /*factor*/, 0.000001 /*prob*/);
 
-		System.out.println(inputPath);
-		System.out.println(outputPath+"/preprocessed");
-		System.out.println(outputPath+"/sketched");
+		LOG.info("input-path: "+inputPath);
+		LOG.info("preprocessor-path: "+outputPath+"/preprocessed");
+		LOG.info("sketcher-path: " + outputPath+"/sketched");
 
-		System.out.println(sketch_samples.w() );
-		System.out.println(sketch_samples.d() );
-		System.out.println("size in mb:"+ (sketch_samples.w()*sketch_samples.d())*4.0/1024.0/1024.0 );
+		LOG.info("w="+sketch_samples.w() );
+		LOG.info("d="+sketch_samples.d() );
+		LOG.info("size in mb:"+ (sketch_samples.w()*sketch_samples.d())*4.0/1024.0/1024.0 );
 
 
 		StatisticsBuilder.run(env, inputPath, getStatisticsPath(outputPath), new SampleFormat(",", " ", -1, 2));
@@ -94,6 +94,7 @@ public class Builder {
 		// preprocessing phase
 		// ------------------------------------------
 		if(cmd.hasOption("preprocessor")){
+			LOG.info("starting preprocessor");
 			preprocess( env, inputPath, getPreprocessedPath( outputPath) );
 		}
 
@@ -101,6 +102,7 @@ public class Builder {
 		// sketcher phase
 		// ------------------------------------------
 		if(cmd.hasOption("sketcher")){
+			LOG.info("starting sketcher");
 			sketch(env, getPreprocessedPath(outputPath), getSketchedPath(outputPath), sketches);
 		}
 
@@ -108,6 +110,7 @@ public class Builder {
 		// learner phase
 		// ------------------------------------------
 		if(cmd.hasOption("learner")){
+			LOG.info("starting learner");
 			learn( env, outputPath, sketches );
 		}
 	}
@@ -128,6 +131,28 @@ public class Builder {
 
 	/**
 	 * preapre the raw input dataset for the sketching phase
+	 *
+	 * input-format
+	 * 		index,label,x-values (separated by space delimiter)
+	 *
+	 *
+	 * OUTPUT:
+	 * 	LABELS:
+	 *
+	 * 	output-format
+	 *		(x,y) -> (i,k ) => (i,k,xk^i * y^i )
+	 *
+	 * 	SAMPLES:
+	 *
+	 * 	output-format
+	 *		(x,y) -> (i, k, j) =>  (i,k,j,xk^i * xj^i)
+	 *
+	 *		i: sample-index
+	 *		k: feature-index
+	 *		j: feature-index
+	 *		x: sample
+	 *		y: label
+	 *
 	 * @param env
 	 * @param input
 	 * @param preprocessPath
@@ -157,18 +182,19 @@ public class Builder {
 						sketches[0].getHashfunctions(),
 						SketchBuilder.SKETCHTYPE_CM_SKETCH,
 						new SketchBuilder.DefaultSketcherUDF(
-								",", // split line by comma
+								SketchBuilder.FIELD_DELIMITER, // split line by comma
 								2,	// emit y-value
 								SketchBuilder.Fields(0,1)), // extract fields for hashing (i,k)
 						SketchBuilder.ReduceSketchByFields(0, 1) // group by hash
-				),
+				)
+				,
 				SketchBuilder.apply(
-						"sketch_samples", /*input*/
-						"sketch_samples",  /*output*/
+						"sketch_samples",
+						"sketch_samples",
 						sketches[1].getHashfunctions(),
 						SketchBuilder.SKETCHTYPE_CM_SKETCH,
 						new SketchBuilder.DefaultSketcherUDF(
-								",", // split line by comma
+								SketchBuilder.FIELD_DELIMITER, // split line by comma
 								3,	// emit y-value
 								SketchBuilder.Fields(0,1,2)), // extract fields for hashing (i,k)
 						SketchBuilder.ReduceSketchByFields(0, 1) // group by hash
