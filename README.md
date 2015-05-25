@@ -27,7 +27,8 @@ Function: f(x) = 1*x^1 + 2*X^2 + ... {factor}:{exp} (more are possible)
  blos generators poly --sigma 0.05 -f "100:0,0.5:1" --range="-1:1" --count 10000 | blos visualize scatter2d
  ```
 
-Read data do regression and visualize data and show result
+Read data do regression and visualize data and show result. Please keep in your mind, that `regression linear` only allows the regression on linear m*x+c datasets. More regression may be supported in the future.
+
 ```
 cat data | blos regression linear | blos visualize curve2d
 cat data | blos regression poly | blos visualize curve2d
