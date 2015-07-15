@@ -1,9 +1,9 @@
 package eu.blos.scala.algorithms.sketches
 
-import pl.edu.icm.jlargearrays.LongLargeArray
+import pl.edu.icm.jlargearrays.FloatLargeArray
 import eu.blos.java.algorithms.sketches.{Sketch, HashFunction, DigestHashFunction}
 
-case class CMSketch(  var delta: Double,
+case class ModCMSketch(  var delta: Double,
                       var epsilon: Double
                 ) extends Sketch with Serializable {
 
@@ -17,41 +17,37 @@ case class CMSketch(  var delta: Double,
   def d = Math.ceil(Math.log(1 / delta)).toLong
 
   // sketh data
-  var count : LongLargeArray = null;
+  var count : FloatLargeArray = null;
 
   def alloc = {
-    count = new LongLargeArray(w*d, true /*init memory with zeros*/ )
+    count = new FloatLargeArray(w*d, true /*init memory with zeros*/ )
   }
 
   def size = if(count == null) 0 else d*w
   def estimate(t: (Float,String)) = -get(t._2)
   def get_hashfunctions = hashfunctions
   def getHashfunctions = hashfunctions.toArray( new Array[HashFunction]( hashfunctions.size() ) )
-  def array_get(row : Long ,col : Long ) : Long = {
+  def array_get(row : Long ,col : Long ) : Float = {
     count.get(row*w+col)
   }
 
-  def array_set(row : Long ,col : Long, value : Long ) {
+  def array_set(row : Long ,col : Long, value : Float ) {
     count.set(row * w + col, value )
   }
 
-  def update( key : String, increment : Long ) {
+  def update( key : String, increment : Float ) = {
     for( row <- 0 until get_hashfunctions.size ){
       val col = get_hashfunctions.get(row).hash(key).toInt
       array_set(row,col, array_get(row,col)+increment ) //, count(row)(col)
     }
   }
 
-  def update( key : String ) {
-    update(key, 1L )
-  }
-
-  def +( key : String, increment : Long ) = {
+  def +( key : String, increment : Float ) = {
     update(key,increment)
   }
 
   def get( key : String ) = {
-    var result = Long.MaxValue
+    var result = Float.MaxValue
     for( row <- 0 until get_hashfunctions.size ){
       val col = get_hashfunctions.get(row).hash(key).toLong
       result = Math.min( array_get(row, col), result )
@@ -67,7 +63,7 @@ case class CMSketch(  var delta: Double,
     hf
   }
 
-  def mergeWith( cms : CMSketch ) = {
+  def mergeWith( cms : ModCMSketch ) = {
     //val cms : CMPDD = s.asInstanceOf[CMPDD];
     var x : Long = 0
     var y : Long = 0
