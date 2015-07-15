@@ -74,8 +74,8 @@ public class Preprocessor {
 
 						//k>0
 						// for each sample i, feature k emit y^i * x_k^i
-						for(int k=0; k < features.length; k++ ){
-							Double value = (k == 0? label : label*Double.parseDouble(features[k]) );
+						for(int k=0; k <= features.length; k++ ){
+							Double value = (k == 0? label : label*Double.parseDouble(features[k-1]) );
 							Integer normalized = normalizer.normalize(value.doubleValue());
 
 							collector.collect( new Tuple4<String,Integer,Double, Integer>( sampleId, k, value, normalized ) );

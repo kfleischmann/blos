@@ -194,6 +194,8 @@ public class Learner {
 					Long count = Long.parseLong(fields[2]);
 					Double value = Double.parseDouble(fields[3]);
 
+					System.out.println(count);
+
 					sketch_samples.array_set(d,w, count);
 				}
 			}
