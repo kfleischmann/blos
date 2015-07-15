@@ -110,9 +110,11 @@ public class SketchBuilder {
 					.groupBy(sketch.getGroupBy())  // reduce
 					.reduce(new ReduceFunction<Tuple4<Long, Integer, Integer, Double>>() {
 						@Override
-						public Tuple4<Long, Integer, Integer, Double> reduce(Tuple4<Long, Integer, Integer, Double> left,
-																	Tuple4<Long, Integer, Integer, Double> right) throws Exception {
-							return new Tuple4<Long, Integer, Integer, Double>(left.f0, left.f1, left.f2+right.f2, left.f3+right.f3 );
+						public Tuple4<Long, Integer, Integer, Double>
+							reduce(Tuple4<Long, Integer, Integer, Double> left,
+											Tuple4<Long, Integer, Integer, Double> right) throws Exception {
+							return
+								new Tuple4<Long, Integer, Integer, Double>(left.f0, left.f1, left.f2+right.f2, left.f3+right.f3 );
 						}
 					})
 					.writeAsCsv(sketchDataPath + "/" + sketch.getDest(), "\n", FIELD_DELIMITER, FileSystem.WriteMode.OVERWRITE);
