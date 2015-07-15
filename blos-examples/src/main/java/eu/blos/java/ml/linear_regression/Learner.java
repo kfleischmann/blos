@@ -179,18 +179,25 @@ public class Learner {
 					String[] fields = sketchFields.split(",");
 					Long w = Long.parseLong(fields[0]);
 					Long d = Long.parseLong(fields[1]);
-					Float count = Float.parseFloat(fields[3]);
+					Long count = Long.parseLong(fields[2]);
+					Float sum = Float.parseFloat(fields[3]);
 
-					sketch_labels.array_set(d,w,count);
+
+					System.out.println(count+" "+sum);
+
+					sketch_labels.array_set(d,w,sum/(float)count);
 				}
 
 				if(sketchType.compareTo("sketch_samples") == 0 ) {
 					String[] fields = sketchFields.split(",");
 					Long w = Long.parseLong(fields[0]);
 					Long d = Long.parseLong(fields[1]);
-					Float count = Float.parseFloat(fields[3]);
+					Long count = Long.parseLong(fields[2]);
+					Float sum = Float.parseFloat(fields[3]);
 
-					sketch_samples.array_set(d,w,count);
+					System.out.println(count+" "+sum);
+
+					sketch_samples.array_set(d,w,sum/(float)count);
 				}
 			}
 
@@ -221,17 +228,19 @@ public class Learner {
 
 			// m*x+b
 			Double alpha=0.05;
-			Double[] theta = {0.0, 0.0};
-			Double[] theta_old ={0.0, 0.0};
+			Double[] theta = {-1.0, 1.0};
+			Double[] theta_old = {-1.0, 1.0};
 
-			for( int i=0; i < 100; i++ ) {
+			for( int i=0; i < 1; i++ ) {
 				LOG.info("learned model (iteration "+i+"): "+theta[0]+" "+theta[1]);
 
 				theta[0] = theta_old[0] - alpha*nextStep(0, theta_old);
-				theta[1] = theta_old[1] - alpha*nextStep(1, theta_old);
+								theta[1] = theta_old[1] - alpha*nextStep(1, theta_old);
 
 				theta_old[0] = theta[0];
 				theta_old[1] = theta[1];
+
+				output.collect( new Tuple1<String>(i+","+theta[0]+" "+theta[1] ) );
 			}
 		}
 
@@ -239,18 +248,24 @@ public class Learner {
 		private Double nextStep( int k, Double[] theta ){
 			int d = theta.length;
 			Double sum=0.0;
+			Double result=0.0;
 			for( int i=0; i < statistics.getSampleCount(); i++ ) {
-				//result+= - dataset.get(i).f0*dataset.get(i).f1[k];
+				result+= - dataset.get(i).f0*dataset.get(i).f1[k];
 				sum+= - sketch_labels.get( SketchBuilder.constructKey(i,k) );
-
 			}//for
+
 
 			for( int j=0; j < d; j++ ) {
 				for (int i = 0; i < statistics.getSampleCount(); i++) {
-					//sum += theta[j] * dataset.get(i).f1[j] * dataset.get(i).f1[k];
+					result += theta[j] * dataset.get(i).f1[j] * dataset.get(i).f1[k];
+
 					sum += theta[j] * sketch_samples.get(SketchBuilder.constructKey(i,j,k) );
 				}//for
 			}//for
+
+			System.out.println("result: "+result);
+			System.out.println("sum: "+sum);
+			System.out.println("---");
 
 			return sum / (double) statistics.getSampleCount();
 		}
