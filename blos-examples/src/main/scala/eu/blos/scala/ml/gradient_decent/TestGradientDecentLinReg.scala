@@ -95,12 +95,12 @@ class TestGradientDecentLinRegWithSketch( override val alpha : Double, override 
     println("sketching")
 
     for( i <- Range(0,dataset.length)) {
-      sketch_labels.update( i+"-"+0, (getY(i)*getX(i,0)).toFloat )
-      sketch_labels.update( i+"-"+1, (getY(i)*getX(i,1)).toFloat )
+      sketch_labels.update( i+"-"+0, (getY(i)*getX(i,0)).toLong )
+      sketch_labels.update( i+"-"+1, (getY(i)*getX(i,1)).toLong )
 
       for( j <- Range(0,model.length)) {
-        sketch_samples.update( i+"-"+j+"-"+0, (getX(i,0)*getX(i,1)).toFloat )
-        sketch_samples.update( i+"-"+j+"-"+1, (getX(i,1)*getX(i,0)).toFloat )
+        sketch_samples.update( i+"-"+j+"-"+0, (getX(i,0)*getX(i,1)).toLong )
+        sketch_samples.update( i+"-"+j+"-"+1, (getX(i,1)*getX(i,0)).toLong )
       }
     }
   }
