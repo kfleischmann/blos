@@ -207,6 +207,7 @@ public class Learner {
 			learn(output);
 		}
 
+
 		public static List<Tuple2<Double,Double[]>> testLinRegDataSet(){
 			List<Tuple2<Double,Double[]>> dataset = new ArrayList<Tuple2<Double,Double[]>>();
 			dataset.add(new Tuple2(-0.955629435186,  new Double[] {1.0, -0.75121113185}) );
@@ -231,9 +232,7 @@ public class Learner {
 			Double[] theta = {-1.0, 1.0};
 			Double[] theta_old = {-1.0, 1.0};
 
-			for( int i=0; i < 1; i++ ) {
-				LOG.info("learned model (iteration "+i+"): "+theta[0]+" "+theta[1]);
-
+			for( int i=0; i < 100; i++ ) {
 				theta[0] = theta_old[0] - alpha*nextStep(0, theta_old);
 								theta[1] = theta_old[1] - alpha*nextStep(1, theta_old);
 
@@ -242,6 +241,8 @@ public class Learner {
 
 				output.collect( new Tuple1<String>(i+","+theta[0]+" "+theta[1] ) );
 			}
+			LOG.info("final learned model: " + theta[0]+" "+theta[1]);
+
 		}
 
 		private List<Tuple2<Double,Double[] >> dataset = testLinRegDataSet();
@@ -253,8 +254,6 @@ public class Learner {
 				result+= - dataset.get(i).f0*dataset.get(i).f1[k];
 				sum+= - sketch_labels.get( SketchBuilder.constructKey(i,k) );
 			}//for
-
-
 			for( int j=0; j < d; j++ ) {
 				for (int i = 0; i < statistics.getSampleCount(); i++) {
 					result += theta[j] * dataset.get(i).f1[j] * dataset.get(i).f1[k];
@@ -262,11 +261,6 @@ public class Learner {
 					sum += theta[j] * sketch_samples.get(SketchBuilder.constructKey(i,j,k) );
 				}//for
 			}//for
-
-			System.out.println("result: "+result);
-			System.out.println("sum: "+sum);
-			System.out.println("---");
-
 			return sum / (double) statistics.getSampleCount();
 		}
 
