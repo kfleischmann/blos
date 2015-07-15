@@ -16,7 +16,7 @@ case class CMSketch(  var delta: Double,
   def w = Math.ceil(Math.exp(1) /epsilon).toLong
   def d = Math.ceil(Math.log(1 / delta)).toLong
 
-  // memory contianing the sketch data
+  // sketh data
   var count : FloatLargeArray = null;
 
   def alloc = {
