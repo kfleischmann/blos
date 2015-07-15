@@ -36,7 +36,8 @@ public class SketchBuilder {
 		return result.trim().replaceAll(FIELD_DELIMITER+"$", "");
 	}
 
-	public static class DefaultSketcherUDF implements SketcherUDF {
+
+	public static class FieldSketcherUDF implements SketcherUDF {
 		private String fieldDelimiter;
 		private int[] extractFields;
 		private int valueIndex;
@@ -48,14 +49,14 @@ public class SketchBuilder {
 		 * @param valueIndex field-index that should be used as emit value. default value is 1.0
 		 * @param extractFields fields used for the hashing process
 		 */
-		public DefaultSketcherUDF(String fieldDelimiter, int valueIndex, int ... extractFields ){
+		public FieldSketcherUDF(String fieldDelimiter, int valueIndex, int ... extractFields ){
 			this.fieldDelimiter = fieldDelimiter;
 			this.extractFields = extractFields;
 			this.valueIndex = valueIndex;
 
 		}
 
-		public DefaultSketcherUDF(String fieldDelimiter,int ... extractFields ){
+		public FieldSketcherUDF(String fieldDelimiter,int ... extractFields ){
 			this(fieldDelimiter, -1, extractFields);
 		}
 
@@ -83,8 +84,10 @@ public class SketchBuilder {
 			}//for
 		}
 	}
+
+
 	public static Sketcher apply( String source, String dest, HashFunction[] hashfunction, int type, int[] groupBy ){
-		return new Sketcher( source, dest, hashfunction, new DefaultSketcherUDF( FIELD_DELIMITER ), type, groupBy );
+		return new Sketcher( source, dest, hashfunction, new FieldSketcherUDF( FIELD_DELIMITER ), type, groupBy );
 	}
 
 	public static Sketcher apply( String source, String dest, HashFunction[] hashfunctions, int type, SketcherUDF udf, int[] groupBy ){

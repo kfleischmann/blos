@@ -1,5 +1,7 @@
 package eu.blos.java.ml.linear_regression;
 
+import eu.blos.java.algorithms.sketches.FieldNormalizer;
+import eu.blos.java.algorithms.sketches.field_normalizer.ZeroOneNormalizer;
 import eu.blos.java.flink.helper.DataSetReader;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -8,6 +10,7 @@ import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.ExecutionEnvironment;
 import org.apache.flink.api.java.tuple.Tuple3;
 import org.apache.flink.api.java.tuple.Tuple4;
+import org.apache.flink.api.java.tuple.Tuple5;
 import org.apache.flink.core.fs.FileSystem;
 import org.apache.flink.core.fs.Path;
 import org.apache.flink.util.Collector;
@@ -37,7 +40,7 @@ public class Preprocessor {
 	 * @param args
 	 * @throws Exception
 	 */
-	public static void transform(final ExecutionEnvironment env, String inputPath, String outputPath, String ... args ) throws Exception {
+	public static void transform(final ExecutionEnvironment env, String inputPath, String outputPath, final FieldNormalizer normalizer, String ... args ) throws Exception {
 		LOG.info("start preprocessing phase");
 
 		if(!outputPath.equals("stdout")) {
@@ -56,10 +59,10 @@ public class Preprocessor {
 
 
 		// output: (i, k, xk^i * y^i)
-		DataSet<Tuple3<String, Integer,Double>> sketch1 =
-				samples.flatMap(new FlatMapFunction<String, Tuple3<String, Integer, Double>>() {
+		DataSet<Tuple4<String, Integer,Double, Integer>> sketch1 =
+				samples.flatMap(new FlatMapFunction<String, Tuple4<String, Integer, Double, Integer>>() {
 					@Override
-					public void flatMap(String s, Collector<Tuple3<String, Integer, Double>> collector) throws Exception {
+					public void flatMap(String s, Collector<Tuple4<String, Integer, Double, Integer>> collector) throws Exception {
 						// format: (sampleId,y,attributes)
 						String[] fields = s.split(( FIELD_SEPARATOR ));
 						String sampleId = fields[0];
@@ -67,22 +70,24 @@ public class Preprocessor {
 						Double label = Double.parseDouble(fields[1]);
 
 						//k==0
-						collector.collect( new Tuple3<String,Integer,Double>( sampleId, 0, label ) );
+						//collector.collect( new Tuple4<String,Integer,Double, Integer>( sampleId, 0, label ) );
 
 						//k>0
 						// for each sample i, feature k emit y^i * x_k^i
-						for(int k=1; k <= features.length; k++ ){
-							Double value = label*Double.parseDouble(features[k-1]);
-							collector.collect( new Tuple3<String,Integer,Double>( sampleId, k, value ) );
+						for(int k=0; k < features.length; k++ ){
+							Double value = (k == 0? label : label*Double.parseDouble(features[k]) );
+							Integer normalized = normalizer.normalize(value.doubleValue());
+
+							collector.collect( new Tuple4<String,Integer,Double, Integer>( sampleId, k, value, normalized ) );
 						}//for
 					} // flatMap
 				});
 
 		// output: for each index (i, k, j,) =>  xk^i * xj^i
-		DataSet<Tuple4<String, Integer, Integer,Double>> sketch2 =
-				samples.flatMap(new FlatMapFunction<String, Tuple4<String, Integer, Integer, Double>>() {
+		DataSet<Tuple5<String, Integer, Integer,Double, Integer>> sketch2 =
+				samples.flatMap(new FlatMapFunction<String, Tuple5<String, Integer, Integer, Double, Integer>>() {
 					@Override
-					public void flatMap(String s, Collector<Tuple4<String, Integer, Integer, Double>> collector) throws Exception {
+					public void flatMap(String s, Collector<Tuple5<String, Integer, Integer, Double, Integer>> collector) throws Exception {
 						String[] fields = s.split(( FIELD_SEPARATOR ));
 						String sampleId = fields[0];
 						String[] features = fields[2].split( VALUE_SEPARATOR );
@@ -92,25 +97,14 @@ public class Preprocessor {
 
 
 							for (int k = 0; k <= features.length; k++) {
-								//Double kvalue = Double.parseDouble(features[k]);
+
+								Double value = (j==0? 1.0 : Double.parseDouble(features[j-1]) )*(k == 0? 1.0 :  Double.parseDouble(features[k-1]) );
+								Integer normalized = normalizer.normalize(value.doubleValue());
+
 								collector.collect(
-											new Tuple4<String, Integer, Integer, Double>(sampleId, j, k,
-													(j==0? 1.0 : Double.parseDouble(features[j-1]) )*(k == 0? 1.0 :  Double.parseDouble(features[k-1]) )
-											));
+											new Tuple5<String, Integer, Integer, Double, Integer>(sampleId, j, k, value, normalized )
+											);
 							}//for
-
-
-
-							/*
-							// k==0
-							collector.collect(new Tuple4<String, Integer, Integer, Double>(sampleId, j, 0, jvalue ));
-
-							// k>0
-							for (int k = 1; k <= features.length; k++) {
-								Double kvalue = Double.parseDouble(features[k-1]);
-								collector.collect(new Tuple4<String, Integer, Integer, Double>(sampleId, j, k, jvalue*kvalue));
-							}//for*/
-
 
 						}//for
 					} // flatMap

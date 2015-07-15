@@ -47,8 +47,8 @@ public class Builder {
 					Preprocessor.PATH_OUTPUT_SKETCH_NODE+"-left",
 					bfNodeLeft.getHashfunctions(),SketchBuilder.SKETCHTYPE_BLOOM_FILTER,
 						new SketcherUDF() {
-							private SketchBuilder.DefaultSketcherUDF defaultSketcher =
-									new SketchBuilder.DefaultSketcherUDF(",", SketchBuilder.Fields(0, 2, 4) );
+							private SketchBuilder.FieldSketcherUDF defaultSketcher =
+									new SketchBuilder.FieldSketcherUDF(",", SketchBuilder.Fields(0, 2, 4) );
 
 							@Override
 							public void sketch(String record, Collector<Tuple4<Long, Integer, Integer,Double>> collector, HashFunction[] hashFunctions ) {
@@ -70,8 +70,8 @@ public class Builder {
 					Preprocessor.PATH_OUTPUT_SKETCH_NODE+"-right",
 					bfNodeRight.getHashfunctions(), SketchBuilder.SKETCHTYPE_BLOOM_FILTER,
 						new SketcherUDF() {
-							private SketchBuilder.DefaultSketcherUDF defaultSketcher =
-									new SketchBuilder.DefaultSketcherUDF(",", SketchBuilder.Fields(0, 2, 4));
+							private SketchBuilder.FieldSketcherUDF defaultSketcher =
+									new SketchBuilder.FieldSketcherUDF(",", SketchBuilder.Fields(0, 2, 4));
 							@Override
 							public void sketch(String record, Collector<Tuple4<Long, Integer, Integer, Double>> collector, HashFunction[] hashFunctions ) {
 								// only sketch right

@@ -1,7 +1,6 @@
 package eu.blos.java.algorithms.sketches;
 
 
-import java.io.Serializable;
 import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -21,7 +20,7 @@ public class DigestHashFunction implements HashFunction {
 		HashFunction[] h = new HashFunction[number];
 		for (byte i = 0; i < number; i++) {
 			h[i] = new DigestHashFunction(w, i);
-		}
+		}//for
 		return h;
 	}
 
@@ -34,7 +33,6 @@ public class DigestHashFunction implements HashFunction {
 
 	private String seed;
 
-
 	static {
 		try {
 			digest = MessageDigest.getInstance("SHA-256");
@@ -45,7 +43,7 @@ public class DigestHashFunction implements HashFunction {
 
 	public DigestHashFunction(long w, long seed) {
 		this.w = w;
-		this.seed = StringUtils.leftPad( ""+seed, 5, "0"  );
+		this.seed = StringUtils.leftPad( ""+seed, 5, "0" );
 	}
 
 	@Override
@@ -58,7 +56,7 @@ public class DigestHashFunction implements HashFunction {
 		long value=0;
 		for ( int b=0; b < 8; b++ ){
 			value ^= ((long)hash[b]) << (8*b);
-		}
+		}//for
 
 		long result = Math.abs( (long) (((double)value/(double)Long.MAX_VALUE ) *w) );
 		return result;

@@ -1,6 +1,8 @@
 package eu.blos.java.ml.linear_regression;
 
+import eu.blos.java.algorithms.sketches.FieldNormalizer;
 import eu.blos.java.algorithms.sketches.Sketch;
+import eu.blos.java.algorithms.sketches.field_normalizer.ZeroOneNormalizer;
 import eu.blos.java.api.common.LearningFunction;
 import eu.blos.java.flink.helper.DataSetStatistics;
 import eu.blos.java.flink.sketch.api.SketchBuilder;
@@ -13,7 +15,6 @@ import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.ExecutionEnvironment;
 import org.apache.flink.api.java.tuple.Tuple1;
 import org.apache.flink.api.java.tuple.Tuple2;
-import org.apache.flink.api.java.tuple.Tuple3;
 import org.apache.flink.core.fs.FileSystem;
 import org.apache.flink.core.fs.Path;
 import org.apache.flink.util.Collector;
@@ -180,9 +181,10 @@ public class Learner {
 					Long w = Long.parseLong(fields[0]);
 					Long d = Long.parseLong(fields[1]);
 					Long count = Long.parseLong(fields[2]);
-					Float value = Float.parseFloat(fields[3]);
+					Double value = Double.parseDouble(fields[3]);
 
-					sketch_labels.array_set(d,w, count);
+					sketch_labels.array_set(d, w, count);
+
 				}
 
 				if(sketchType.compareTo("sketch_samples") == 0 ) {
@@ -190,7 +192,7 @@ public class Learner {
 					Long w = Long.parseLong(fields[0]);
 					Long d = Long.parseLong(fields[1]);
 					Long count = Long.parseLong(fields[2]);
-					Float value = Float.parseFloat(fields[3]);
+					Double value = Double.parseDouble(fields[3]);
 
 					sketch_samples.array_set(d,w, count);
 				}
@@ -214,7 +216,7 @@ public class Learner {
 			dataset.add(new Tuple2(-0.227083652156,  new Double[] {1.0, -0.0966025660222} ));
 			dataset.add(new Tuple2(0.309557927922,  new Double[] {1.0, 0.4713667385} ));
 			dataset.add(new Tuple2(-0.38246690061,  new Double[] {1.0, -0.229493696328} ));
-			dataset.add(new Tuple2(-0.399638414267, new Double[] { 1.0, -0.194375304678} ));
+			dataset.add(new Tuple2(-0.399638414267, new Double[] {1.0, -0.194375304678} ));
 			return dataset;
 		}
 

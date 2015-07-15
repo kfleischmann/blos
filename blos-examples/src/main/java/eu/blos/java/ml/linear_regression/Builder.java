@@ -1,7 +1,9 @@
 package eu.blos.java.ml.linear_regression;
 
 
+import eu.blos.java.algorithms.sketches.FieldNormalizer;
 import eu.blos.java.algorithms.sketches.Sketch;
+import eu.blos.java.algorithms.sketches.field_normalizer.ZeroOneNormalizer;
 import eu.blos.java.flink.helper.StatisticsBuilder;
 import eu.blos.java.flink.helper.SampleFormat;
 import eu.blos.java.flink.sketch.api.SketchBuilder;
@@ -98,12 +100,12 @@ public class Builder {
 		LOG.info("sketch label size in mb:"+ (sketch_labels.w()*sketch_labels.d())*4.0/1024.0/1024.0 );
 
 
-//		System.exit(0);
-
 
 		StatisticsBuilder.run(env, inputPath, getStatisticsPath(outputPath), new SampleFormat(",", " ", -1, 2));
 		Learner.statistics = StatisticsBuilder.read(env, getStatisticsPath(outputPath) );
 
+
+		FieldNormalizer normalizer = new ZeroOneNormalizer(22);
 
 		// build sketches which are distributed
 		Sketch[] sketches = {sketch_labels, sketch_samples };
@@ -114,7 +116,7 @@ public class Builder {
 		// ------------------------------------------
 		if(cmd.hasOption("preprocessor")){
 			LOG.info("starting preprocessor");
-			preprocess( env, inputPath, getPreprocessedPath( outputPath) );
+			preprocess( env, inputPath, getPreprocessedPath( outputPath), normalizer );
 		}
 
 		// ------------------------------------------
@@ -154,7 +156,6 @@ public class Builder {
 	 * input-format
 	 * 		index,label,x-values (separated by space delimiter)
 	 *
-	 *
 	 * OUTPUT:
 	 * 	LABELS:
 	 *
@@ -176,8 +177,8 @@ public class Builder {
 	 * @param input
 	 * @param preprocessPath
 	 */
-	public static void preprocess(final ExecutionEnvironment env, String input, String preprocessPath ) throws Exception {
-		Preprocessor.transform(env, input, preprocessPath);
+	public static void preprocess(final ExecutionEnvironment env, String input, String preprocessPath, FieldNormalizer normalizer ) throws Exception {
+		Preprocessor.transform(env, input, preprocessPath, normalizer);
 	}
 
 	/**
@@ -200,10 +201,10 @@ public class Builder {
 						"sketch_labels",  /* output sketch */
 						sketches[0].getHashfunctions(),
 						SketchBuilder.SKETCHTYPE_CM_SKETCH,
-						new SketchBuilder.DefaultSketcherUDF(
+						new SketchBuilder.FieldSketcherUDF(
 								SketchBuilder.FIELD_DELIMITER, // split line by comma
 								2,	// emit y-value
-								SketchBuilder.Fields(0,1)), // extract fields for hashing (i,k)
+								SketchBuilder.Fields(3)), // extract fields for hashing (i,k)
 						SketchBuilder.ReduceSketchByFields(0, 1) // group by hash
 				)
 				,
@@ -212,10 +213,10 @@ public class Builder {
 						"sketch_samples",
 						sketches[1].getHashfunctions(),
 						SketchBuilder.SKETCHTYPE_CM_SKETCH,
-						new SketchBuilder.DefaultSketcherUDF(
+						new SketchBuilder.FieldSketcherUDF(
 								SketchBuilder.FIELD_DELIMITER, // split line by comma
 								3,	// emit y-value
-								SketchBuilder.Fields(0,1,2)), // extract fields for hashing (i,k)
+								SketchBuilder.Fields(4)), // extract fields for hashing (i,k)
 						SketchBuilder.ReduceSketchByFields(0, 1) // group by hash
 				)
 		);

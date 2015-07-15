@@ -3,9 +3,9 @@ package eu.blos.scala.algorithms.sketches
 import pl.edu.icm.jlargearrays.LongLargeArray
 import eu.blos.java.algorithms.sketches.{Sketch, HashFunction, DigestHashFunction}
 
+
 case class CMSketch(  var delta: Double,
-                      var epsilon: Double
-                ) extends Sketch with Serializable {
+                      var epsilon: Double) extends Sketch with Serializable {
 
   def this() = {
     this(1,1/*,1, None*/ )
@@ -31,29 +31,32 @@ case class CMSketch(  var delta: Double,
     count.get(row*w+col)
   }
 
+
+  def beforeHash( key : String ) = key
+
   def array_set(row : Long ,col : Long, value : Long ) {
     count.set(row * w + col, value )
   }
 
   def update( key : String, increment : Long ) {
     for( row <- 0 until get_hashfunctions.size ){
-      val col = get_hashfunctions.get(row).hash(key).toInt
+      val col = get_hashfunctions.get(row).hash( beforeHash( key ) )
       array_set(row,col, array_get(row,col)+increment ) //, count(row)(col)
     }
   }
 
   def update( key : String ) {
-    update(key, 1L )
+    update( key, 1L )
   }
 
   def +( key : String, increment : Long ) = {
     update(key,increment)
   }
 
-  def get( key : String ) = {
+  def get( key : String ) : Long = {
     var result = Long.MaxValue
     for( row <- 0 until get_hashfunctions.size ){
-      val col = get_hashfunctions.get(row).hash(key).toLong
+      val col = get_hashfunctions.get(row).hash(beforeHash(key))
       result = Math.min( array_get(row, col), result )
     }
     result
@@ -62,7 +65,7 @@ case class CMSketch(  var delta: Double,
   def create_hashfunctions = {
     val hf = new java.util.ArrayList[HashFunction]()
     for ( x <- 0 until d.toInt ){
-      hf.add( new DigestHashFunction(w.toLong, x) )
+      hf.add( new DigestHashFunction(w, x) )
     }
     hf
   }
