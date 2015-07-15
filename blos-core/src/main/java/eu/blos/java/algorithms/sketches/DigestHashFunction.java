@@ -52,10 +52,18 @@ public class DigestHashFunction implements HashFunction {
 
 	private long hash(byte[] x) {
 		byte[] hash = digest.digest(x);
-		long value = 0;
-		for (int i = 0; i < hash.length; i++) {
-			value += ((long) hash[i] & 0xffL) << (8 * i);
+		//long value = 0;
+		//for (int i = 0; i < hash.length; i++) {
+		//	value += ((long) hash[i] & 0xffL) << (8 * i);
+		//}
+
+		// [ (double)  hash[0..7] << XOR ] / Long.MAX * w;
+		long value=0;
+		for ( int b=0; b < 8; b++ ){
+			value ^= ((long)hash[b]) << (8*b);
 		}
-		return Math.abs(value % w);
+
+		long result = Math.abs( (long) (((double)value / (double)Long.MAX_VALUE ) *w) );
+		return result;
 	}
 }
