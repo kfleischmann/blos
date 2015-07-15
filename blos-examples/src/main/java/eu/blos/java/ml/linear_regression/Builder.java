@@ -70,19 +70,36 @@ public class Builder {
 		String inputPath		= 			cmd.getOptionValue("input-path");
 		String outputPath 		= 			cmd.getOptionValue("output-path");
 
-		CMSketch sketch_labels = new CMSketch(0.05 /*factor*/, 0.000005 /*prob*/);
-		CMSketch sketch_samples = new CMSketch(0.005 /*factor*/, 0.000005 /*prob*/);
+		String[] inputSketch1_param		= cmd.getOptionValue("sketch1").split(":");
+		String[] inputSketch2_param 	= cmd.getOptionValue("sketch2").split(":");
+
+
+		//--sketch1 0.05:0.000005
+		//CMSketch sketch_labels = new CMSketch(0.5 /*factor*/, 0.00001 /*prob*/);
+		CMSketch sketch_labels = new CMSketch( 	Double.parseDouble(inputSketch1_param[0]) /*factor*/,
+												Double.parseDouble(inputSketch1_param[1]) /*prob*/);
+
+		//--sketch2 0.005:0.000005
+		CMSketch sketch_samples = new CMSketch( Double.parseDouble(inputSketch2_param[0]) /*factor*/,
+												Double.parseDouble(inputSketch2_param[1]) /*prob*/);
+
 
 		LOG.info("input-path: "+inputPath);
 		LOG.info("preprocessor-path: "+outputPath+"/preprocessed");
 		LOG.info("sketcher-path: " + outputPath+"/sketched");
 
-		LOG.info("w="+sketch_samples.w() );
-		LOG.info("d="+sketch_samples.d() );
+		LOG.info("sketch samples w="+sketch_samples.w() );
+		LOG.info("sketch samples d="+sketch_samples.d() );
+
+		LOG.info("sketch labels w="+sketch_labels.w() );
+		LOG.info("sketch labels d="+sketch_labels.d() );
+
 		LOG.info("sketch samples size in mb:"+ (sketch_samples.w()*sketch_samples.d())*4.0/1024.0/1024.0 );
 		LOG.info("sketch label size in mb:"+ (sketch_labels.w()*sketch_labels.d())*4.0/1024.0/1024.0 );
 
-		//System.exit(0);
+
+//		System.exit(0);
+
 
 		StatisticsBuilder.run(env, inputPath, getStatisticsPath(outputPath), new SampleFormat(",", " ", -1, 2));
 		Learner.statistics = StatisticsBuilder.read(env, getStatisticsPath(outputPath) );
@@ -133,7 +150,7 @@ public class Builder {
 
 	/**
 	 * preapre the raw input dataset for the sketching phase
-	 *
+	 *h
 	 * input-format
 	 * 		index,label,x-values (separated by space delimiter)
 	 *
@@ -265,6 +282,26 @@ public class Builder {
 								.withValueSeparator('=')
 								.hasArg()
 						.create("r"));
+
+
+		lvOptions.addOption(
+				OptionBuilder
+						.withLongOpt("sketch1")
+						.withDescription("set parameters for sketch1 delta:epsilon")
+								.isRequired()
+								//.withValueSeparator('=')
+								.hasArg()
+						.create("s1"));
+
+		lvOptions.addOption(
+				OptionBuilder
+						.withLongOpt("sketch2")
+						.withDescription("set parameters for sketch2 delta:epsilon")
+								.isRequired()
+								//.withValueSeparator('=')
+								.hasArg()
+						.create("s2"));
+
 
 		withArguments(lvOptions);
 		CommandLineParser lvParser = new BasicParser();
