@@ -180,9 +180,9 @@ public class Learner {
 					Long w = Long.parseLong(fields[0]);
 					Long d = Long.parseLong(fields[1]);
 					Long count = Long.parseLong(fields[2]);
-					Float sum = Float.parseFloat(fields[3]);
+					Float value = Float.parseFloat(fields[3]);
 
-					sketch_labels.array_set(d,w,sum/(float)count);
+					sketch_labels.array_set(d,w, count);
 				}
 
 				if(sketchType.compareTo("sketch_samples") == 0 ) {
@@ -190,9 +190,9 @@ public class Learner {
 					Long w = Long.parseLong(fields[0]);
 					Long d = Long.parseLong(fields[1]);
 					Long count = Long.parseLong(fields[2]);
-					Float sum = Float.parseFloat(fields[3]);
+					Float value = Float.parseFloat(fields[3]);
 
-					sketch_samples.array_set(d,w,sum/(float)count);
+					sketch_samples.array_set(d,w, count);
 				}
 			}
 
