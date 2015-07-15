@@ -182,9 +182,6 @@ public class Learner {
 					Long count = Long.parseLong(fields[2]);
 					Float sum = Float.parseFloat(fields[3]);
 
-
-					System.out.println(count+" "+sum);
-
 					sketch_labels.array_set(d,w,sum/(float)count);
 				}
 
@@ -194,8 +191,6 @@ public class Learner {
 					Long d = Long.parseLong(fields[1]);
 					Long count = Long.parseLong(fields[2]);
 					Float sum = Float.parseFloat(fields[3]);
-
-					System.out.println(count+" "+sum);
 
 					sketch_samples.array_set(d,w,sum/(float)count);
 				}
