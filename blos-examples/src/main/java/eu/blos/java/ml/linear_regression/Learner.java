@@ -194,11 +194,21 @@ public class Learner {
 					Long count = Long.parseLong(fields[2]);
 					Double value = Double.parseDouble(fields[3]);
 
-					System.out.println(count);
+					//System.out.println(count);
 
 					sketch_samples.array_set(d,w, count);
+
 				}
 			}
+
+
+			System.out.println( sketch_samples.get( "4194304" ) ); // 10
+			System.out.println( sketch_samples.get( "-3150807" ) ); // 2
+			System.out.println( sketch_samples.get( "2366921" ) );  // 1
+
+
+			System.out.println( sketch_samples.get( "2454973" ) ); // 2
+			System.out.println( sketch_samples.get( "2590700" ) ); // 1
 
 			LOG.info("finished reading sketches into memory");
 
