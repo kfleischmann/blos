@@ -1,9 +1,12 @@
 package eu.blos.java.algorithms.sketches;
 
+
 import java.io.Serializable;
 import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import org.apache.commons.lang3.StringUtils;
+
 
 public class DigestHashFunction implements HashFunction {
 
@@ -29,7 +32,7 @@ public class DigestHashFunction implements HashFunction {
 
 	private long w;
 
-	private long seed;
+	private String seed;
 
 
 	static {
@@ -42,28 +45,22 @@ public class DigestHashFunction implements HashFunction {
 
 	public DigestHashFunction(long w, long seed) {
 		this.w = w;
-		this.seed = seed;
+		this.seed = StringUtils.leftPad( ""+seed, 5, "0"  );
 	}
 
 	@Override
 	public long hash(String text) {
-		return hash((text + seed).getBytes(charset));
+		return hash((""+seed+text ).getBytes(charset));
 	}
 
 	private long hash(byte[] x) {
 		byte[] hash = digest.digest(x);
-		//long value = 0;
-		//for (int i = 0; i < hash.length; i++) {
-		//	value += ((long) hash[i] & 0xffL) << (8 * i);
-		//}
-
-		// [ (double)  hash[0..7] << XOR ] / Long.MAX * w;
 		long value=0;
 		for ( int b=0; b < 8; b++ ){
 			value ^= ((long)hash[b]) << (8*b);
 		}
 
-		long result = Math.abs( (long) (((double)value / (double)Long.MAX_VALUE ) *w) );
+		long result = Math.abs( (long) (((double)value/(double)Long.MAX_VALUE ) *w) );
 		return result;
 	}
 }
