@@ -13,6 +13,7 @@ case class CMSketch(  var delta: Double,
 
   var hashfunctions = create_hashfunctions
   val BIG_PRIME : Long = 9223372036854775783L
+
   def w = Math.ceil(Math.exp(1) /epsilon).toLong
   def d = Math.ceil(Math.log(1 / delta)).toLong
 
@@ -31,6 +32,13 @@ case class CMSketch(  var delta: Double,
     count.get(row*w+col)
   }
 
+  def totalSumPerHash : Long = {
+    var total_sum = 0L
+    for( col <- 0L until w ) {
+      total_sum += count.get(col);
+    }
+    total_sum
+  }
 
   def beforeHash( key : String ) = key
 

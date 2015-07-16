@@ -105,7 +105,7 @@ public class Builder {
 		Learner.statistics = StatisticsBuilder.read(env, getStatisticsPath(outputPath) );
 
 
-		FieldNormalizer normalizer = new ZeroOneNormalizer(22);
+		FieldNormalizer normalizer = new ZeroOneNormalizer(20);
 
 		// build sketches which are distributed
 		Sketch[] sketches = {sketch_labels, sketch_samples };

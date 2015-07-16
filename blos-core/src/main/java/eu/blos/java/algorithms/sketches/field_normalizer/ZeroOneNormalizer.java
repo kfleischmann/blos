@@ -2,10 +2,12 @@ package eu.blos.java.algorithms.sketches.field_normalizer;
 
 import eu.blos.java.algorithms.sketches.FieldNormalizer;
 
+import java.util.Random;
+
 public class ZeroOneNormalizer implements FieldNormalizer {
 
 	private int pow;
-
+	private Random r = new java.util.Random();
 	public ZeroOneNormalizer(int pow ){
 		this.pow = pow;
 	}
@@ -28,5 +30,10 @@ public class ZeroOneNormalizer implements FieldNormalizer {
 	@Override
 	public double getMin() {
 		return 0;
+	}
+
+	@Override
+	public int getRandom() {
+		return r.nextInt( 2*(int)Math.pow(2, pow) ) - (int)Math.pow(2, pow);
 	}
 }

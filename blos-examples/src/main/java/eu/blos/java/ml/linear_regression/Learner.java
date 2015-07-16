@@ -202,18 +202,30 @@ public class Learner {
 			}
 
 
-			System.out.println( sketch_samples.get( "4194304" ) ); // 10
-			System.out.println( sketch_samples.get( "-3150807" ) ); // 2
-			System.out.println( sketch_samples.get( "2366921" ) );  // 1
+			long row_sum = sketch_samples.totalSumPerHash();
 
+			System.out.println(row_sum);
 
-			System.out.println( sketch_samples.get( "2454973" ) ); // 2
-			System.out.println( sketch_samples.get( "2590700" ) ); // 1
+			FieldNormalizer normalizer = new ZeroOneNormalizer(20);
+			Random r =new java.util.Random();
+
+			long step_sum = 0L;
+			for( int i=0; i < row_sum; i++ ){
+				int a = normalizer.getRandom();
+				long f =sketch_samples.get(""+a);
+
+				System.out.println(a+" "+f+" "+normalizer.denormalize(a));
+				step_sum += normalizer.denormalize(a)*f;
+			}//for
+
+			step_sum /= step_sum;
+
+			System.out.println( step_sum );
 
 			LOG.info("finished reading sketches into memory");
 
 
-			learn(output);
+			//learn(output);
 		}
 
 
