@@ -23,17 +23,17 @@ public class ZeroOneNormalizer implements FieldNormalizer {
 	}
 
 	@Override
-	public double getMax() {
-		return 1;
+	public int getMax() {
+		return (int)Math.pow(2, pow);
 	}
 
 	@Override
-	public double getMin() {
-		return 0;
+	public int getMin() {
+		return - (int)Math.pow(2, pow);
 	}
 
 	@Override
 	public int getRandom() {
-		return r.nextInt( 2*(int)Math.pow(2, pow) ) - (int)Math.pow(2, pow);
+		return r.nextInt( 2*(int)Math.pow(2, pow) ) - (int)Math.pow(2, pow) ;
 	}
 }

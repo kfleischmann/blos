@@ -5,7 +5,7 @@ import java.io.Serializable;
 public interface FieldNormalizer extends Serializable{
 	public int normalize(double val);
 	public double denormalize(int val);
-	public double getMax();
-	public double getMin();
+	public int getMax();
+	public int getMin();
 	public int getRandom();
 }

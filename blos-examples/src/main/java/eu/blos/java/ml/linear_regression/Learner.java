@@ -164,6 +164,15 @@ public class Learner {
 		public void mapPartition(Iterable<Tuple2<String, String>> sketch, Collector<Tuple1<String>> output)
 					throws Exception {
 			this.output = output;
+			int mb = 1024*1024;
+			Runtime runtime = Runtime.getRuntime();
+
+			LOG.info("max memory space "+runtime.maxMemory() / mb);
+			LOG.info("used memory space "+  (runtime.totalMemory() - runtime.freeMemory()) / mb);
+
+			LOG.info("sketch samples size in mb:"+ (sketch_samples.alloc_size())/1024.0/1024.0 );
+			LOG.info("sketch label size in mb:"+ (sketch_samples.alloc_size())/1024.0/1024.0 );
+
 
 			//sketch_qj.allocate();
 			sketch_labels.alloc();
@@ -194,12 +203,9 @@ public class Learner {
 					Long count = Long.parseLong(fields[2]);
 					Double value = Double.parseDouble(fields[3]);
 
-					//System.out.println(count);
-
 					sketch_samples.array_set(d,w, count);
-
-				}
-			}
+				}//if
+			}//while
 
 
 			long row_sum = sketch_samples.totalSumPerHash();
@@ -207,20 +213,36 @@ public class Learner {
 			System.out.println(row_sum);
 
 			FieldNormalizer normalizer = new ZeroOneNormalizer(20);
-			Random r =new java.util.Random();
 
-			long step_sum = 0L;
-			for( int i=0; i < row_sum; i++ ){
+			Double step_sum = 0.0;
+			long step_totoal_sum = 0L;
+
+			while( step_totoal_sum <= row_sum ){
 				int a = normalizer.getRandom();
 				long f =sketch_samples.get(""+a);
 
-				System.out.println(a+" "+f+" "+normalizer.denormalize(a));
 				step_sum += normalizer.denormalize(a)*f;
+				step_totoal_sum += f;
 			}//for
 
-			step_sum /= step_sum;
+			System.out.println( step_sum );
+			step_sum /= step_totoal_sum;
+			System.out.println( step_sum );
+
+
+
+			step_sum = 0.0;
+			step_totoal_sum = 0L;
+			for( int a=normalizer.getMin(); a < normalizer.getMax(); a++ ){
+				long f =sketch_samples.get(""+a);
+				step_sum += normalizer.denormalize(a)*f;
+				step_totoal_sum += f;
+			}//for
 
 			System.out.println( step_sum );
+			step_sum /= step_totoal_sum;
+			System.out.println( step_sum );
+
 
 			LOG.info("finished reading sketches into memory");
 

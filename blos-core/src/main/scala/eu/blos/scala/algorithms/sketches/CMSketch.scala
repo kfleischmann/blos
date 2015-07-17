@@ -24,7 +24,8 @@ case class CMSketch(  var delta: Double,
     count = new LongLargeArray(w*d, true /*init memory with zeros*/ )
   }
 
-  def size = if(count == null) 0 else d*w
+  def size = if(count == null) 0 else d*w*8.0 // Bytes
+  def alloc_size = d*w*8.0 // Bytes
   def estimate(t: (Float,String)) = -get(t._2)
   def get_hashfunctions = hashfunctions
   def getHashfunctions = hashfunctions.toArray( new Array[HashFunction]( hashfunctions.size() ) )

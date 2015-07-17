@@ -67,10 +67,15 @@ public class Builder {
 			return;
 		}
 
+		int mb = 1024*1024;
+		Runtime runtime = Runtime.getRuntime();
+
+		LOG.info("max memory space "+runtime.maxMemory() / mb);
+
 		final ExecutionEnvironment env = getEnv(cmd);
 
-		String inputPath		= 			cmd.getOptionValue("input-path");
-		String outputPath 		= 			cmd.getOptionValue("output-path");
+		String inputPath				= cmd.getOptionValue("input-path");
+		String outputPath 				= cmd.getOptionValue("output-path");
 
 		String[] inputSketch1_param		= cmd.getOptionValue("sketch1").split(":");
 		String[] inputSketch2_param 	= cmd.getOptionValue("sketch2").split(":");
@@ -96,9 +101,15 @@ public class Builder {
 		LOG.info("sketch labels w="+sketch_labels.w() );
 		LOG.info("sketch labels d="+sketch_labels.d() );
 
-		LOG.info("sketch samples size in mb:"+ (sketch_samples.w()*sketch_samples.d())*4.0/1024.0/1024.0 );
-		LOG.info("sketch label size in mb:"+ (sketch_labels.w()*sketch_labels.d())*4.0/1024.0/1024.0 );
+		LOG.info("sketch samples size in mb:"+ (sketch_samples.alloc_size())/1024.0/1024.0 );
+		LOG.info("sketch label size in mb:"+ (sketch_labels.alloc_size())/1024.0/1024.0 );
 
+
+
+		if (cmd.hasOption('d') ) {
+			LOG.info("run in describe-mode");
+			return;
+		}
 
 
 		StatisticsBuilder.run(env, inputPath, getStatisticsPath(outputPath), new SampleFormat(",", " ", -1, 2));
@@ -134,6 +145,7 @@ public class Builder {
 			LOG.info("starting learner");
 			learn( env, outputPath, sketches );
 		}
+
 	}
 
 	/**
@@ -302,6 +314,16 @@ public class Builder {
 								//.withValueSeparator('=')
 								.hasArg()
 						.create("s2"));
+
+
+		lvOptions.addOption(
+				OptionBuilder
+						.withLongOpt("describe")
+						.withDescription("runs the application in the describe-mode. This does not execute any distributed algorithms")
+								//.isRequired()
+								//.withValueSeparator('=')
+								//.hasArg()
+						.create("d"));
 
 
 		withArguments(lvOptions);
