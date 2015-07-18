@@ -2,7 +2,10 @@ package eu.blos.scala.algorithms.sketches
 
 import pl.edu.icm.jlargearrays.LongLargeArray
 import eu.blos.java.algorithms.sketches.{Sketch, HashFunction, DigestHashFunction}
-
+import java.nio.charset.Charset
+import java.security.MessageDigest
+import java.security.NoSuchAlgorithmException
+import org.apache.commons.lang3.StringUtils
 
 case class CMSketch(  var delta: Double,
                       var epsilon: Double) extends Sketch with Serializable {
@@ -99,5 +102,16 @@ case class CMSketch(  var delta: Double,
 
   def print {
     System.out.println(toString)
+  }
+
+  def display {
+    var result = Long.MaxValue
+    for( row <- 0 until get_hashfunctions.size ){
+      for( col <- 0L until w ) {
+        result = array_get(row, col)
+        System.out.print( StringUtils.leftPad( ""+result, 3, " " )+" " );
+      }
+      System.out.println();
+    }
   }
 }
