@@ -23,11 +23,11 @@ public class Test {
 	public static List<CMSketch> sketch2 = new ArrayList<CMSketch>();
 
 	//public static FieldNormalizer normalizer = new ZeroOneNormalizer(10);
-	public static FieldNormalizer normalizer =  new RoundNormalizer(5);
+	public static FieldNormalizer normalizer =  new RoundNormalizer(4);
 
 	public static void main(String[] args)  {
 
-		File file = new File("/home/kay/Dropbox/kay-rep/Uni-Berlin/Masterarbeit/datasets/linear_regression/dataset12");
+		File file = new File("/home/kay/Dropbox/kay-rep/Uni-Berlin/Masterarbeit/datasets/linear_regression/dataset13");
 
 		try (BufferedReader br = new BufferedReader( new FileReader( file ) )) {
 			String line;
@@ -47,13 +47,13 @@ public class Test {
 		}
 
 
-		sketch1.add( new CMSketch(0.1, 0.0001 ) );
-		sketch1.add( new CMSketch(0.1, 0.0001 ) );
+		sketch1.add( new CMSketch(0.05, 0.0001 ) );
+		sketch1.add( new CMSketch(0.05, 0.0001 ) );
 
-		sketch2.add( new CMSketch(0.1, 0.0001 ) );
-		sketch2.add( new CMSketch(0.1, 0.0001 ) );
-		sketch2.add( new CMSketch(0.1, 0.0001 ) );
-		sketch2.add( new CMSketch(0.1, 0.0001 ) );
+		sketch2.add( new CMSketch(0.05, 0.0001 ) );
+		sketch2.add( new CMSketch(0.05, 0.0001 ) );
+		sketch2.add( new CMSketch(0.05, 0.0001 ) );
+		sketch2.add( new CMSketch(0.05, 0.0001 ) );
 
 
 		for( CMSketch s : sketch1 ){
@@ -114,7 +114,7 @@ public class Test {
 		}//for
 
 
-		//learn();
+		learn();
 
 
 	}
@@ -168,7 +168,7 @@ public class Test {
 			result+= - labels.get(i).f0 * (double)dataset.get(i).getField(k) / (double)dataset.size();
 		}//for
 
-		sum2 += -sketchEstimate( sketch1.get(k) , normalizer );
+		sum2 += -sketchEstimate( sketch1.get(k) , normalizer )  / (double)dataset.size();
 
 		System.out.println( "real: "+result+" --- estimate "+sum2 );
 
@@ -176,7 +176,7 @@ public class Test {
 			for (int i = 0; i < dataset.size(); i++) {
 				result += theta[j] * (double)dataset.get(i).getField(j) * (double)dataset.get(i).getField(k) / (double)dataset.size();
 			}//for
-			sum2 += theta[j] * sketchEstimate( sketch2.get(k*2+j) , normalizer );
+			sum2 += theta[j] * sketchEstimate( sketch2.get(k*2+j) , normalizer ) / (double)dataset.size();
 
 			System.out.println( "real: "+result+" --- estimate "+sum2 );
 
@@ -194,12 +194,15 @@ public class Test {
 		for(double l=(double)normalizer.getMin(); l < (double)normalizer.getMax(); l+=(double)normalizer.getStep() ){
 			lookup = ""+normalizer.normalize(l);
 			freq =  sketch.get(""+lookup);
+
+
 			//if(freq>0)System.out.println("lookup: "+lookup+" "+freq);
+
 			sum += l * freq;
 			counter += freq;
 		}//for
 
-		//return sum;
-		return counter > 0 ? sum / (double)counter : 0.0;
+		return sum;
+		//return counter > 0 ? sum / (double)counter : 0.0;
 	}
 }

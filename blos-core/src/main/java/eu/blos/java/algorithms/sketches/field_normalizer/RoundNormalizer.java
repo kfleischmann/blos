@@ -43,6 +43,6 @@ public class RoundNormalizer implements FieldNormalizer<Double> {
 
 	@Override
 	public Double getRandom() {
-		return null;
+		return new java.util.Random().nextFloat()*2.0 - 1.0;
 	}
 }
