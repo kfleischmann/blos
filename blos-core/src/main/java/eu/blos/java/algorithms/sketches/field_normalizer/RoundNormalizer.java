@@ -28,12 +28,12 @@ public class RoundNormalizer implements FieldNormalizer<Double> {
 
 	@Override
 	public Double getMax() {
-		return 1.5;
+		return 1.0;
 	}
 
 	@Override
 	public Double getMin() {
-		return -1.5;
+		return -1.0;
 	}
 
 	@Override

@@ -23,11 +23,11 @@ public class Test {
 	public static List<CMSketch> sketch2 = new ArrayList<CMSketch>();
 
 	//public static FieldNormalizer normalizer = new ZeroOneNormalizer(10);
-	public static FieldNormalizer normalizer =  new RoundNormalizer(1);
+	public static FieldNormalizer normalizer =  new RoundNormalizer(5);
 
 	public static void main(String[] args)  {
 
-		File file = new File("/home/kay/Dropbox/kay-rep/Uni-Berlin/Masterarbeit/datasets/linear_regression/dataset9");
+		File file = new File("/home/kay/Dropbox/kay-rep/Uni-Berlin/Masterarbeit/datasets/linear_regression/dataset12");
 
 		try (BufferedReader br = new BufferedReader( new FileReader( file ) )) {
 			String line;
@@ -47,23 +47,29 @@ public class Test {
 		}
 
 
-		sketch1.add( new CMSketch(0.01, 0.1 ) );
-		sketch1.add( new CMSketch(0.01, 0.1 ) );
+		sketch1.add( new CMSketch(0.1, 0.0001 ) );
+		sketch1.add( new CMSketch(0.1, 0.0001 ) );
 
-		sketch2.add( new CMSketch(0.01, 0.1 ) );
-		sketch2.add( new CMSketch(0.01, 0.1 ) );
-		sketch2.add( new CMSketch(0.01, 0.1) );
-		sketch2.add( new CMSketch(0.01, 0.1 ) );
+		sketch2.add( new CMSketch(0.1, 0.0001 ) );
+		sketch2.add( new CMSketch(0.1, 0.0001 ) );
+		sketch2.add( new CMSketch(0.1, 0.0001 ) );
+		sketch2.add( new CMSketch(0.1, 0.0001 ) );
+
 
 		for( CMSketch s : sketch1 ){
 			s.alloc();
 			System.out.println(s.w());
+			System.out.println(s.d());
 		}
 
 		for( CMSketch s : sketch2 ){
 			s.alloc();
 			System.out.println(s.w());
+			System.out.println(s.d());
 		}
+
+		double max=0.0;
+		double min=0.0;
 
 		String lookup;
 		for(int k=0; k < 2; k++ ) {
@@ -77,6 +83,11 @@ public class Test {
 				for (int j = 0; j < 2; j++) {
 					double xij_xik0 = (double) dataset.get(i).getField(j) * (double) dataset.get(i).getField(k);
 
+
+					max = Math.max( max, xij_xik0);
+					min = Math.min( min, xij_xik0);
+
+
 					lookup=""+normalizer.normalize(xij_xik0);
 					sketch2.get(k*2+j).update(lookup);
 
@@ -86,20 +97,24 @@ public class Test {
 			}//for
 		}
 
+		System.out.println("max:"+max);
+		System.out.println("min:"+min);
+
 		//System.out.println( sketchEstimate( sketch2.get(1) , normalizer ) );
 		//System.out.println( sketchEstimate( sketch2.get(2) , normalizer ) );
 
 		for( CMSketch s : sketch1 ){
 			System.out.println("");
-			s.display();
+			//s.display();
 		}//for
 
 		for( CMSketch s : sketch2 ){
 			System.out.println("");
-			s.display();
+			//s.display();
 		}//for
 
-		learn();
+
+		//learn();
 
 
 	}
@@ -124,9 +139,9 @@ public class Test {
 	public static void learn() {
 
 		// m*x+b
-		Double alpha=0.05;
-		Double[] theta = {0.0, 0.0};
-		Double[] theta_old = {0.0, 0.0};
+		Double alpha=0.5;
+		Double[] theta = {0.3, 0.3};
+		Double[] theta_old = {0.3, 0.3};
 
 		for( int i=0; i < 500; i++ ) {
 			theta[0] = theta_old[0] - alpha*nextStep(0, theta_old);
