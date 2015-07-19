@@ -23,17 +23,22 @@ public class RoundNormalizer implements FieldNormalizer<Double> {
 
 	@Override
 	public double denormalize(Double val) {
-		return 0;
+		return val;
 	}
 
 	@Override
 	public Double getMax() {
-		return null;
+		return 1.5;
 	}
 
 	@Override
 	public Double getMin() {
-		return null;
+		return -1.5;
+	}
+
+	@Override
+	public Double getStep() {
+		return Math.pow(10, -precision);
 	}
 
 	@Override

@@ -33,6 +33,11 @@ public class ZeroOneNormalizer implements FieldNormalizer<Integer> {
 	}
 
 	@Override
+	public Integer getStep() {
+		return 0;
+	}
+
+	@Override
 	public Integer getRandom() {
 		return r.nextInt( 2*(int)Math.pow(2, pow) ) - (int)Math.pow(2, pow) ;
 	}

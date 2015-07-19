@@ -7,5 +7,6 @@ public interface FieldNormalizer<T> extends Serializable{
 	public double denormalize(T val);
 	public T getMax();
 	public T getMin();
+	public T getStep();
 	public T getRandom();
 }
