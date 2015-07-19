@@ -59,10 +59,10 @@ public class Preprocessor {
 
 
 		// output: (i, k, xk^i * y^i)
-		DataSet<Tuple4<String, Integer,Double, Integer>> sketch1 =
-				samples.flatMap(new FlatMapFunction<String, Tuple4<String, Integer, Double, Integer>>() {
+		DataSet<Tuple4<String, Integer,Double, Object>> sketch1 =
+				samples.flatMap(new FlatMapFunction<String, Tuple4<String, Integer, Double, Object>>() {
 					@Override
-					public void flatMap(String s, Collector<Tuple4<String, Integer, Double, Integer>> collector) throws Exception {
+					public void flatMap(String s, Collector<Tuple4<String, Integer, Double, Object>> collector) throws Exception {
 						// format: (sampleId,y,attributes)
 						String[] fields = s.split(( FIELD_SEPARATOR ));
 						String sampleId = fields[0];
@@ -76,18 +76,18 @@ public class Preprocessor {
 						// for each sample i, feature k emit y^i * x_k^i
 						for(int k=0; k <= features.length; k++ ){
 							Double value = (k == 0? label : label*Double.parseDouble(features[k-1]) );
-							Integer normalized = normalizer.normalize(value.doubleValue());
+							Object normalized = normalizer.normalize(value.doubleValue());
 
-							collector.collect( new Tuple4<String,Integer,Double, Integer>( sampleId, k, value, normalized ) );
+							collector.collect( new Tuple4<String,Integer,Double, Object>( sampleId, k, value, normalized ) );
 						}//for
 					} // flatMap
 				});
 
 		// output: for each index (i, k, j,) =>  xk^i * xj^i
-		DataSet<Tuple5<String, Integer, Integer,Double, Integer>> sketch2 =
-				samples.flatMap(new FlatMapFunction<String, Tuple5<String, Integer, Integer, Double, Integer>>() {
+		DataSet<Tuple5<String, Integer, Integer,Double, Object>> sketch2 =
+				samples.flatMap(new FlatMapFunction<String, Tuple5<String, Integer, Integer, Double, Object>>() {
 					@Override
-					public void flatMap(String s, Collector<Tuple5<String, Integer, Integer, Double, Integer>> collector) throws Exception {
+					public void flatMap(String s, Collector<Tuple5<String, Integer, Integer, Double, Object>> collector) throws Exception {
 						String[] fields = s.split(( FIELD_SEPARATOR ));
 						String sampleId = fields[0];
 						String[] features = fields[2].split( VALUE_SEPARATOR );
@@ -99,10 +99,10 @@ public class Preprocessor {
 							for (int k = 0; k <= features.length; k++) {
 
 								Double value = (j==0? 1.0 : Double.parseDouble(features[j-1]) )*(k == 0? 1.0 :  Double.parseDouble(features[k-1]) );
-								Integer normalized = normalizer.normalize(value.doubleValue());
+								Object normalized = normalizer.normalize(value.doubleValue());
 
 								collector.collect(
-											new Tuple5<String, Integer, Integer, Double, Integer>(sampleId, j, k, value, normalized )
+											new Tuple5<String, Integer, Integer, Double, Object>(sampleId, j, k, value, normalized )
 											);
 							}//for
 

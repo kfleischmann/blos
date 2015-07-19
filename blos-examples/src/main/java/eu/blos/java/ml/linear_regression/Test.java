@@ -37,7 +37,6 @@ public class Test {
 
 
 				Tuple1<Double> Yi = new Tuple1<Double>( Double.parseDouble(values[1]) );
-
 				Tuple2<Double,Double> Xi = new Tuple2<>( 1.0, Double.parseDouble(values[2]) );
 
 				dataset.add(Xi);
@@ -48,13 +47,13 @@ public class Test {
 		}
 
 
-		sketch1.add( new CMSketch(0.01, 0.008 ) );
-		sketch1.add( new CMSketch(0.01, 0.008 ) );
+		sketch1.add( new CMSketch(0.01, 0.08 ) );
+		sketch1.add( new CMSketch(0.01, 0.08 ) );
 
-		sketch2.add( new CMSketch(0.01, 0.008 ) );
-		sketch2.add( new CMSketch(0.01, 0.008 ) );
-		sketch2.add( new CMSketch(0.01, 0.008) );
-		sketch2.add( new CMSketch(0.01, 0.008 ) );
+		sketch2.add( new CMSketch(0.01, 0.08 ) );
+		sketch2.add( new CMSketch(0.01, 0.08 ) );
+		sketch2.add( new CMSketch(0.01, 0.08) );
+		sketch2.add( new CMSketch(0.01, 0.08 ) );
 
 		for( CMSketch s : sketch1 ){
 			s.alloc();
@@ -70,6 +69,8 @@ public class Test {
 
 			for (int i = 0; i < dataset.size(); i++) {
 				double yi_xik0 = (double) labels.get(i).getField(0) * (double) dataset.get(i).getField(k);
+
+				System.out.println(yi_xik0);
 
 				sketch1.get(k).update("" + normalizer.normalize(yi_xik0));
 
@@ -92,7 +93,7 @@ public class Test {
 			s.display();
 		}//for
 
-		learn();
+		//learn();
 
 
 	}
@@ -169,7 +170,7 @@ public class Test {
 		long freq;
 		double a;
 
-		for(int l=normalizer.getMin(); l < normalizer.getMax(); l++ ){
+		for(int l=(int)normalizer.getMin(); l < (int)normalizer.getMax(); l++ ){
 			a = normalizer.denormalize(l);
 			freq =  sketch.get(""+l);
 			sum += a * freq;

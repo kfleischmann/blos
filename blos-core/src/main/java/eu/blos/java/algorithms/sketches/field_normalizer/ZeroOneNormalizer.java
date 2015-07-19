@@ -4,7 +4,7 @@ import eu.blos.java.algorithms.sketches.FieldNormalizer;
 
 import java.util.Random;
 
-public class ZeroOneNormalizer implements FieldNormalizer {
+public class ZeroOneNormalizer implements FieldNormalizer<Integer> {
 
 	private int pow;
 	private Random r = new java.util.Random();
@@ -13,27 +13,28 @@ public class ZeroOneNormalizer implements FieldNormalizer {
 	}
 
 	@Override
-	public int normalize(double val) {
+	public Integer normalize(double val) {
 		return (int) ( val * Math.pow(2, this.pow ) );
 	}
 
 	@Override
-	public double denormalize(int val) {
+	public double denormalize(Integer val) {
 		return (  Math.pow(2, -this.pow )  * (double)val);
 	}
 
 	@Override
-	public int getMax() {
+	public Integer getMax() {
 		return (int)Math.pow(2, pow);
 	}
 
 	@Override
-	public int getMin() {
+	public Integer getMin() {
 		return - (int)Math.pow(2, pow);
 	}
 
 	@Override
-	public int getRandom() {
+	public Integer getRandom() {
 		return r.nextInt( 2*(int)Math.pow(2, pow) ) - (int)Math.pow(2, pow) ;
 	}
 }
+

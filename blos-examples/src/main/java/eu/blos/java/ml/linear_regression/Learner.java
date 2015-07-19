@@ -218,7 +218,7 @@ public class Learner {
 			long step_totoal_sum = 0L;
 
 			while( step_totoal_sum <= row_sum ){
-				int a = normalizer.getRandom();
+				int a = (int)normalizer.getRandom();
 				long f =sketch_samples.get(""+a);
 
 				step_sum += normalizer.denormalize(a)*f;
@@ -235,7 +235,7 @@ public class Learner {
 
 			step_sum = 0.0;
 			step_totoal_sum = 0L;
-			for( int a=normalizer.getMin(); a < normalizer.getMax(); a++ ){
+			for( int a=(int)normalizer.getMin(); a < (int)normalizer.getMax(); a++ ){
 				long f =sketch_samples.get(""+a);
 				step_sum += normalizer.denormalize(a)*f;
 				step_totoal_sum += f;
