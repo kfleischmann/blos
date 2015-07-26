@@ -5,6 +5,7 @@ import eu.blos.java.algorithms.sketches.field_normalizer.RoundNormalizer;
 import eu.blos.java.algorithms.sketches.field_normalizer.ZeroOneNormalizer;
 import eu.blos.java.flink.sketch.api.SketchBuilder;
 import eu.blos.scala.algorithms.sketches.CMSketch;
+import org.apache.commons.cli.*;
 import org.apache.flink.api.java.tuple.Tuple;
 import org.apache.flink.api.java.tuple.Tuple1;
 import org.apache.flink.api.java.tuple.Tuple2;
@@ -25,41 +26,122 @@ public class Test {
 	//public static FieldNormalizer normalizer = new ZeroOneNormalizer(10);
 	public static FieldNormalizer normalizer =  new RoundNormalizer(6);
 
-	public static void main(String[] args)  {
 
-		File file = new File("/home/kay/Dropbox/kay-rep/Uni-Berlin/Masterarbeit/datasets/linear_regression/dataset12");
+	/**
+	 * parse the input parameters
+	 * @param args
+	 * @return
+	 */
+	public static Options lvOptions = new Options();
+	public static CommandLine parseArguments(String[] args ) throws Exception {
+		lvOptions.addOption("h", "help", false, "shows valid arguments and options");
 
-		long lines=0;
-		try (BufferedReader br = new BufferedReader( new FileReader( file ) )) {
-			String line;
+		lvOptions.addOption(
+				OptionBuilder
+						.withLongOpt("input")
+						.withDescription("set the input dataset to process")
+						.isRequired()
+								//.withValueSeparator('=')
+								//.hasArg()
+						.create("i")
+		);
 
-			while ((line = br.readLine()) != null) {
-				String[] values =line.split(",");
+		lvOptions.addOption(
+				OptionBuilder
+						.withLongOpt("sketch1")
+						.withDescription("sketch size")
+						.isRequired()
+								//.withValueSeparator('=')
+								//.hasArg()
+						.create("s1")
+		);
 
-				if(lines%100000 == 0)
-				System.out.println("read lines "+lines);
+		lvOptions.addOption(
+				OptionBuilder
+						.withLongOpt("sketch2")
+						.withDescription("sketch size")
+						.isRequired()
+								//.withValueSeparator('=')
+								//.hasArg()
+						.create("s2")
+		);
 
 
-				Tuple1<Double> Yi = new Tuple1<Double>( Double.parseDouble(values[1]) );
-				Tuple2<Double,Double> Xi = new Tuple2<>( 1.0, Double.parseDouble(values[2]) );
+		lvOptions.addOption(
+				OptionBuilder
+						.withLongOpt("sketch3")
+						.withDescription("sketch size")
+						.isRequired()
+								//.withValueSeparator('=')
+								//.hasArg()
+						.create("s3")
+		);
 
-				dataset.add(Xi);
-				labels.add(Yi);
-				lines++;
-				}
-			} catch (IOException e) {
-				e.printStackTrace();
+
+		lvOptions.addOption(
+				OptionBuilder
+						.withLongOpt("sketch4")
+						.withDescription("sketch size")
+						.isRequired()
+								//.withValueSeparator('=')
+								//.hasArg()
+						.create("s4")
+		);
+
+		lvOptions.addOption(
+				OptionBuilder
+						.withLongOpt("sketch5")
+						.withDescription("sketch size")
+						.isRequired()
+								//.withValueSeparator('=')
+								//.hasArg()
+						.create("s5")
+		);
+
+		lvOptions.addOption(
+				OptionBuilder
+						.withLongOpt("sketch6")
+						.withDescription("sketch size")
+						.isRequired()
+								//.withValueSeparator('=')
+								//.hasArg()
+						.create("s6")
+		);
+
+		CommandLineParser lvParser = new BasicParser();
+		CommandLine cmd = null;
+		cmd = lvParser.parse(lvOptions, args);
+		return cmd;
+	}
+
+	public static void main(String[] args) throws Exception {
+		HelpFormatter lvFormater = new HelpFormatter();
+		CommandLine cmd = parseArguments(args);
+
+		if (cmd.hasOption('h') || (cmd.getArgs().length == 0 && cmd.getOptions().length == 0) ) {
+			lvFormater.printHelp( "Sketched Regression", lvOptions );
+			return;
 		}
 
 
-		double total_size=0.0;
-		sketch1.add( new CMSketch(0.03, 0.0001 ) );
-		sketch1.add( new CMSketch(0.03, 0.0001 ) );
+		File file = new File( cmd.getOptionValue("input") );
 
-		sketch2.add( new CMSketch(0.03, 0.0001 ) );
-		sketch2.add( new CMSketch(0.03, 0.0001 ) );
-		sketch2.add( new CMSketch(0.03, 0.0001 ) );
-		sketch2.add( new CMSketch(0.03, 0.0001 ) );
+		String[] inputSketch1_param		= cmd.getOptionValue("sketch1").split(":");
+		String[] inputSketch2_param 	= cmd.getOptionValue("sketch2").split(":");
+		String[] inputSketch3_param 	= cmd.getOptionValue("sketch3").split(":");
+		String[] inputSketch4_param 	= cmd.getOptionValue("sketch4").split(":");
+		String[] inputSketch5_param 	= cmd.getOptionValue("sketch5").split(":");
+		String[] inputSketch6_param 	= cmd.getOptionValue("sketch6").split(":");
+		//sketch1.add( new CMSketch(0.03, 0.0001 ) );
+
+		double total_size=0.0;
+		sketch1.add( new CMSketch( Double.parseDouble(inputSketch1_param[0]), Double.parseDouble(inputSketch1_param[1]) ) );
+		sketch1.add( new CMSketch( Double.parseDouble(inputSketch2_param[0]), Double.parseDouble(inputSketch2_param[1]) ) );
+
+		sketch2.add( new CMSketch( Double.parseDouble(inputSketch3_param[0]), Double.parseDouble(inputSketch3_param[1]) ) );
+		sketch2.add( new CMSketch( Double.parseDouble(inputSketch4_param[0]), Double.parseDouble(inputSketch4_param[1]) ) );
+		sketch2.add( new CMSketch( Double.parseDouble(inputSketch5_param[0]), Double.parseDouble(inputSketch5_param[1]) ) );
+		sketch2.add( new CMSketch( Double.parseDouble(inputSketch6_param[0]), Double.parseDouble(inputSketch6_param[1]) ) );
 
 
 		for( CMSketch s : sketch1 ){
@@ -80,38 +162,67 @@ public class Test {
 
 		System.out.println("total hash-size: "+ (total_size/1024.0/1024.0 )+"mb");
 
-		System.exit(0);
+
 
 		double max=0.0;
 		double min=0.0;
 
-		String lookup;
-		for(int k=0; k < 2; k++ ) {
-			System.out.println("k:"+k);
-			for (int i = 0; i < dataset.size(); i++) {
-				double yi_xik0 = (double) labels.get(i).getField(0) * (double) dataset.get(i).getField(k);
-				lookup = ""+normalizer.normalize(yi_xik0);
-				//System.out.println(yi_xik0+" => " + lookup );
+		long lines=0;
+		try (BufferedReader br = new BufferedReader( new FileReader( file ) )) {
+			String line;
 
-				sketch1.get(k).update(lookup);
-				for (int j = 0; j < 2; j++) {
-					double xij_xik0 = (double) dataset.get(i).getField(j) * (double) dataset.get(i).getField(k);
+			String lookup;
 
-					if( i%1000 == 0)
-						System.out.println(k+" "+(i)+" "+j);
+			while ((line = br.readLine()) != null) {
+				String[] values =line.split(",");
 
-					max = Math.max( max, xij_xik0);
-					min = Math.min( min, xij_xik0);
+				if(lines%100000 == 0)
+				System.out.println("read lines "+lines);
 
 
-					lookup=""+normalizer.normalize(xij_xik0);
-					sketch2.get(k*2+j).update(lookup);
+				Tuple1<Double> Yi = new Tuple1<Double>( Double.parseDouble(values[1]) );
+				Tuple2<Double,Double> Xi = new Tuple2<>( 1.0, Double.parseDouble(values[2]) );
 
-					//System.out.println(+xij_xik0+" => " + lookup + " "+ sketch2.get(k*2+j).get(lookup));
+				//dataset.add(Xi);
+				//labels.add(Yi);
 
+
+				for(int k=0; k < 2; k++ ) {
+					System.out.println("k:"+k);
+					double yi_xik0 = (double) Yi.getField(0) * (double) Xi.getField(k);
+					lookup = ""+normalizer.normalize(yi_xik0);
+					//System.out.println(yi_xik0+" => " + lookup );
+
+					sketch1.get(k).update(lookup);
+					for (int j = 0; j < 2; j++) {
+						double xij_xik0 = (double) Xi.getField(j) * (double) Xi.getField(k);
+
+						if( lines%1000 == 0)
+							System.out.println(k+" "+(lines)+" "+j);
+
+						max = Math.max( max, xij_xik0);
+						min = Math.min( min, xij_xik0);
+
+
+						lookup=""+normalizer.normalize(xij_xik0);
+						sketch2.get(k*2+j).update(lookup);
+
+						//System.out.println(+xij_xik0+" => " + lookup + " "+ sketch2.get(k*2+j).get(lookup));
+
+					}//for
 				}//for
-			}//for
+
+
+				lines++;
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
 		}
+
+		//System.exit(0);
+
+		//for (int i = 0; i < dataset.size(); i++) {
+		//}
 
 		System.out.println("max:"+max);
 		System.out.println("min:"+min);
@@ -127,7 +238,7 @@ public class Test {
 		}//for
 
 
-		learn();
+		//learn();
 	}
 
 
