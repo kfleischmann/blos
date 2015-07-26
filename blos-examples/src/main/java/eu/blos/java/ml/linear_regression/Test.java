@@ -23,17 +23,21 @@ public class Test {
 	public static List<CMSketch> sketch2 = new ArrayList<CMSketch>();
 
 	//public static FieldNormalizer normalizer = new ZeroOneNormalizer(10);
-	public static FieldNormalizer normalizer =  new RoundNormalizer(4);
+	public static FieldNormalizer normalizer =  new RoundNormalizer(6);
 
 	public static void main(String[] args)  {
 
-		File file = new File("/home/kay/Dropbox/kay-rep/Uni-Berlin/Masterarbeit/datasets/linear_regression/dataset13");
+		File file = new File("/home/kay/Dropbox/kay-rep/Uni-Berlin/Masterarbeit/datasets/linear_regression/dataset12");
 
+		long lines=0;
 		try (BufferedReader br = new BufferedReader( new FileReader( file ) )) {
 			String line;
 
 			while ((line = br.readLine()) != null) {
 				String[] values =line.split(",");
+
+				if(lines%100000 == 0)
+				System.out.println("read lines "+lines);
 
 
 				Tuple1<Double> Yi = new Tuple1<Double>( Double.parseDouble(values[1]) );
@@ -41,39 +45,49 @@ public class Test {
 
 				dataset.add(Xi);
 				labels.add(Yi);
+				lines++;
 				}
 			} catch (IOException e) {
 				e.printStackTrace();
 		}
 
 
-		sketch1.add( new CMSketch(0.05, 0.0001 ) );
-		sketch1.add( new CMSketch(0.05, 0.0001 ) );
+		double total_size=0.0;
+		sketch1.add( new CMSketch(0.03, 0.0001 ) );
+		sketch1.add( new CMSketch(0.03, 0.0001 ) );
 
-		sketch2.add( new CMSketch(0.05, 0.0001 ) );
-		sketch2.add( new CMSketch(0.05, 0.0001 ) );
-		sketch2.add( new CMSketch(0.05, 0.0001 ) );
-		sketch2.add( new CMSketch(0.05, 0.0001 ) );
+		sketch2.add( new CMSketch(0.03, 0.0001 ) );
+		sketch2.add( new CMSketch(0.03, 0.0001 ) );
+		sketch2.add( new CMSketch(0.03, 0.0001 ) );
+		sketch2.add( new CMSketch(0.03, 0.0001 ) );
 
 
 		for( CMSketch s : sketch1 ){
 			s.alloc();
 			System.out.println(s.w());
 			System.out.println(s.d());
+
+			total_size += s.alloc_size();
 		}
 
 		for( CMSketch s : sketch2 ){
 			s.alloc();
 			System.out.println(s.w());
 			System.out.println(s.d());
+
+			total_size += s.alloc_size();
 		}
+
+		System.out.println("total hash-size: "+ (total_size/1024.0/1024.0 )+"mb");
+
+		System.exit(0);
 
 		double max=0.0;
 		double min=0.0;
 
 		String lookup;
 		for(int k=0; k < 2; k++ ) {
-			//System.out.println("k:"+k);
+			System.out.println("k:"+k);
 			for (int i = 0; i < dataset.size(); i++) {
 				double yi_xik0 = (double) labels.get(i).getField(0) * (double) dataset.get(i).getField(k);
 				lookup = ""+normalizer.normalize(yi_xik0);
@@ -83,6 +97,8 @@ public class Test {
 				for (int j = 0; j < 2; j++) {
 					double xij_xik0 = (double) dataset.get(i).getField(j) * (double) dataset.get(i).getField(k);
 
+					if( i%1000 == 0)
+						System.out.println(k+" "+(i)+" "+j);
 
 					max = Math.max( max, xij_xik0);
 					min = Math.min( min, xij_xik0);
@@ -100,9 +116,6 @@ public class Test {
 		System.out.println("max:"+max);
 		System.out.println("min:"+min);
 
-		//System.out.println( sketchEstimate( sketch2.get(1) , normalizer ) );
-		//System.out.println( sketchEstimate( sketch2.get(2) , normalizer ) );
-
 		for( CMSketch s : sketch1 ){
 			System.out.println("");
 			//s.display();
@@ -115,8 +128,6 @@ public class Test {
 
 
 		learn();
-
-
 	}
 
 
@@ -164,18 +175,20 @@ public class Test {
 
 		Double sum2 = 0.0;
 
-		for( int i=0; i < dataset.size(); i++ ) {
-			result+= - labels.get(i).f0 * (double)dataset.get(i).getField(k) / (double)dataset.size();
-		}//for
+		// real gradient decent
+		//for( int i=0; i < dataset.size(); i++ ) {
+			//result+= - labels.get(i).f0 * (double)dataset.get(i).getField(k) / (double)dataset.size();
+			//}//for
 
 		sum2 += -sketchEstimate( sketch1.get(k) , normalizer )  / (double)dataset.size();
 
 		System.out.println( "real: "+result+" --- estimate "+sum2 );
 
 		for( int j=0; j < d; j++ ) {
-			for (int i = 0; i < dataset.size(); i++) {
-				result += theta[j] * (double)dataset.get(i).getField(j) * (double)dataset.get(i).getField(k) / (double)dataset.size();
-			}//for
+			// real gradient decent
+			//for (int i = 0; i < dataset.size(); i++) {
+				//result += theta[j] * (double)dataset.get(i).getField(j) * (double)dataset.get(i).getField(k) / (double)dataset.size();
+			//}//for
 			sum2 += theta[j] * sketchEstimate( sketch2.get(k*2+j) , normalizer ) / (double)dataset.size();
 
 			System.out.println( "real: "+result+" --- estimate "+sum2 );
@@ -183,7 +196,7 @@ public class Test {
 		}//for
 
 		return sum2;
-		//return result;
+		//return result; // result of real gradient decent
 	}
 
 	public static Double sketchEstimate(CMSketch sketch, FieldNormalizer normalizer ){
@@ -192,17 +205,12 @@ public class Test {
 		long freq;
 		String lookup;
 		for(double l=(double)normalizer.getMin(); l < (double)normalizer.getMax(); l+=(double)normalizer.getStep() ){
+			//if(freq>0)System.out.println("lookup: "+lookup+" "+freq);
 			lookup = ""+normalizer.normalize(l);
 			freq =  sketch.get(""+lookup);
-
-
-			//if(freq>0)System.out.println("lookup: "+lookup+" "+freq);
-
 			sum += l * freq;
 			counter += freq;
 		}//for
-
 		return sum;
-		//return counter > 0 ? sum / (double)counter : 0.0;
 	}
 }
