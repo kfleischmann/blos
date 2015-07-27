@@ -353,12 +353,11 @@ public class SketchedGradientDecentDemo {
 				OptionBuilder
 						.withLongOpt("normalization-space")
 						.withDescription("normalization-space")
+						.isRequired()
 								//.withValueSeparator('=')
 						.hasArg()
 						.create("s")
 		);
-
-
 
 		CommandLineParser lvParser = new BasicParser();
 		CommandLine cmd = null;
