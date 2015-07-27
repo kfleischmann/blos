@@ -49,6 +49,11 @@ blos generators poly --sigma 0.1 -f 1:1 --range="-1:1" --count 1000 | blos regre
 blos generators poly --sigma 0.035 -f 0.2:1 --range="-1:1" --count 1000 | blos visualize scatter2d
 ```
 
+Linear-Regression with Gradient-Decent
+```
+ cat dataset7|blos math gd
+```
+
 
 Examples
 =============
