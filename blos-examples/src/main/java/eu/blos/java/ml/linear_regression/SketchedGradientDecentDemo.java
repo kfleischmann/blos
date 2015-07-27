@@ -22,8 +22,9 @@ public class SketchedGradientDecentDemo {
 	public static List<CMSketch> sketch1 = new ArrayList<CMSketch>();
 	public static List<CMSketch> sketch2 = new ArrayList<CMSketch>();
 	public static long datasetSize = 0;
+	public static int numIterations = 0;
 
-	public static FieldNormalizer normalizer =  new RoundNormalizer(6);
+	public static FieldNormalizer normalizer;
 
 	public static CommandLine cmd;
 	public static void main(String[] args) throws Exception {
@@ -37,6 +38,9 @@ public class SketchedGradientDecentDemo {
 
 
 		File file = new File( cmd.getOptionValue("input") );
+		normalizer =  new RoundNormalizer( Integer.parseInt(cmd.getOptionValue("normalization-space")) );
+
+		if( cmd.hasOption("verbose")) System.out.println(cmd.getOptionValue("input"));
 
 		String[] inputSketch1_param		= cmd.getOptionValue("sketch1").split(":");
 		String[] inputSketch2_param 	= cmd.getOptionValue("sketch2").split(":");
@@ -45,10 +49,12 @@ public class SketchedGradientDecentDemo {
 		String[] inputSketch5_param 	= cmd.getOptionValue("sketch5").split(":");
 		String[] inputSketch6_param 	= cmd.getOptionValue("sketch6").split(":");
 
+		numIterations = Integer.parseInt( cmd.getOptionValue("iterations") );
+
 		double total_size=0.0;
+
 		sketch1.add( new CMSketch( Double.parseDouble(inputSketch1_param[0]), Double.parseDouble(inputSketch1_param[1]) ) );
 		sketch1.add( new CMSketch( Double.parseDouble(inputSketch2_param[0]), Double.parseDouble(inputSketch2_param[1]) ) );
-
 		sketch2.add( new CMSketch( Double.parseDouble(inputSketch3_param[0]), Double.parseDouble(inputSketch3_param[1]) ) );
 		sketch2.add( new CMSketch( Double.parseDouble(inputSketch4_param[0]), Double.parseDouble(inputSketch4_param[1]) ) );
 		sketch2.add( new CMSketch( Double.parseDouble(inputSketch5_param[0]), Double.parseDouble(inputSketch5_param[1]) ) );
@@ -57,18 +63,18 @@ public class SketchedGradientDecentDemo {
 
 		for( CMSketch s : sketch1 ){
 			s.alloc();
-			System.out.println("Sketch-size: w="+s.w()+", d="+s.d());
+			if( cmd.hasOption("verbose")) System.out.println("Sketch-size: w="+s.w()+", d="+s.d());
 
 			total_size += s.alloc_size();
 		}
 
 		for( CMSketch s : sketch2 ){
 			s.alloc();
-			System.out.println("Sketch-size: w="+s.w()+", d="+s.d());
+			if( cmd.hasOption("verbose"))  System.out.println("Sketch-size: w="+s.w()+", d="+s.d());
 			total_size += s.alloc_size();
 		}
 
-		System.out.println("total sketch-size: "+ (total_size/1024.0/1024.0 )+"mb");
+		if( cmd.hasOption("verbose")) System.out.println("total sketch-size: "+ (total_size/1024.0/1024.0 )+"mb");
 
 		double max=0.0;
 		double min=0.0;
@@ -84,7 +90,7 @@ public class SketchedGradientDecentDemo {
 				datasetSize++;
 
 				// some debug messages
-				if(lines%100000 == 0) System.out.println("read lines "+lines);
+				if( cmd.hasOption("verbose"))  if(lines%100000 == 0) System.out.println("read lines "+lines);
 
 
 				Tuple1<Double> Yi = new Tuple1<Double>( Double.parseDouble(values[1]) );
@@ -101,10 +107,8 @@ public class SketchedGradientDecentDemo {
 						max = Math.max( max, xij_xik0);
 						min = Math.min( min, xij_xik0);
 
-
 						lookup=""+normalizer.normalize(xij_xik0);
 						sketch2.get(k*2+j).update(lookup);
-
 					}//for
 				}//for
 
@@ -115,13 +119,20 @@ public class SketchedGradientDecentDemo {
 				e.printStackTrace();
 		}
 
-		for( CMSketch s : sketch1 ){
-			s.display();
-		}//for
 
-		for( CMSketch s : sketch2 ){
-			s.display();
-		}//for
+		if( cmd.hasOption("display-sketches")) {
+			for( CMSketch s : sketch1 ){
+				s.display();
+				System.out.println();
+			}//for
+		}//if
+
+		if( cmd.hasOption("display-sketches")) {
+			for (CMSketch s : sketch2) {
+				s.display();
+				System.out.println();
+			}//for
+		}//if
 
 		learn();
 	}
@@ -143,7 +154,6 @@ public class SketchedGradientDecentDemo {
 		return dataset;
 	}
 
-
 	/**
 	 * learn the model
 	 */
@@ -152,15 +162,16 @@ public class SketchedGradientDecentDemo {
 		Double[] theta = {0.9, 0.9};
 		Double[] theta_old = {0.9, 0.9};
 
-		for( int i=0; i < 100; i++ ) {
+		for( int i=0; i < numIterations; i++ ) {
 			theta[0] = theta_old[0] - alpha*nextStepSkeched(0, theta_old);
 			theta[1] = theta_old[1] - alpha*nextStepSkeched(1, theta_old);
 
 			theta_old[0] = theta[0];
 			theta_old[1] = theta[1];
 
-			System.out.println( theta[0] + " "+theta[1]);
+			if( cmd.hasOption("verbose") || cmd.hasOption("all-results")) System.out.println( theta[0] + " "+theta[1]);
 		}//for
+		System.out.println( "final-model: "+theta[0] + " "+theta[1]);
 	}
 
 	/**
@@ -191,11 +202,10 @@ public class SketchedGradientDecentDemo {
 		return sum;
 	}
 
-
 	/**
-	 *
+	 * that function estimate a sum over a specific dataset
 	 * @param sketch sketch to read from the estimate
-	 * @param normalizer normalizer to reconstruct the "real" value if encoded. Can be potential
+	 * @param normalizer normalizer to reconstruct the "real" value if encoded. Can be potential the identity function
 	 * @return
 	 */
 	public static Double sketchEstimate(CMSketch sketch, FieldNormalizer normalizer ){
@@ -306,20 +316,39 @@ public class SketchedGradientDecentDemo {
 
 		lvOptions.addOption(
 				OptionBuilder
-						.withLongOpt("show-all-results")
-						.withDescription("number of iterations")
+						.withLongOpt("all-results")
+						.withDescription("show all model results")
 								//.withValueSeparator('=')
-						.hasArg()
-						.create("s")
+								//.hasArg()
+						.create("a")
+		);
+
+		lvOptions.addOption(
+				OptionBuilder
+						.withLongOpt("verbose")
+						.withDescription("verbose")
+								//.withValueSeparator('=')
+								//.hasArg()
+						.create("v")
 		);
 
 		lvOptions.addOption(
 				OptionBuilder
 						.withLongOpt("display-sketches")
-						.withDescription("display-sketches")
+						.withDescription("display the sketch content")
 								//.withValueSeparator('=')
 								//.hasArg()
 						.create("d")
+		);
+
+
+		lvOptions.addOption(
+				OptionBuilder
+						.withLongOpt("normalization-space")
+						.withDescription("normalization-space")
+								//.withValueSeparator('=')
+								.hasArg()
+						.create("s")
 		);
 
 
