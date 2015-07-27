@@ -36,8 +36,15 @@ public class SketchedGradientDecentDemo {
 			return;
 		}
 
+		// make it possible to read from stdin
+		InputStreamReader is=null;
+		if( cmd.getOptionValue("input").equals("stdin") ){
+			is = new InputStreamReader(System.in);
+		} else {
+			is = new FileReader(new File(cmd.getOptionValue("input")));
+		}
 
-		File file = new File( cmd.getOptionValue("input") );
+		// prepare normalizer from input
 		normalizer =  new RoundNormalizer( Integer.parseInt(cmd.getOptionValue("normalization-space")) );
 
 		if( cmd.hasOption("verbose")) System.out.println(cmd.getOptionValue("input"));
@@ -80,7 +87,7 @@ public class SketchedGradientDecentDemo {
 		double min=0.0;
 
 		long lines=0;
-		try (BufferedReader br = new BufferedReader( new FileReader( file ) )) {
+		try (BufferedReader br = new BufferedReader( is )) {
 			String line;
 
 			String lookup;
@@ -347,7 +354,7 @@ public class SketchedGradientDecentDemo {
 						.withLongOpt("normalization-space")
 						.withDescription("normalization-space")
 								//.withValueSeparator('=')
-								.hasArg()
+						.hasArg()
 						.create("s")
 		);
 
