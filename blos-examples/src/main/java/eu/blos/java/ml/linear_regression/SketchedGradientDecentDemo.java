@@ -15,108 +15,20 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Test {
-
-	public static List<Tuple2<Double,Double>> dataset = new ArrayList<Tuple2<Double,Double>>();
+public class SketchedGradientDecentDemo {
+	//public static List<Tuple2<Double,Double>> dataset = new ArrayList<Tuple2<Double,Double>>();
 
 	public static List<Tuple1<Double>> labels = new ArrayList<Tuple1<Double>>();
 	public static List<CMSketch> sketch1 = new ArrayList<CMSketch>();
 	public static List<CMSketch> sketch2 = new ArrayList<CMSketch>();
+	public static long datasetSize = 0;
 
-	//public static FieldNormalizer normalizer = new ZeroOneNormalizer(10);
 	public static FieldNormalizer normalizer =  new RoundNormalizer(6);
 
-
-	/**
-	 * parse the input parameters
-	 * @param args
-	 * @return
-	 */
-	public static Options lvOptions = new Options();
-	public static CommandLine parseArguments(String[] args ) throws Exception {
-		lvOptions.addOption("h", "help", false, "shows valid arguments and options");
-
-		lvOptions.addOption(
-				OptionBuilder
-						.withLongOpt("input")
-						.withDescription("set the input dataset to process")
-						.isRequired()
-								//.withValueSeparator('=')
-								//.hasArg()
-						.create("i")
-		);
-
-		lvOptions.addOption(
-				OptionBuilder
-						.withLongOpt("sketch1")
-						.withDescription("sketch size")
-						.isRequired()
-								//.withValueSeparator('=')
-								//.hasArg()
-						.create("s1")
-		);
-
-		lvOptions.addOption(
-				OptionBuilder
-						.withLongOpt("sketch2")
-						.withDescription("sketch size")
-						.isRequired()
-								//.withValueSeparator('=')
-								//.hasArg()
-						.create("s2")
-		);
-
-
-		lvOptions.addOption(
-				OptionBuilder
-						.withLongOpt("sketch3")
-						.withDescription("sketch size")
-						.isRequired()
-								//.withValueSeparator('=')
-								//.hasArg()
-						.create("s3")
-		);
-
-
-		lvOptions.addOption(
-				OptionBuilder
-						.withLongOpt("sketch4")
-						.withDescription("sketch size")
-						.isRequired()
-								//.withValueSeparator('=')
-								//.hasArg()
-						.create("s4")
-		);
-
-		lvOptions.addOption(
-				OptionBuilder
-						.withLongOpt("sketch5")
-						.withDescription("sketch size")
-						.isRequired()
-								//.withValueSeparator('=')
-								//.hasArg()
-						.create("s5")
-		);
-
-		lvOptions.addOption(
-				OptionBuilder
-						.withLongOpt("sketch6")
-						.withDescription("sketch size")
-						.isRequired()
-								//.withValueSeparator('=')
-								//.hasArg()
-						.create("s6")
-		);
-
-		CommandLineParser lvParser = new BasicParser();
-		CommandLine cmd = null;
-		cmd = lvParser.parse(lvOptions, args);
-		return cmd;
-	}
-
+	public static CommandLine cmd;
 	public static void main(String[] args) throws Exception {
 		HelpFormatter lvFormater = new HelpFormatter();
-		CommandLine cmd = parseArguments(args);
+		cmd = parseArguments(args);
 
 		if (cmd.hasOption('h') || (cmd.getArgs().length == 0 && cmd.getOptions().length == 0) ) {
 			lvFormater.printHelp( "Sketched Regression", lvOptions );
@@ -132,7 +44,6 @@ public class Test {
 		String[] inputSketch4_param 	= cmd.getOptionValue("sketch4").split(":");
 		String[] inputSketch5_param 	= cmd.getOptionValue("sketch5").split(":");
 		String[] inputSketch6_param 	= cmd.getOptionValue("sketch6").split(":");
-		//sketch1.add( new CMSketch(0.03, 0.0001 ) );
 
 		double total_size=0.0;
 		sketch1.add( new CMSketch( Double.parseDouble(inputSketch1_param[0]), Double.parseDouble(inputSketch1_param[1]) ) );
@@ -146,23 +57,18 @@ public class Test {
 
 		for( CMSketch s : sketch1 ){
 			s.alloc();
-			System.out.println(s.w());
-			System.out.println(s.d());
+			System.out.println("Sketch-size: w="+s.w()+", d="+s.d());
 
 			total_size += s.alloc_size();
 		}
 
 		for( CMSketch s : sketch2 ){
 			s.alloc();
-			System.out.println(s.w());
-			System.out.println(s.d());
-
+			System.out.println("Sketch-size: w="+s.w()+", d="+s.d());
 			total_size += s.alloc_size();
 		}
 
-		System.out.println("total hash-size: "+ (total_size/1024.0/1024.0 )+"mb");
-
-
+		System.out.println("total sketch-size: "+ (total_size/1024.0/1024.0 )+"mb");
 
 		double max=0.0;
 		double min=0.0;
@@ -175,30 +81,22 @@ public class Test {
 
 			while ((line = br.readLine()) != null) {
 				String[] values =line.split(",");
+				datasetSize++;
 
-				if(lines%100000 == 0)
-				System.out.println("read lines "+lines);
+				// some debug messages
+				if(lines%100000 == 0) System.out.println("read lines "+lines);
 
 
 				Tuple1<Double> Yi = new Tuple1<Double>( Double.parseDouble(values[1]) );
 				Tuple2<Double,Double> Xi = new Tuple2<>( 1.0, Double.parseDouble(values[2]) );
 
-				//dataset.add(Xi);
-				//labels.add(Yi);
-
-
 				for(int k=0; k < 2; k++ ) {
-					System.out.println("k:"+k);
 					double yi_xik0 = (double) Yi.getField(0) * (double) Xi.getField(k);
 					lookup = ""+normalizer.normalize(yi_xik0);
-					//System.out.println(yi_xik0+" => " + lookup );
 
 					sketch1.get(k).update(lookup);
 					for (int j = 0; j < 2; j++) {
 						double xij_xik0 = (double) Xi.getField(j) * (double) Xi.getField(k);
-
-						if( lines%1000 == 0)
-							System.out.println(k+" "+(lines)+" "+j);
 
 						max = Math.max( max, xij_xik0);
 						min = Math.min( min, xij_xik0);
@@ -206,8 +104,6 @@ public class Test {
 
 						lookup=""+normalizer.normalize(xij_xik0);
 						sketch2.get(k*2+j).update(lookup);
-
-						//System.out.println(+xij_xik0+" => " + lookup + " "+ sketch2.get(k*2+j).get(lookup));
 
 					}//for
 				}//for
@@ -219,26 +115,15 @@ public class Test {
 				e.printStackTrace();
 		}
 
-		//System.exit(0);
-
-		//for (int i = 0; i < dataset.size(); i++) {
-		//}
-
-		System.out.println("max:"+max);
-		System.out.println("min:"+min);
-
 		for( CMSketch s : sketch1 ){
-			System.out.println("");
-			//s.display();
+			s.display();
 		}//for
 
 		for( CMSketch s : sketch2 ){
-			System.out.println("");
-			//s.display();
+			s.display();
 		}//for
 
-
-		//learn();
+		learn();
 	}
 
 
@@ -258,65 +143,67 @@ public class Test {
 		return dataset;
 	}
 
+
+	/**
+	 * learn the model
+	 */
 	public static void learn() {
-
-		// m*x+b
 		Double alpha=0.5;
-		Double[] theta = {0.3, 0.3};
-		Double[] theta_old = {0.3, 0.3};
+		Double[] theta = {0.9, 0.9};
+		Double[] theta_old = {0.9, 0.9};
 
-		for( int i=0; i < 500; i++ ) {
-			theta[0] = theta_old[0] - alpha*nextStep(0, theta_old);
-			theta[1] = theta_old[1] - alpha*nextStep(1, theta_old);
+		for( int i=0; i < 100; i++ ) {
+			theta[0] = theta_old[0] - alpha*nextStepSkeched(0, theta_old);
+			theta[1] = theta_old[1] - alpha*nextStepSkeched(1, theta_old);
 
 			theta_old[0] = theta[0];
 			theta_old[1] = theta[1];
 
 			System.out.println( theta[0] + " "+theta[1]);
-		}
-
+		}//for
 	}
 
-	public static List<Tuple2<Double,Double[] >> dataset2 = testLinRegDataSet();
-
-	public static Double nextStep( int k, Double[] theta ){
+	/**
+	 * computes one step for the following iteration
+	 *
+	 * @param k
+	 * @param theta
+	 * @return
+	 */
+	public static Double nextStepSkeched( int k, Double[] theta ){
 		int d = theta.length;
-		Double sum=0.0;
-		Double result=0.0;
-
-		Double sum2 = 0.0;
-
+		//Double result=0.0;
+		Double sum = 0.0;
 		// real gradient decent
 		//for( int i=0; i < dataset.size(); i++ ) {
 			//result+= - labels.get(i).f0 * (double)dataset.get(i).getField(k) / (double)dataset.size();
-			//}//for
-
-		sum2 += -sketchEstimate( sketch1.get(k) , normalizer )  / (double)dataset.size();
-
-		System.out.println( "real: "+result+" --- estimate "+sum2 );
+		//}//for
+		sum += -sketchEstimate( sketch1.get(k) , normalizer )  / (double)datasetSize;
 
 		for( int j=0; j < d; j++ ) {
 			// real gradient decent
 			//for (int i = 0; i < dataset.size(); i++) {
 				//result += theta[j] * (double)dataset.get(i).getField(j) * (double)dataset.get(i).getField(k) / (double)dataset.size();
 			//}//for
-			sum2 += theta[j] * sketchEstimate( sketch2.get(k*2+j) , normalizer ) / (double)dataset.size();
 
-			System.out.println( "real: "+result+" --- estimate "+sum2 );
-
+			sum += theta[j] * sketchEstimate( sketch2.get(k*2+j) , normalizer ) / (double)datasetSize;
 		}//for
-
-		return sum2;
-		//return result; // result of real gradient decent
+		return sum;
 	}
 
+
+	/**
+	 *
+	 * @param sketch sketch to read from the estimate
+	 * @param normalizer normalizer to reconstruct the "real" value if encoded. Can be potential
+	 * @return
+	 */
 	public static Double sketchEstimate(CMSketch sketch, FieldNormalizer normalizer ){
 		double sum = 0.0;
 		long counter = sketch.totalSumPerHash();
 		long freq;
 		String lookup;
 		for(double l=(double)normalizer.getMin(); l < (double)normalizer.getMax(); l+=(double)normalizer.getStep() ){
-			//if(freq>0)System.out.println("lookup: "+lookup+" "+freq);
 			lookup = ""+normalizer.normalize(l);
 			freq =  sketch.get(""+lookup);
 			sum += l * freq;
@@ -324,4 +211,123 @@ public class Test {
 		}//for
 		return sum;
 	}
+
+
+	/**
+	 * parse the input parameters
+	 * @param args
+	 * @return
+	 */
+	public static Options lvOptions = new Options();
+	public static CommandLine parseArguments(String[] args ) throws Exception {
+		lvOptions.addOption("h", "help", false, "shows valid arguments and options");
+
+		lvOptions.addOption(
+				OptionBuilder
+						.withLongOpt("input")
+						.withDescription("set the input dataset to process")
+						.isRequired()
+								//.withValueSeparator('=')
+						.hasArg()
+						.create("i")
+		);
+
+		lvOptions.addOption(
+				OptionBuilder
+						.withLongOpt("sketch1")
+						.withDescription("sketch size")
+						.isRequired()
+								//.withValueSeparator('=')
+						.hasArg()
+						.create("s1")
+		);
+
+		lvOptions.addOption(
+				OptionBuilder
+						.withLongOpt("sketch2")
+						.withDescription("sketch size")
+						.isRequired()
+								//.withValueSeparator('=')
+						.hasArg()
+						.create("s2")
+		);
+
+
+		lvOptions.addOption(
+				OptionBuilder
+						.withLongOpt("sketch3")
+						.withDescription("sketch size")
+						.isRequired()
+								//.withValueSeparator('=')
+						.hasArg()
+						.create("s3")
+		);
+
+
+		lvOptions.addOption(
+				OptionBuilder
+						.withLongOpt("sketch4")
+						.withDescription("sketch size")
+						.isRequired()
+								//.withValueSeparator('=')
+						.hasArg()
+						.create("s4")
+		);
+
+		lvOptions.addOption(
+				OptionBuilder
+						.withLongOpt("sketch5")
+						.withDescription("sketch size")
+						.isRequired()
+								//.withValueSeparator('=')
+						.hasArg()
+						.create("s5")
+		);
+
+		lvOptions.addOption(
+				OptionBuilder
+						.withLongOpt("sketch6")
+						.withDescription("sketch size")
+						.isRequired()
+								//.withValueSeparator('=')
+						.hasArg()
+						.create("s6")
+		);
+
+		lvOptions.addOption(
+				OptionBuilder
+						.withLongOpt("iterations")
+						.withDescription("number of iterations")
+						.isRequired()
+								//.withValueSeparator('=')
+						.hasArg()
+						.create("n")
+		);
+
+		lvOptions.addOption(
+				OptionBuilder
+						.withLongOpt("show-all-results")
+						.withDescription("number of iterations")
+								//.withValueSeparator('=')
+						.hasArg()
+						.create("s")
+		);
+
+		lvOptions.addOption(
+				OptionBuilder
+						.withLongOpt("display-sketches")
+						.withDescription("display-sketches")
+								//.withValueSeparator('=')
+								//.hasArg()
+						.create("d")
+		);
+
+
+
+		CommandLineParser lvParser = new BasicParser();
+		CommandLine cmd = null;
+		cmd = lvParser.parse(lvOptions, args);
+		return cmd;
+	}
+
 }
