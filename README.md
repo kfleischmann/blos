@@ -60,8 +60,12 @@ Linear-Regression with Gradient-Decent the skeched way
 cat dataset9 | blos run-examples sketched-gradient-decent-demo -i stdin -n 10 -s 1 -s1 0.1:0.2 -s2 0.1:0.2 -s3 0.1:0.2 -s4 0.1:0.2 -s5 0.1:0.2 -s6 0.1:0.2 -v -d
 ```
 
+Linear-Regression for real-model: y=0.6+0.1*x with 1Mio datapoints. Totoal Sketchsize 3mb
 ```
+blos generators poly --sigma 0 -f 0.6:0,0.1:1 --range="-1:1" --count 1000000 -H no | blos run-examples sketched-gradient-decent-demo -i stdin -n 50 -s 4 -s1 0.1:0.0001 -s2 0.1:0.0001 -s3 0.1:0.0001 -s4 0.1:0.0001 -s5 0.1:0.0001 -s6 0.1:0.0001 -v -d
 ```
+Finally learned model: 0.5998466649164175 0.10477879077668788
+
 
 Examples
 =============
