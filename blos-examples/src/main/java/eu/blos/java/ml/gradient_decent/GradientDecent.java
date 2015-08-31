@@ -44,6 +44,8 @@ public class GradientDecent {
 		buildSketches(is);
 
 		sketch.display();
+
+		learn();
 	}
 
 
@@ -120,8 +122,8 @@ public class GradientDecent {
 		Tuple2<Double,Double> theta_old = new Tuple2<Double,Double>(0.9, 0.9);
 
 		for( int i=0; i < numIterations; i++ ) {
-			theta.f0 = theta_old.f0 - alpha*nextStepSkeched(0, theta_old);
-			theta.f1 = theta_old.f1 - alpha*nextStepSkeched(1, theta_old);
+			theta.f0 = theta_old.f0 + alpha*nextStepSkeched(0, theta_old);
+			theta.f1 = theta_old.f1 + alpha*nextStepSkeched(1, theta_old);
 
 			theta_old.f0 = theta.f0;
 			theta_old.f1 = theta.f1;
@@ -139,7 +141,7 @@ public class GradientDecent {
 	 * @return
 	 */
 	public static Double nextStepSkeched( int k, Tuple2<Double,Double> theta ){
-		return sketchGradientDecentUpdateEstimate( theta, k );
+		return sketchGradientDecentUpdateEstimate( theta, k ) / (double)datasetSize;
 	}
 
 
