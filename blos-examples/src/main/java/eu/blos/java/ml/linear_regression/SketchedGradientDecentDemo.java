@@ -28,6 +28,7 @@ public class SketchedGradientDecentDemo {
 	public static FieldNormalizer normalizer;
 
 	public static CommandLine cmd;
+
 	public static void main(String[] args) throws Exception {
 		HelpFormatter lvFormater = new HelpFormatter();
 		cmd = parseArguments(args);
@@ -207,6 +208,7 @@ public class SketchedGradientDecentDemo {
 
 			sum += theta[j] * sketchEstimate( sketch2.get(k*2+j) , normalizer ) / (double)datasetSize;
 		}//for
+
 		return sum;
 	}
 
@@ -225,6 +227,7 @@ public class SketchedGradientDecentDemo {
 		if( cmd.hasOption("random-samples") ){
 			// iterate through the whole input-space
 			for( int i=0; i < Integer.parseInt(cmd.getOptionValue("random-samples")); i++ ) {
+
 					double l = (double)normalizer.getRandom();
 					lookup = "" + normalizer.normalize(l);
 					freq = sketch.get("" + lookup);
