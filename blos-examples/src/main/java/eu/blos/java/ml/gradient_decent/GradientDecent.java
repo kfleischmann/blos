@@ -72,6 +72,8 @@ public class GradientDecent {
 		sketch = new CMSketch( Double.parseDouble(inputSketchSize_param[0]), Double.parseDouble(inputSketchSize_param[1]) );
 
 		sketch.alloc();
+		total_size = sketch.alloc_size();
+
 		if( cmd.hasOption("verbose")) System.out.println("Sketch-size: w="+sketch.w()+", d="+sketch.d());
 		if( cmd.hasOption("verbose")) System.out.println("total sketch-size: "+ (total_size/1024.0/1024.0 )+"mb");
 
@@ -95,9 +97,8 @@ public class GradientDecent {
 				Tuple2<Double,Double> Xi = new Tuple2<>(  normalizer.normalize(1.0), normalizer.normalize(Double.parseDouble(values[2])) );
 				//Tuple1<Double> Xi = new Tuple1<>(normalizer.normalize(Double.parseDouble(values[2])));
 
-				dataset.add( Xi );
-
-				labels.add(Yi);
+				//dataset.add( Xi );
+				//labels.add(Yi);
 
 				lookup = Xi.toString() ;
 
@@ -146,8 +147,8 @@ public class GradientDecent {
 	 * @return
 	 */
 	public static Double nextStepSkeched( int k, Tuple2<Double,Double> theta ){
-		//return sketchGradientDecentUpdateEstimate( theta, k );
-		return realGradientDecentUpdateEstimate( theta, k ) / (double)datasetSize;
+		return sketchGradientDecentUpdateEstimate( theta, k ) / (double)datasetSize;
+		//return realGradientDecentUpdateEstimate( theta, k ) / (double)datasetSize;
 	}
 
 
