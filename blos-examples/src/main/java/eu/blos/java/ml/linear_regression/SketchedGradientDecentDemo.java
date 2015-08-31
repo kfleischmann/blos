@@ -1,5 +1,6 @@
 package eu.blos.java.ml.linear_regression;
 
+
 import eu.blos.java.algorithms.sketches.FieldNormalizer;
 import eu.blos.java.algorithms.sketches.field_normalizer.RoundNormalizer;
 import eu.blos.java.algorithms.sketches.field_normalizer.ZeroOneNormalizer;
@@ -27,6 +28,7 @@ public class SketchedGradientDecentDemo {
 	public static FieldNormalizer normalizer;
 
 	public static CommandLine cmd;
+
 	public static void main(String[] args) throws Exception {
 		HelpFormatter lvFormater = new HelpFormatter();
 		cmd = parseArguments(args);
@@ -206,6 +208,7 @@ public class SketchedGradientDecentDemo {
 
 			sum += theta[j] * sketchEstimate( sketch2.get(k*2+j) , normalizer ) / (double)datasetSize;
 		}//for
+
 		return sum;
 	}
 
@@ -220,12 +223,27 @@ public class SketchedGradientDecentDemo {
 		long counter = sketch.totalSumPerHash();
 		long freq;
 		String lookup;
-		for(double l=(double)normalizer.getMin(); l < (double)normalizer.getMax(); l+=(double)normalizer.getStep() ){
-			lookup = ""+normalizer.normalize(l);
-			freq =  sketch.get(""+lookup);
-			sum += l * freq;
-			counter += freq;
-		}//for
+
+		if( cmd.hasOption("random-samples") ){
+			// iterate through the whole input-space
+			for( int i=0; i < Integer.parseInt(cmd.getOptionValue("random-samples")); i++ ) {
+
+					double l = (double)normalizer.getRandom();
+					lookup = "" + normalizer.normalize(l);
+					freq = sketch.get("" + lookup);
+					sum += l * freq;
+					counter += freq;
+			}//for
+
+		} else {
+			// iterate through the whole input-space
+			for (double l = (double) normalizer.getMin(); l < (double) normalizer.getMax(); l += (double) normalizer.getStep()) {
+				lookup = "" + normalizer.normalize(l);
+				freq = sketch.get("" + lookup);
+				sum += l * freq;
+				counter += freq;
+			}//for
+		}
 		return sum;
 	}
 
@@ -358,6 +376,17 @@ public class SketchedGradientDecentDemo {
 						.hasArg()
 						.create("s")
 		);
+
+		lvOptions.addOption(
+				OptionBuilder
+						.withLongOpt("random-samples")
+						.withDescription("sample randomly from input-space")
+								//.isRequired()
+								//.withValueSeparator('=')
+						.hasArg()
+						.create("r")
+		);
+
 
 		CommandLineParser lvParser = new BasicParser();
 		CommandLine cmd = null;
