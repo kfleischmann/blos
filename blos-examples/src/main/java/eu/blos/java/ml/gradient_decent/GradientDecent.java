@@ -22,6 +22,8 @@ public class GradientDecent {
 	public static FieldNormalizer<Double> normalizer;
 
 	public static CommandLine cmd;
+	public static List<Tuple2<Double,Double>> dataset = new ArrayList<>();
+	public static List<Tuple1<Double>> labels = new ArrayList<>();
 
 	public static void main(String[] args) throws Exception {
 		HelpFormatter lvFormater = new HelpFormatter();
@@ -93,6 +95,9 @@ public class GradientDecent {
 				Tuple2<Double,Double> Xi = new Tuple2<>(  normalizer.normalize(1.0), normalizer.normalize(Double.parseDouble(values[2])) );
 				//Tuple1<Double> Xi = new Tuple1<>(normalizer.normalize(Double.parseDouble(values[2])));
 
+				dataset.add( Xi );
+
+				labels.add(Yi);
 
 				lookup = Xi.toString() ;
 
@@ -118,12 +123,12 @@ public class GradientDecent {
 	public static void learn() {
 		Double alpha=0.5;
 
-		Tuple2<Double,Double> theta = new Tuple2<Double,Double>(0.9, 0.9);
-		Tuple2<Double,Double> theta_old = new Tuple2<Double,Double>(0.9, 0.9);
+		Tuple2<Double,Double> theta = new Tuple2<Double,Double>(0.0, 0.0);
+		Tuple2<Double,Double> theta_old = new Tuple2<Double,Double>(0.0, 0.0);
 
 		for( int i=0; i < numIterations; i++ ) {
-			theta.f0 = theta_old.f0 + alpha*nextStepSkeched(0, theta_old);
-			theta.f1 = theta_old.f1 + alpha*nextStepSkeched(1, theta_old);
+			theta.f0 = theta_old.f0 - alpha*nextStepSkeched(0, theta_old);
+			theta.f1 = theta_old.f1 - alpha*nextStepSkeched(1, theta_old);
 
 			theta_old.f0 = theta.f0;
 			theta_old.f1 = theta.f1;
@@ -141,7 +146,8 @@ public class GradientDecent {
 	 * @return
 	 */
 	public static Double nextStepSkeched( int k, Tuple2<Double,Double> theta ){
-		return sketchGradientDecentUpdateEstimate( theta, k ) / (double)datasetSize;
+		//return sketchGradientDecentUpdateEstimate( theta, k );
+		return realGradientDecentUpdateEstimate( theta, k ) / (double)datasetSize;
 	}
 
 
@@ -153,7 +159,11 @@ public class GradientDecent {
 	 * @return
 	 */
 	public static double G_k_theta(int k, Tuple2<Double,Double> Xi, Tuple2<Double,Double>  model){
-		return (1.0 / (1.0+ Math.exp( Xi.f0*model.f0 + Xi.f1*model.f1 ))) * (double)Xi.getField(k);
+		return g_theta(Xi, model ) * (double)Xi.getField(k);
+	}
+
+	public static double g_theta(  Tuple2<Double,Double> Xi,Tuple2<Double,Double>  model){
+		return (1.0 / (1.0+ Math.exp( -(Xi.f0*model.f0 + Xi.f1*model.f1 ))));
 	}
 
 	/**
@@ -172,10 +182,21 @@ public class GradientDecent {
 			lookup = "(1.0," + normalizer.normalize(l)+")";
 			freq = sketch.get(lookup);
 
-			sum +=  freq * G_k_theta( k, new Tuple2<>(1.0, l), model )* freq;
+			sum +=  G_k_theta( k, new Tuple2<>(1.0, l), model )* freq;
 		}//for
-		return - consts[k] + sum;
+
+		return sum - consts[k];
 	}
+
+	public static Double realGradientDecentUpdateEstimate(Tuple2<Double,Double> model, int k  ) {
+		Double sum=0.0;
+		for( int i=0; i < datasetSize; i++ ){
+			sum += (g_theta( dataset.get(i), model ) - labels.get(i).f0 ) * (double)dataset.get(i).getField(k);
+		}
+		return sum;
+	}
+
+
 
 	/**
 	 * parse the input parameters
