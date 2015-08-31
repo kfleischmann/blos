@@ -47,38 +47,6 @@ public class GradientDecent {
 	}
 
 
-	/**
-	 * learn the model
-	 */
-	public static void learn() {
-		Double alpha=0.5;
-
-		Tuple2<Double,Double> theta = new Tuple2<Double,Double>(0.9, 0.9);
-		Tuple2<Double,Double> theta_old = new Tuple2<Double,Double>(0.9, 0.9);
-
-		for( int i=0; i < numIterations; i++ ) {
-			theta.f0 = theta_old.f0 - alpha*nextStepSkeched(0, theta_old);
-			theta.f1 = theta_old.f1 - alpha*nextStepSkeched(1, theta_old);
-
-			theta_old.f0 = theta.f0;
-			theta_old.f1 = theta.f1;
-
-			if( cmd.hasOption("verbose") || cmd.hasOption("all-results")) System.out.println( theta.f0 + " "+theta.f1);
-		}//for
-		System.out.println( "final-model: "+theta.f0 + " "+theta.f1);
-	}
-
-	/**
-	 * computes one step for the following iteration
-	 *
-	 * @param k
-	 * @param theta
-	 * @return
-	 */
-	public static Double nextStepSkeched( int k, Tuple2<Double,Double> theta ){
-		return sketchGradientDecentUpdateEstimate( theta, k );
-	}
-
 
 	/**
 	 *
@@ -140,6 +108,40 @@ public class GradientDecent {
 			e.printStackTrace();
 		}
 	}
+
+
+	/**
+	 * learn the model
+	 */
+	public static void learn() {
+		Double alpha=0.5;
+
+		Tuple2<Double,Double> theta = new Tuple2<Double,Double>(0.9, 0.9);
+		Tuple2<Double,Double> theta_old = new Tuple2<Double,Double>(0.9, 0.9);
+
+		for( int i=0; i < numIterations; i++ ) {
+			theta.f0 = theta_old.f0 - alpha*nextStepSkeched(0, theta_old);
+			theta.f1 = theta_old.f1 - alpha*nextStepSkeched(1, theta_old);
+
+			theta_old.f0 = theta.f0;
+			theta_old.f1 = theta.f1;
+
+			if( cmd.hasOption("verbose") || cmd.hasOption("all-results")) System.out.println( theta.f0 + " "+theta.f1);
+		}//for
+		System.out.println( "final-model: "+theta.f0 + " "+theta.f1);
+	}
+
+	/**
+	 * computes one step for the following iteration
+	 *
+	 * @param k
+	 * @param theta
+	 * @return
+	 */
+	public static Double nextStepSkeched( int k, Tuple2<Double,Double> theta ){
+		return sketchGradientDecentUpdateEstimate( theta, k );
+	}
+
 
 	/**
 	 *
