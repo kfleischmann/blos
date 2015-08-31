@@ -1,4 +1,4 @@
-package eu.blos.java.ml.gradient_decent;
+package eu.blos.java.ml.regression;
 
 import eu.blos.java.algorithms.sketches.FieldNormalizer;
 import eu.blos.java.algorithms.sketches.field_normalizer.RoundNormalizer;
@@ -11,7 +11,7 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class GradientDecent {
+public class LogisticGradientDecent {
 
 
 	public static CMSketch sketch = new CMSketch();
