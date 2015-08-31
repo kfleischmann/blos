@@ -122,10 +122,10 @@ public class LogisticGradientDecent {
 	 * learn the model
 	 */
 	public static void learn() {
-		Double alpha=0.5;
+		Double alpha=1.0;
 
-		Tuple2<Double,Double> theta = new Tuple2<Double,Double>(0.0, 0.0);
-		Tuple2<Double,Double> theta_old = new Tuple2<Double,Double>(0.0, 0.0);
+		Tuple2<Double,Double> theta = new Tuple2<Double,Double>(2.0, 4.0);
+		Tuple2<Double,Double> theta_old = new Tuple2<Double,Double>(2.0, 4.0);
 
 		for( int i=0; i < numIterations; i++ ) {
 			theta.f0 = theta_old.f0 - alpha*nextStepSkeched(0, theta_old);
