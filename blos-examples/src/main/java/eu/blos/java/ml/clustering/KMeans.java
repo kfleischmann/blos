@@ -5,6 +5,7 @@ import eu.blos.java.algorithms.sketches.FieldNormalizer;
 import eu.blos.java.algorithms.sketches.field_normalizer.RoundNormalizer;
 import eu.blos.scala.algorithms.sketches.CMSketch;
 import org.apache.commons.cli.*;
+import org.apache.flink.api.java.tuple.Tuple;
 import org.apache.flink.api.java.tuple.Tuple1;
 import org.apache.flink.api.java.tuple.Tuple2;
 
@@ -92,12 +93,8 @@ public class KMeans {
 				// some debug messages
 				if( cmd.hasOption("verbose"))  if(lines%100000 == 0) System.out.println("read lines "+lines);
 
-				Tuple1<Double> Yi = new Tuple1<Double>( Double.parseDouble(values[1]) );
-				Tuple2<Double,Double> Xi = new Tuple2<>(  normalizer.normalize(1.0), normalizer.normalize(Double.parseDouble(values[2])) );
-				//Tuple1<Double> Xi = new Tuple1<>(normalizer.normalize(Double.parseDouble(values[2])));
+				Tuple2<Double,Double> Xi = new Tuple2<>(  normalizer.normalize(Double.parseDouble(values[1])), normalizer.normalize(Double.parseDouble(values[2])) );
 
-				//dataset.add( Xi );
-				//labels.add(Yi);
 
 				lookup = Xi.toString() ;
 
@@ -115,10 +112,48 @@ public class KMeans {
 	 * learn the model
 	 */
 	public static void learn() {
-	
+
 	}
 
 
+	/**
+	 *
+	 * @return
+	 */
+	public static void updateClusterCentroids( Tuple2<Double,Double>[] centroids ){
+		long freq;
+		String lookup;
+
+		Tuple2<Double,Double>[] sums = new Tuple2[centroids.length];
+
+		long[] counts = new long[centroids.length] ;
+
+		// iterate through the whole input-space
+		for (double x = (double) normalizer.getMin(); x < (double) normalizer.getMax(); x += (double) normalizer.getStep()) {
+			for (double y = (double) normalizer.getMin(); y < (double) normalizer.getMax(); y += (double) normalizer.getStep()) {
+
+				Tuple2<Double,Double> value = new Tuple2<>(normalizer.normalize(x),normalizer.normalize(y));
+				lookup = "("+normalizer.normalize(x)+"," + normalizer.normalize(y) + ")";
+				freq = sketch.get(lookup);
+
+				int ibestCentroid = 0;
+				double currDistance = Double.MAX_VALUE;
+				for (int i = 1; i < centroids.length; i++) {
+					double d = Math.sqrt(
+						(centroids[ibestCentroid].f0 - centroids[i].f0) * (centroids[ibestCentroid].f0 - centroids[i].f0) +
+						(centroids[ibestCentroid].f0 - centroids[i].f0) * (centroids[ibestCentroid].f0 - centroids[i].f0)  );
+
+					if( d < currDistance){
+						ibestCentroid = i;
+					}
+				}//for
+
+				counts[ibestCentroid] += freq;
+				//sums[ibestCentroid] += value;
+
+			}//For
+		}//for
+	}
 
 
 	/**
