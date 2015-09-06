@@ -120,7 +120,7 @@ public class KMeans {
 	 *
 	 * @return
 	 */
-	public static void updateClusterCentroids( Tuple2<Double,Double>[] centroids ){
+	public static void updategClusterCentroids( Tuple2<Double,Double>[] centroids ){
 		long freq;
 		String lookup;
 
