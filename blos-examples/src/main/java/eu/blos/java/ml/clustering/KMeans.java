@@ -9,6 +9,8 @@ import org.apache.flink.api.java.tuple.Tuple;
 import org.apache.flink.api.java.tuple.Tuple1;
 import org.apache.flink.api.java.tuple.Tuple2;
 
+import org.apache.flink.examples.java.clustering.util.KMeansDataGenerator;
+
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,8 +37,7 @@ public class KMeans {
 			lvFormater.printHelp("Sketched Regression", lvOptions);
 			return;
 		}
-
-		numCentroids = Integer.parseInt ( cmd.getOptionValue("cenroids") );
+		numCentroids = Integer.parseInt ( cmd.getOptionValue("centroids") );
 
 		// make it possible to read from stdin
 		InputStreamReader is = null;
@@ -91,16 +92,15 @@ public class KMeans {
 			String lookup;
 
 			while ((line = br.readLine()) != null) {
-				String[] values =line.split(",");
+				String[] values =line.split(" ");
 				datasetSize++;
 
 				// some debug messages
 				if( cmd.hasOption("verbose"))  if(lines%100000 == 0) System.out.println("read lines "+lines);
 
-				Tuple2<Double,Double> Xi = new Tuple2<>(  normalizer.normalize(Double.parseDouble(values[1])), normalizer.normalize(Double.parseDouble(values[2])) );
+				Tuple2<Double,Double> Xi = new Tuple2<>(  normalizer.normalize(Double.parseDouble(values[0])), normalizer.normalize(Double.parseDouble(values[1])) );
 
 				lookup = Xi.toString() ;
-
 				sketch.update(lookup);
 
 				lines++;
@@ -119,11 +119,17 @@ public class KMeans {
 
 		// init centroids randomly
 		Random r = new java.util.Random();
-		for( Tuple2<Double,Double> c : centroids ){
-			c.f0 = r.nextDouble();
-			c.f1 = r.nextDouble();
-		}//for
-
+		for( int c=0; c < centroids.length; c++ ){
+			centroids[c] =  new Tuple2<>(r.nextDouble()*2-1, r.nextDouble()*2-1);
+			System.out.println("init centroid "+c+" => "+centroids[c]);
+		}
+		for( int i=0; i < numIterations; i++ ){
+			updategClusterCentroids(centroids);
+			for(int k=0; k < centroids.length; k++ ){
+				System.out.print( centroids[k] );
+			}
+			System.out.println();
+		}
 	}
 
 
@@ -136,6 +142,7 @@ public class KMeans {
 		String lookup;
 
 		Tuple2<Double,Double>[] sums = new Tuple2[centroids.length];
+		for( int l=0; l < sums.length; l++) sums[l] = new Tuple2<>(0.0,0.0);
 
 		long[] counts = new long[centroids.length] ;
 
@@ -147,31 +154,37 @@ public class KMeans {
 				lookup = "("+normalizer.normalize(x)+"," + normalizer.normalize(y) + ")";
 				freq = sketch.get(lookup);
 
-				int ibestCentroid = 0;
-				double currDistance = Double.MAX_VALUE;
-				for (int i = 1; i < centroids.length; i++) {
-					double d = Math.sqrt(
-						(centroids[ibestCentroid].f0 - centroids[i].f0) * (centroids[ibestCentroid].f0 - centroids[i].f0) +
-						(centroids[ibestCentroid].f0 - centroids[i].f0) * (centroids[ibestCentroid].f0 - centroids[i].f0)  );
+				if(freq>0) {
+					int ibestCentroid = -1;
+					double currDistance = Double.MAX_VALUE;
+					for (int i = 0; i < centroids.length; i++) {
+						double d = Math.sqrt(
+								(value.f0 - centroids[i].f0) * (value.f0 - centroids[i].f0) +
+								(value.f1 - centroids[i].f1) * (value.f1 - centroids[i].f1)  );
+						if( d < currDistance){
+							ibestCentroid = i;
+							currDistance= d;
+						}
+					}//for
 
-					if( d < currDistance){
-						ibestCentroid = i;
-					}
-				}//for
+					// what is the closest center to that point?
+					counts[ibestCentroid] += freq;
 
-				counts[ibestCentroid] += freq;
-
-				sums[ibestCentroid].f0 += value.f0;
-				sums[ibestCentroid].f1 += value.f1;
+					sums[ibestCentroid].f0 += value.f0;
+					sums[ibestCentroid].f1 += value.f1;
+				}
 
 			}//For
 		}//for
 
 		// update centroids
-		for (int i = 1; i < centroids.length; i++) {
+		for (int i = 0; i < centroids.length; i++) {
 			centroids[i].f0 = sums[i].f0 / counts[i];
 			centroids[i].f1 = sums[i].f1 / counts[i];
+			System.out.println("counted values for centroid "+i+" => "+counts[i]);
+
 		}//for
+
 
 	}
 
@@ -198,7 +211,7 @@ public class KMeans {
 		lvOptions.addOption(
 				OptionBuilder
 						.withLongOpt("centroids")
-						.withDescription("set the input dataset to process")
+						.withDescription("set the number of centroids")
 						.isRequired()
 						.hasArg()
 						.create("k")
@@ -249,7 +262,7 @@ public class KMeans {
 						.isRequired()
 								//.withValueSeparator('=')
 						.hasArg()
-						.create("s")
+						.create("p")
 		);
 
 
