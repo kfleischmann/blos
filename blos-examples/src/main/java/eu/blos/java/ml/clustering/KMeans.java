@@ -12,12 +12,14 @@ import org.apache.flink.api.java.tuple.Tuple2;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 public class KMeans {
 
 	public static CMSketch sketch = new CMSketch();
 	public static long datasetSize = 0;
 	public static int numIterations = 0;
+	public static int numCentroids = 0;
 
 	public static FieldNormalizer<Double> normalizer;
 
@@ -33,6 +35,8 @@ public class KMeans {
 			lvFormater.printHelp("Sketched Regression", lvOptions);
 			return;
 		}
+
+		numCentroids = Integer.parseInt ( cmd.getOptionValue("cenroids") );
 
 		// make it possible to read from stdin
 		InputStreamReader is = null;
@@ -95,7 +99,6 @@ public class KMeans {
 
 				Tuple2<Double,Double> Xi = new Tuple2<>(  normalizer.normalize(Double.parseDouble(values[1])), normalizer.normalize(Double.parseDouble(values[2])) );
 
-
 				lookup = Xi.toString() ;
 
 				sketch.update(lookup);
@@ -112,6 +115,14 @@ public class KMeans {
 	 * learn the model
 	 */
 	public static void learn() {
+		Tuple2<Double,Double>[] centroids = new Tuple2[numCentroids];
+
+		// init centroids randomly
+		Random r = new java.util.Random();
+		for( Tuple2<Double,Double> c : centroids ){
+			c.f0 = r.nextDouble();
+			c.f1 = r.nextDouble();
+		}//for
 
 	}
 
@@ -149,10 +160,19 @@ public class KMeans {
 				}//for
 
 				counts[ibestCentroid] += freq;
-				//sums[ibestCentroid] += value;
+
+				sums[ibestCentroid].f0 += value.f0;
+				sums[ibestCentroid].f1 += value.f1;
 
 			}//For
 		}//for
+
+		// update centroids
+		for (int i = 1; i < centroids.length; i++) {
+			centroids[i].f0 = sums[i].f0 / counts[i];
+			centroids[i].f1 = sums[i].f1 / counts[i];
+		}//for
+
 	}
 
 
@@ -175,6 +195,14 @@ public class KMeans {
 						.create("i")
 		);
 
+		lvOptions.addOption(
+				OptionBuilder
+						.withLongOpt("centroids")
+						.withDescription("set the input dataset to process")
+						.isRequired()
+						.hasArg()
+						.create("k")
+		);
 
 		lvOptions.addOption(
 				OptionBuilder
