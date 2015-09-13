@@ -22,6 +22,7 @@ public class KMeans {
 	public static long datasetSize = 0;
 	public static int numIterations = 0;
 	public static int numCentroids = 0;
+	public static int numHeavyHitters = 100000;
 
 	public static FieldNormalizer<Double> normalizer;
 
@@ -50,7 +51,19 @@ public class KMeans {
 
 		buildSketches(is);
 
-		sketch.display();
+		/*for( int k=1; k < sketch.getHeavyHitters().getHeapArray().length; k++ ){
+			scala.Tuple2<Integer, String > topK = (scala.Tuple2<Integer, String >)sketch.getHeavyHitters().getHeapArray()[k];
+			if(topK!=null) {
+				System.out.println("val ("+k+"): " + topK);
+			}
+		}*/
+		for( Object o : sketch.getHeavyHitters().getHeapArray() ){
+			if(o!=null) {
+				scala.Tuple2<Integer, String> topK = (scala.Tuple2<Integer, String>) o;
+
+				System.out.println("val (" + o + "): " + topK);
+			}
+		}
 
 		learn();
 	}
@@ -74,7 +87,7 @@ public class KMeans {
 
 		double total_size=0.0;
 
-		sketch = new CMSketch( Double.parseDouble(inputSketchSize_param[0]), Double.parseDouble(inputSketchSize_param[1]) );
+		sketch = new CMSketch( Double.parseDouble(inputSketchSize_param[0]), Double.parseDouble(inputSketchSize_param[1]), numHeavyHitters );
 
 		sketch.alloc();
 		total_size = sketch.alloc_size();
@@ -124,7 +137,7 @@ public class KMeans {
 			if( cmd.hasOption("verbose")) System.out.println("init centroid "+c+" => "+centroids[c]);
 		}
 		for( int i=0; i < numIterations; i++ ){
-			updategClusterCentroids(centroids);
+			updateClusterCentroids(centroids);
 
 			if( cmd.hasOption("verbose")) {
 				for (int k = 0; k < centroids.length; k++) {
@@ -135,12 +148,33 @@ public class KMeans {
 		}
 	}
 
+	public static void updateClusterCentroidsWithHeavyHitters( Tuple2<Double,Double>[] centroids ){
+		long freq;
+		String lookup;
+		long inputSpace=0;
+
+		Tuple2<Double,Double>[] sums = new Tuple2[centroids.length];
+		for( int l=0; l < sums.length; l++) sums[l] = new Tuple2<>(0.0,0.0);
+
+		long[] counts = new long[centroids.length] ;
+
+
+		// update centroids
+		for (int i = 0; i < centroids.length; i++) {
+			centroids[i].f0 = sums[i].f0 / counts[i];
+			centroids[i].f1 = sums[i].f1 / counts[i];
+			if( cmd.hasOption("verbose")) System.out.println("counted values for centroid "+i+" => "+counts[i]);
+
+		}//for
+		if( cmd.hasOption("verbose")) System.out.println("inputSpace size "+inputSpace);
+	}
+
 
 	/**
 	 *
 	 * @return
 	 */
-	public static void updategClusterCentroids( Tuple2<Double,Double>[] centroids ){
+	public static void updateClusterCentroids( Tuple2<Double,Double>[] centroids ){
 		long freq;
 		String lookup;
 		long inputSpace=0;

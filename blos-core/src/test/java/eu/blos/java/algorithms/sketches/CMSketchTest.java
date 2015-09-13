@@ -23,7 +23,7 @@ public class CMSketchTest {
 
 	@Test
 	public void testUniformHashFunction (){
-		CMSketch sketch = new CMSketch(0.01, 0.1, 1 );
+		CMSketch sketch = new CMSketch(0.01, 0.1, 1  );
 		sketch.alloc();
 
 		HashFunction[] hashfunctions = sketch.getHashfunctions();

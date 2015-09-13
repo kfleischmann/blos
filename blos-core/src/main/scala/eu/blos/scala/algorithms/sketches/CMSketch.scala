@@ -1,14 +1,13 @@
 package eu.blos.scala.algorithms.sketches
 
 import pl.edu.icm.jlargearrays.LongLargeArray
-import eu.blos.java.algorithms.sketches.{Sketch, HashFunction, DigestHashFunction}
-import java.nio.charset.Charset
-import java.security.MessageDigest
-import java.security.NoSuchAlgorithmException
+import eu.blos.java.algorithms.sketches.{PriorityQueue, Sketch, HashFunction, DigestHashFunction}
 import org.apache.commons.lang3.StringUtils
-import scala.collection.mutable
-import breeze.linalg.max
 
+class HeavyHitters(var maxSize : Int ) extends PriorityQueue[(Long,String)] with Serializable {
+  initialize( maxSize )
+  def lessThan(a : (Long, String), b : (Long, String) ) = a._1>b._1;
+}
 
 case class CMSketch(  var delta: Double,
                       var epsilon: Double,
@@ -28,10 +27,8 @@ case class CMSketch(  var delta: Double,
   def w = Math.ceil(Math.exp(1) /epsilon).toLong
   def d = Math.ceil(Math.log(1 / delta)).toLong
 
-  object Ord extends Ordering[(Long,String)] {	// not implicit
-    def compare(x: (Long,String), y: (Long,String)) = y._1.compare(x._1)
-  }
-  var top_k = mutable.PriorityQueue[(Long,String)]()(Ord);
+
+  var heavyHitters = new HeavyHitters(k);
 
   // sketh data
   var count : LongLargeArray = null;
@@ -48,6 +45,7 @@ case class CMSketch(  var delta: Double,
   def array_get(row : Long ,col : Long ) : Long = {
     count.get(row*w+col)
   }
+  def getHeavyHitters = heavyHitters
 
   def totalSumPerHash : Long = {
     var total_sum = 0L
@@ -76,7 +74,8 @@ case class CMSketch(  var delta: Double,
   }
 
   def update_heap(key : String ){
-    top_k +=( (get(key), key ) )
+    heavyHitters.insertWithOverflow( (get(key), key ) )
+
   }
 
   def +( key : String, increment : Long ) = {
