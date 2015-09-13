@@ -18,7 +18,7 @@ public class LogisticGradientDecent {
 	public static long datasetSize = 0;
 	public static int numIterations = 0;
 	public static double[] consts = new double[2];
-	public static int numHeavyHitters = 5000;
+	public static int numHeavyHitters = 1000;
 
 	public static FieldNormalizer<Double> normalizer;
 
@@ -44,9 +44,32 @@ public class LogisticGradientDecent {
 		}
 
 
+
 		buildSketches(is);
 
-		//sketch.display();
+		String absolutePath = new File(cmd.getOptionValue("input")).getAbsolutePath();
+		File file = new File( absolutePath.substring(0,absolutePath.lastIndexOf(File.separator)) +"/heavy_hitters" );
+		FileWriter fw = new FileWriter(file.getAbsoluteFile());
+		BufferedWriter bw = new BufferedWriter(fw);
+		bw.write("index,y,x");
+		bw.newLine();
+		for( int k=1; k < sketch.getHeavyHitters().getHeapArray().length; k++ ){
+			scala.Tuple2<Long, String > topK = (scala.Tuple2<Long, String >)sketch.getHeavyHitters().getHeapArray()[k];
+			if(topK!=null) {
+				String[] values = topK._2().replaceAll("[^-0-9,.E]","").split(",");
+				// y, x
+				Tuple2<Double,Double> d = new Tuple2<>(Double.parseDouble(values[0]), Double.parseDouble(values[1]) ) ;
+				System.out.println("val ("+k+"): "+topK._1()+" => " + d);
+
+				bw.write(k+","+d.f0+","+d.f1 );
+				bw.newLine();
+			}
+		}
+
+
+		bw.close();
+
+		sketch.display();
 
 		learn();
 	}
@@ -94,21 +117,25 @@ public class LogisticGradientDecent {
 				// some debug messages
 				if( cmd.hasOption("verbose"))  if(lines%100000 == 0) System.out.println("read lines "+lines);
 
-				Tuple1<Double> Yi = new Tuple1<Double>( Double.parseDouble(values[1]) );
-				Tuple2<Double,Double> Xi = new Tuple2<>(  normalizer.normalize(1.0), normalizer.normalize(Double.parseDouble(values[2])) );
+				//Tuple1<Double> Yi = new Tuple1<Double>( Double.parseDouble(values[1]) );
+				//Tuple2<Double,Double> Xi = new Tuple2<>(  normalizer.normalize(1.0), normalizer.normalize(Double.parseDouble(values[2])) );
 				//Tuple1<Double> Xi = new Tuple1<>(normalizer.normalize(Double.parseDouble(values[2])));
 
 				//dataset.add( Xi );
 				//labels.add(Yi);
+				//lookup = Xi.toString() ;
+				//sketch.update(lookup);
+
+				// (y,x)
+				Tuple2<Double,Double> Xi = new Tuple2<>(  normalizer.normalize(Double.parseDouble(values[1])), normalizer.normalize(Double.parseDouble(values[2])) );
 
 				lookup = Xi.toString() ;
-
 				sketch.update(lookup);
 
 				// for each dimension
-				for(int k=0; k < 2; k++ ) {
-					consts[k] += Yi.f0* (double)Xi.getField(k);
-				}//for
+				//for(int k=0; k < 2; k++ ) {
+				//	consts[k] += Yi.f0* (double)Xi.getField(k);
+				//}//for
 
 
 				lines++;
@@ -148,7 +175,7 @@ public class LogisticGradientDecent {
 	 * @return
 	 */
 	public static Double nextStepSkeched( int k, Tuple2<Double,Double> theta ){
-		return sketchGradientDecentUpdateEstimateWithHeavyHitterse( theta, k ) / (double)datasetSize;
+		return sketchGradientDecentUpdateEstimateWithHeavyHitters(theta, k) ;
 		//return sketchGradientDecentUpdateEstimate( theta, k ) / (double)datasetSize;
 		//return realGradientDecentUpdateEstimate( theta, k ) / (double)datasetSize;
 	}
@@ -191,24 +218,30 @@ public class LogisticGradientDecent {
 		return sum - consts[k];
 	}
 
-	public static Double sketchGradientDecentUpdateEstimateWithHeavyHitterse(Tuple2<Double,Double> model, int k  ){
+	public static Double sketchGradientDecentUpdateEstimateWithHeavyHitters(Tuple2<Double,Double> model, int k  ){
 		double sum = 0.0;
+		double sumy = 0.0;
+		long total_freq = 0;
 		long freq;
 
 		for( int s=1; s < sketch.getHeavyHitters().getHeapArray().length; s++ ) {
 			scala.Tuple2<Long, String> topK = (scala.Tuple2<Long, String>) sketch.getHeavyHitters().getHeapArray()[s];
 			if (topK != null) {
-				String[] values = topK._2().replaceAll("[^0-9,.-E]", "").split(",");
+				String[] values = topK._2().replaceAll("[^-0-9,.E]", "").split(",");
 
-				Tuple2<Double, Double> value = new Tuple2<>(Double.parseDouble(values[0]), Double.parseDouble(values[1]));
+				// (y,x)
+				Tuple1<Double> Yi = new Tuple1<>(Double.parseDouble(values[0]));
+				Tuple2<Double, Double> Xi = new Tuple2<>( 1.0, Double.parseDouble(values[1]));
 
 				freq = topK._1();
+				total_freq += freq;
+				sum +=  G_k_theta( k, Xi, model )* freq;
 
-				sum +=  G_k_theta( k, value, model )* freq;
+				sumy += (Yi.f0 * (double)Xi.getField(k))*freq;
 			}
 		}
 
-		return sum - consts[k];
+		return (sum - sumy) / total_freq;
 	}
 
 	public static Double realGradientDecentUpdateEstimate(Tuple2<Double,Double> model, int k  ) {
