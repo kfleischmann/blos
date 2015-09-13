@@ -121,14 +121,17 @@ public class KMeans {
 		Random r = new java.util.Random();
 		for( int c=0; c < centroids.length; c++ ){
 			centroids[c] =  new Tuple2<>(r.nextDouble()*2-1, r.nextDouble()*2-1);
-			System.out.println("init centroid "+c+" => "+centroids[c]);
+			if( cmd.hasOption("verbose")) System.out.println("init centroid "+c+" => "+centroids[c]);
 		}
 		for( int i=0; i < numIterations; i++ ){
 			updategClusterCentroids(centroids);
-			for(int k=0; k < centroids.length; k++ ){
-				System.out.print( centroids[k] );
+
+			if( cmd.hasOption("verbose")) {
+				for (int k = 0; k < centroids.length; k++) {
+					System.out.print(centroids[k]);
+				}
+				System.out.println();
 			}
-			System.out.println();
 		}
 	}
 
@@ -140,6 +143,7 @@ public class KMeans {
 	public static void updategClusterCentroids( Tuple2<Double,Double>[] centroids ){
 		long freq;
 		String lookup;
+		long inputSpace=0;
 
 		Tuple2<Double,Double>[] sums = new Tuple2[centroids.length];
 		for( int l=0; l < sums.length; l++) sums[l] = new Tuple2<>(0.0,0.0);
@@ -155,6 +159,9 @@ public class KMeans {
 				freq = sketch.get(lookup);
 
 				if(freq>0) {
+					inputSpace++;
+					//if( cmd.hasOption("verbose")) System.out.println(lookup+" => "+freq );
+
 					int ibestCentroid = -1;
 					double currDistance = Double.MAX_VALUE;
 					for (int i = 0; i < centroids.length; i++) {
@@ -181,10 +188,10 @@ public class KMeans {
 		for (int i = 0; i < centroids.length; i++) {
 			centroids[i].f0 = sums[i].f0 / counts[i];
 			centroids[i].f1 = sums[i].f1 / counts[i];
-			System.out.println("counted values for centroid "+i+" => "+counts[i]);
+			if( cmd.hasOption("verbose")) System.out.println("counted values for centroid "+i+" => "+counts[i]);
 
 		}//for
-
+		if( cmd.hasOption("verbose")) System.out.println("inputSpace size "+inputSpace);
 
 	}
 
