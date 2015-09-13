@@ -5,11 +5,8 @@ import eu.blos.java.algorithms.sketches.FieldNormalizer;
 import eu.blos.java.algorithms.sketches.field_normalizer.RoundNormalizer;
 import eu.blos.scala.algorithms.sketches.CMSketch;
 import org.apache.commons.cli.*;
-import org.apache.flink.api.java.tuple.Tuple;
 import org.apache.flink.api.java.tuple.Tuple1;
 import org.apache.flink.api.java.tuple.Tuple2;
-
-import org.apache.flink.examples.java.clustering.util.KMeansDataGenerator;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -22,7 +19,7 @@ public class KMeans {
 	public static long datasetSize = 0;
 	public static int numIterations = 0;
 	public static int numCentroids = 0;
-	public static int numHeavyHitters = 10000;
+	public static int numHeavyHitters = 5000;
 
 	public static FieldNormalizer<Double> normalizer;
 
@@ -48,13 +45,12 @@ public class KMeans {
 			is = new FileReader(new File(cmd.getOptionValue("input")));
 		}
 
-
 		buildSketches(is);
 
 		for( int k=1; k < sketch.getHeavyHitters().getHeapArray().length; k++ ){
 			scala.Tuple2<Long, String > topK = (scala.Tuple2<Long, String >)sketch.getHeavyHitters().getHeapArray()[k];
 			if(topK!=null) {
-				String[] values = topK._2().replaceAll("[^0-9,.-]","").split(",");
+				String[] values = topK._2().replaceAll("[^0-9,.-E]","").split(",");
 				Tuple2<Double,Double> d = new Tuple2<>(Double.parseDouble(values[0]), Double.parseDouble(values[1]) ) ;
 				System.out.println("val ("+k+"): " + d);
 			}
@@ -157,7 +153,7 @@ public class KMeans {
 		for( int k=1; k < sketch.getHeavyHitters().getHeapArray().length; k++ ){
 			scala.Tuple2<Long, String > topK = (scala.Tuple2<Long, String >)sketch.getHeavyHitters().getHeapArray()[k];
 			if(topK!=null) {
-				String[] values = topK._2().replaceAll("[^0-9,.-]","").split(",");
+				String[] values = topK._2().replaceAll("[^0-9,.-E]","").split(",");
 				Tuple2<Double,Double> value = new Tuple2<>(Double.parseDouble(values[0]), Double.parseDouble(values[1]) ) ;
 
 				freq = topK._1();

@@ -18,6 +18,7 @@ public class LogisticGradientDecent {
 	public static long datasetSize = 0;
 	public static int numIterations = 0;
 	public static double[] consts = new double[2];
+	public static int numHeavyHitters = 5000;
 
 	public static FieldNormalizer<Double> normalizer;
 
@@ -45,7 +46,7 @@ public class LogisticGradientDecent {
 
 		buildSketches(is);
 
-		sketch.display();
+		//sketch.display();
 
 		learn();
 	}
@@ -69,7 +70,7 @@ public class LogisticGradientDecent {
 
 		double total_size=0.0;
 
-		sketch = new CMSketch( Double.parseDouble(inputSketchSize_param[0]), Double.parseDouble(inputSketchSize_param[1]) );
+		sketch = new CMSketch( Double.parseDouble(inputSketchSize_param[0]), Double.parseDouble(inputSketchSize_param[1]), numHeavyHitters );
 
 		sketch.alloc();
 		total_size = sketch.alloc_size();
@@ -147,7 +148,8 @@ public class LogisticGradientDecent {
 	 * @return
 	 */
 	public static Double nextStepSkeched( int k, Tuple2<Double,Double> theta ){
-		return sketchGradientDecentUpdateEstimate( theta, k ) / (double)datasetSize;
+		return sketchGradientDecentUpdateEstimateWithHeavyHitterse( theta, k ) / (double)datasetSize;
+		//return sketchGradientDecentUpdateEstimate( theta, k ) / (double)datasetSize;
 		//return realGradientDecentUpdateEstimate( theta, k ) / (double)datasetSize;
 	}
 
@@ -185,6 +187,26 @@ public class LogisticGradientDecent {
 
 			sum +=  G_k_theta( k, new Tuple2<>(1.0, l), model )* freq;
 		}//for
+
+		return sum - consts[k];
+	}
+
+	public static Double sketchGradientDecentUpdateEstimateWithHeavyHitterse(Tuple2<Double,Double> model, int k  ){
+		double sum = 0.0;
+		long freq;
+
+		for( int s=1; s < sketch.getHeavyHitters().getHeapArray().length; s++ ) {
+			scala.Tuple2<Long, String> topK = (scala.Tuple2<Long, String>) sketch.getHeavyHitters().getHeapArray()[s];
+			if (topK != null) {
+				String[] values = topK._2().replaceAll("[^0-9,.-E]", "").split(",");
+
+				Tuple2<Double, Double> value = new Tuple2<>(Double.parseDouble(values[0]), Double.parseDouble(values[1]));
+
+				freq = topK._1();
+
+				sum +=  G_k_theta( k, value, model )* freq;
+			}
+		}
 
 		return sum - consts[k];
 	}
