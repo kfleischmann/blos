@@ -6,12 +6,20 @@ import java.nio.charset.Charset
 import java.security.MessageDigest
 import java.security.NoSuchAlgorithmException
 import org.apache.commons.lang3.StringUtils
+import scala.collection.mutable
+import breeze.linalg.max
+
 
 case class CMSketch(  var delta: Double,
-                      var epsilon: Double) extends Sketch with Serializable {
+                      var epsilon: Double,
+                      var k : Integer )  extends Sketch with Serializable {
 
   def this() = {
-    this(1,1/*,1, None*/ )
+    this(1,1,0/*,1, None*/ )
+  }
+
+  def this(delta: Double, epsilon: Double ) = {
+    this(delta, epsilon,0/*,1, None*/ )
   }
 
   var hashfunctions = create_hashfunctions
@@ -19,6 +27,11 @@ case class CMSketch(  var delta: Double,
 
   def w = Math.ceil(Math.exp(1) /epsilon).toLong
   def d = Math.ceil(Math.log(1 / delta)).toLong
+
+  object Ord extends Ordering[(Long,String)] {	// not implicit
+    def compare(x: (Long,String), y: (Long,String)) = y._1.compare(x._1)
+  }
+  var top_k = mutable.PriorityQueue[(Long,String)]()(Ord);
 
   // sketh data
   var count : LongLargeArray = null;
@@ -59,6 +72,11 @@ case class CMSketch(  var delta: Double,
 
   def update( key : String ) {
     update( key, 1L )
+    update_heap( key );
+  }
+
+  def update_heap(key : String ){
+    top_k +=( (get(key), key ) )
   }
 
   def +( key : String, increment : Long ) = {
