@@ -22,7 +22,7 @@ public class KMeans {
 	public static long datasetSize = 0;
 	public static int numIterations = 0;
 	public static int numCentroids = 0;
-	public static int numHeavyHitters = 100000;
+	public static int numHeavyHitters = 10000;
 
 	public static FieldNormalizer<Double> normalizer;
 
@@ -51,20 +51,14 @@ public class KMeans {
 
 		buildSketches(is);
 
-		/*for( int k=1; k < sketch.getHeavyHitters().getHeapArray().length; k++ ){
-			scala.Tuple2<Integer, String > topK = (scala.Tuple2<Integer, String >)sketch.getHeavyHitters().getHeapArray()[k];
+		for( int k=1; k < sketch.getHeavyHitters().getHeapArray().length; k++ ){
+			scala.Tuple2<Long, String > topK = (scala.Tuple2<Long, String >)sketch.getHeavyHitters().getHeapArray()[k];
 			if(topK!=null) {
-				System.out.println("val ("+k+"): " + topK);
-			}
-		}*/
-		for( Object o : sketch.getHeavyHitters().getHeapArray() ){
-			if(o!=null) {
-				scala.Tuple2<Integer, String> topK = (scala.Tuple2<Integer, String>) o;
-
-				System.out.println("val (" + o + "): " + topK);
+				String[] values = topK._2().replaceAll("[^0-9,.-]","").split(",");
+				Tuple2<Double,Double> d = new Tuple2<>(Double.parseDouble(values[0]), Double.parseDouble(values[1]) ) ;
+				System.out.println("val ("+k+"): " + d);
 			}
 		}
-
 		learn();
 	}
 
@@ -113,6 +107,7 @@ public class KMeans {
 
 				Tuple2<Double,Double> Xi = new Tuple2<>(  normalizer.normalize(Double.parseDouble(values[0])), normalizer.normalize(Double.parseDouble(values[1])) );
 
+
 				lookup = Xi.toString() ;
 				sketch.update(lookup);
 
@@ -137,7 +132,7 @@ public class KMeans {
 			if( cmd.hasOption("verbose")) System.out.println("init centroid "+c+" => "+centroids[c]);
 		}
 		for( int i=0; i < numIterations; i++ ){
-			updateClusterCentroids(centroids);
+			updateClusterCentroidsWithHeavyHitters(centroids);
 
 			if( cmd.hasOption("verbose")) {
 				for (int k = 0; k < centroids.length; k++) {
@@ -157,6 +152,41 @@ public class KMeans {
 		for( int l=0; l < sums.length; l++) sums[l] = new Tuple2<>(0.0,0.0);
 
 		long[] counts = new long[centroids.length] ;
+
+
+		for( int k=1; k < sketch.getHeavyHitters().getHeapArray().length; k++ ){
+			scala.Tuple2<Long, String > topK = (scala.Tuple2<Long, String >)sketch.getHeavyHitters().getHeapArray()[k];
+			if(topK!=null) {
+				String[] values = topK._2().replaceAll("[^0-9,.-]","").split(",");
+				Tuple2<Double,Double> value = new Tuple2<>(Double.parseDouble(values[0]), Double.parseDouble(values[1]) ) ;
+
+				freq = topK._1();
+
+				if(freq>0) {
+					inputSpace++;
+					//if( cmd.hasOption("verbose")) System.out.println(lookup+" => "+freq );
+
+					int ibestCentroid = -1;
+					double currDistance = Double.MAX_VALUE;
+					for (int i = 0; i < centroids.length; i++) {
+						double d = Math.sqrt(
+								(value.f0 - centroids[i].f0) * (value.f0 - centroids[i].f0) +
+										(value.f1 - centroids[i].f1) * (value.f1 - centroids[i].f1)  );
+						if( d < currDistance){
+							ibestCentroid = i;
+							currDistance= d;
+						}
+					}//for
+
+					// what is the closest center to that point?
+					counts[ibestCentroid] += freq;
+
+					sums[ibestCentroid].f0 += value.f0;
+					sums[ibestCentroid].f1 += value.f1;
+				}
+
+			}
+		}
 
 
 		// update centroids
