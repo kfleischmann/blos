@@ -2,6 +2,7 @@ package eu.blos.java.ml.regression;
 
 import eu.blos.java.algorithms.sketches.FieldNormalizer;
 import eu.blos.java.algorithms.sketches.field_normalizer.RoundNormalizer;
+import eu.blos.scala.algorithms.sketches.CMEstimate;
 import eu.blos.scala.algorithms.sketches.CMSketch;
 import org.apache.commons.cli.*;
 import org.apache.flink.api.java.tuple.Tuple1;
@@ -54,12 +55,12 @@ public class LogisticGradientDecent {
 		bw.write("index,y,x");
 		bw.newLine();
 		for( int k=1; k < sketch.getHeavyHitters().getHeapArray().length; k++ ){
-			scala.Tuple2<Long, String > topK = (scala.Tuple2<Long, String >)sketch.getHeavyHitters().getHeapArray()[k];
+			CMEstimate topK = (CMEstimate)sketch.getHeavyHitters().getHeapArray()[k];
 			if(topK!=null) {
-				String[] values = topK._2().replaceAll("[^-0-9,.E]","").split(",");
+				String[] values = topK.key().replaceAll("[^-0-9,.E]","").split(",");
 				// y, x
 				Tuple2<Double,Double> d = new Tuple2<>(Double.parseDouble(values[0]), Double.parseDouble(values[1]) ) ;
-				System.out.println("val ("+k+"): "+topK._1()+" => " + d);
+				System.out.println("val ("+k+"): "+topK.count()+" => " + d);
 
 				bw.write(k+","+d.f0+","+d.f1 );
 				bw.newLine();
@@ -71,7 +72,7 @@ public class LogisticGradientDecent {
 
 		sketch.display();
 
-		learn();
+		//learn();
 	}
 
 

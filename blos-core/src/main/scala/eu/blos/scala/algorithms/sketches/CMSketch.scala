@@ -4,12 +4,15 @@ import pl.edu.icm.jlargearrays.LongLargeArray
 import eu.blos.java.algorithms.sketches.{PriorityQueue, Sketch, HashFunction, DigestHashFunction}
 import org.apache.commons.lang3.StringUtils
 
-class HeavyHitters(var maxSize : Int ) extends PriorityQueue[(Long,String)] with Serializable {
+case class HeavyHitters(var maxSize : Int ) extends PriorityQueue[CMEstimate] with Serializable {
   initialize( maxSize )
-  def lessThan(a : (Long, String), b : (Long, String) ) = a._1>b._1;
+  def lessThan(a :CMEstimate, b : CMEstimate ) = a.count>b.count;
 }
 
-case class CMSketch(  var delta: Double,
+case class CMEstimate( var count : Long,
+                       var key : String );
+
+class CMSketch(  var delta: Double,
                       var epsilon: Double,
                       var k : Integer )  extends Sketch with Serializable {
 
@@ -29,6 +32,7 @@ case class CMSketch(  var delta: Double,
 
 
   var heavyHitters = new HeavyHitters(k);
+  var top_k = collection.mutable.HashMap[String, CMEstimate ]();
 
   // sketh data
   var count : LongLargeArray = null;
@@ -74,7 +78,29 @@ case class CMSketch(  var delta: Double,
   }
 
   def update_heap(key : String ){
-    heavyHitters.insertWithOverflow( (get(key), key ) )
+    val estimate : Long = get(key)
+
+    if(top_k.contains(key)){
+      val old_pair = top_k.get(key).get
+      old_pair.count = estimate
+      heavyHitters.updateTop();
+    } else  {
+      // do we have enough space in heap?
+      if(top_k.size < k ) {
+
+        val new_pair = new CMEstimate(estimate, key)
+        heavyHitters.add( new_pair )
+        top_k +=( (key, new_pair ) )
+
+      } else {
+        val new_pair = new CMEstimate(estimate, key)
+        val old_pair = heavyHitters.insertWithOverflow( new_pair )
+
+        top_k -= old_pair.key
+        top_k +=( (key, new_pair ) )
+      }
+    }
+
 
   }
 
