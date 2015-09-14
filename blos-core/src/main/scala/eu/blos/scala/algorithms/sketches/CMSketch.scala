@@ -7,6 +7,13 @@ import org.apache.commons.lang3.StringUtils
 case class HeavyHitters(var maxSize : Int ) extends PriorityQueue[CMEstimate] with Serializable {
   initialize( maxSize )
   def lessThan(a :CMEstimate, b : CMEstimate ) = a.count>b.count;
+  def heapify( key : String ){
+    val index = this.getHeapArray.indexOf( (x : CMEstimate) => x.key.equals(key) )
+    //System.out.println("key: "+key+", index: "+index)
+    if(index>0) {
+      this.upHeap(index)
+    }
+  }
 }
 
 case class CMEstimate( var count : Long,
@@ -50,6 +57,7 @@ class CMSketch(  var delta: Double,
     count.get(row*w+col)
   }
   def getHeavyHitters = heavyHitters
+  def getTopK = top_k
 
   def totalSumPerHash : Long = {
     var total_sum = 0L
@@ -81,18 +89,26 @@ class CMSketch(  var delta: Double,
     val estimate : Long = get(key)
 
     if(top_k.contains(key)){
+      System.out.println("key exists: "+key)
       val old_pair = top_k.get(key).get
       old_pair.count = estimate
-      heavyHitters.updateTop();
+      heavyHitters.heapify(key);
+
     } else  {
-      // do we have enough space in heap?
+      // okay we do not know that element
+
+
       if(top_k.size < k ) {
+        // do we have enough space?
 
         val new_pair = new CMEstimate(estimate, key)
+
         heavyHitters.add( new_pair )
         top_k +=( (key, new_pair ) )
 
       } else {
+        // insert new heap is updated automatically
+
         val new_pair = new CMEstimate(estimate, key)
         val old_pair = heavyHitters.insertWithOverflow( new_pair )
 

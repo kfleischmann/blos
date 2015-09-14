@@ -1,8 +1,12 @@
 package eu.blos.java.algorithms.sketches;
 
 
+import eu.blos.scala.algorithms.sketches.CMEstimate;
 import eu.blos.scala.algorithms.sketches.CMSketch;
+import eu.blos.scala.algorithms.sketches.HeavyHitters;
 import org.junit.Test;
+import scala.collection.Iterator;
+import scala.collection.mutable.HashMap;
 
 
 public class CMSketchTest {
@@ -21,7 +25,7 @@ public class CMSketchTest {
 	}
 
 
-	@Test
+	//@Test
 	public void testUniformHashFunction (){
 		CMSketch sketch = new CMSketch(0.01, 0.1, 1  );
 		sketch.alloc();
@@ -52,4 +56,40 @@ public class CMSketchTest {
 
 		assert( avgdiff < epsilon );
 	}//for
+
+
+	@Test
+	public void testHeavyHitters(){
+		CMSketch sketch = new CMSketch(0.01, 0.1, 3  );
+		sketch.alloc();
+
+		// count test1 -> 1
+		// count test2 -> 3
+		// count test3 -> 2
+
+
+		sketch.update("test1");
+		sketch.update("test2");
+		sketch.update("test2");
+		sketch.update("test2");
+
+		sketch.update("test3");
+		sketch.update("test3");
+
+		HeavyHitters hh = sketch.getHeavyHitters();
+		for( int i=0; i < hh.getHeapArray().length; i++ ){
+			CMEstimate e = (CMEstimate)hh.getHeapArray()[i];
+			System.out.println(e);
+		}
+
+		HashMap<String, CMEstimate> map = sketch.getTopK();
+		Iterator<String> it = map.keysIterator();
+		while( it.hasNext() ){
+			String key = it.next();
+			CMEstimate e = map.get(key);
+
+
+		}
+
+	}
 }

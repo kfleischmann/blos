@@ -4,6 +4,7 @@ import eu.blos.java.algorithms.sketches.FieldNormalizer;
 import eu.blos.java.algorithms.sketches.field_normalizer.RoundNormalizer;
 import eu.blos.scala.algorithms.sketches.CMEstimate;
 import eu.blos.scala.algorithms.sketches.CMSketch;
+import eu.blos.scala.algorithms.sketches.HeavyHitters;
 import org.apache.commons.cli.*;
 import org.apache.flink.api.java.tuple.Tuple1;
 import org.apache.flink.api.java.tuple.Tuple2;
@@ -19,7 +20,7 @@ public class LogisticGradientDecent {
 	public static long datasetSize = 0;
 	public static int numIterations = 0;
 	public static double[] consts = new double[2];
-	public static int numHeavyHitters = 1000;
+	public static int numHeavyHitters = 10;
 
 	public static FieldNormalizer<Double> normalizer;
 
@@ -46,6 +47,7 @@ public class LogisticGradientDecent {
 
 
 
+		/*
 		buildSketches(is);
 
 		String absolutePath = new File(cmd.getOptionValue("input")).getAbsolutePath();
@@ -66,13 +68,11 @@ public class LogisticGradientDecent {
 				bw.newLine();
 			}
 		}
-
-
 		bw.close();
+		*/
 
-		sketch.display();
+		//sketch.display();
 
-		//learn();
 	}
 
 
@@ -226,15 +226,15 @@ public class LogisticGradientDecent {
 		long freq;
 
 		for( int s=1; s < sketch.getHeavyHitters().getHeapArray().length; s++ ) {
-			scala.Tuple2<Long, String> topK = (scala.Tuple2<Long, String>) sketch.getHeavyHitters().getHeapArray()[s];
+			CMEstimate topK = (CMEstimate)sketch.getHeavyHitters().getHeapArray()[k];
 			if (topK != null) {
-				String[] values = topK._2().replaceAll("[^-0-9,.E]", "").split(",");
+				String[] values = topK.key().replaceAll("[^-0-9,.E]", "").split(",");
 
 				// (y,x)
 				Tuple1<Double> Yi = new Tuple1<>(Double.parseDouble(values[0]));
 				Tuple2<Double, Double> Xi = new Tuple2<>( 1.0, Double.parseDouble(values[1]));
 
-				freq = topK._1();
+				freq = topK.count();
 				total_freq += freq;
 				sum +=  G_k_theta( k, Xi, model )* freq;
 
