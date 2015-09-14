@@ -165,7 +165,6 @@ public abstract class PriorityQueue<T> {
 	}*/
 
 	public T tryinsert(T element) {
-		System.out.println("try insert");
 		if (size < maxSize) {
 			add(element);
 			return null;

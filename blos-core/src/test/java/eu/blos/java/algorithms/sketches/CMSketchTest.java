@@ -11,9 +11,7 @@ import scala.collection.mutable.HashMap;
 
 public class CMSketchTest {
 
-
-	//@Test
-
+	@Test
 	public void testSingleIncrement (){
 		CMSketch sketch = new CMSketch(0.01, 0.1, 1 );
 		sketch.alloc();
@@ -28,7 +26,7 @@ public class CMSketchTest {
 	}
 
 
-	//@Test
+	@Test
 	public void testUniformHashFunction (){
 		CMSketch sketch = new CMSketch(0.01, 0.1, 1  );
 		sketch.alloc();
@@ -69,6 +67,14 @@ public class CMSketchTest {
 		// count test1 -> 1
 		// count test2 -> 3
 		// count test3 -> 2
+		sketch.update("test-1");
+		sketch.update("test-2");
+		sketch.update("test-3");
+		sketch.update("test-4");
+		sketch.update("test-5");
+		sketch.update("test-6");
+		sketch.update("test-7");
+		sketch.update("test-8");
 
 
 		sketch.update("test1");
@@ -126,11 +132,19 @@ public class CMSketchTest {
 		sketch.update("test18");
 
 		HeavyHitters hh = sketch.getHeavyHitters();
+
+		/*
 		for( int i=0; i < hh.getHeapArray().length; i++ ){
 			CMEstimate e = (CMEstimate)hh.getHeapArray()[i];
 			System.out.println("hh: "+e);
-		}
+		}*/
 
-
+		assert( ((CMEstimate)hh.getHeapArray()[1]).count() == 10 && ((CMEstimate)hh.getHeapArray()[1]).key().equals("test8") );
+		assert( ((CMEstimate)hh.getHeapArray()[2]).count() == 5 && ((CMEstimate)hh.getHeapArray()[2]).key().equals("test1") );
+		assert( ((CMEstimate)hh.getHeapArray()[3]).count() == 5 && ((CMEstimate)hh.getHeapArray()[3]).key().equals("test4") );
+		assert( ((CMEstimate)hh.getHeapArray()[4]).count() == 1 && ((CMEstimate)hh.getHeapArray()[4]).key().equals("test18") );
+		assert( ((CMEstimate)hh.getHeapArray()[5]).count() == 4 && ((CMEstimate)hh.getHeapArray()[5]).key().equals("test7") );
+		assert( ((CMEstimate)hh.getHeapArray()[6]).count() == 4 && ((CMEstimate)hh.getHeapArray()[6]).key().equals("test3") );
+		assert( ((CMEstimate)hh.getHeapArray()[7]).count() == 3 && ((CMEstimate)hh.getHeapArray()[7]).key().equals("test2") );
 	}
 }

@@ -5,11 +5,15 @@ import eu.blos.java.algorithms.sketches.{PriorityQueue, Sketch, HashFunction, Di
 import org.apache.commons.lang3.StringUtils
 
 case class HeavyHitters(var maxSize : Int ) extends PriorityQueue[CMEstimate] with Serializable {
-  initialize( maxSize, 5 )
+  val lnOf2 = scala.math.log(2)
+  def log2(x: Double): Double = scala.math.log(x) / lnOf2
+  def searchSpaceBestReplacement = math.pow( 2, log2(maxSize)-1 ).toInt+1
+
+  initialize( maxSize, searchSpaceBestReplacement )
+
   def lessThan(a :CMEstimate, b : CMEstimate ) = a.count>b.count;
   def heapify( key : String ){
     var index = -1;
-
     for( i <- 1 until getHeapArray.length ){
       val o = getHeapArray.toList(i);
       if( o != null ){
