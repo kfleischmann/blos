@@ -5,7 +5,7 @@ import eu.blos.java.algorithms.sketches.{PriorityQueue, Sketch, HashFunction, Di
 import org.apache.commons.lang3.StringUtils
 
 case class HeavyHitters(var maxSize : Int ) extends PriorityQueue[CMEstimate] with Serializable {
-  initialize( maxSize )
+  initialize( maxSize, 5 )
   def lessThan(a :CMEstimate, b : CMEstimate ) = a.count>b.count;
   def heapify( key : String ){
     var index = -1;
@@ -116,16 +116,17 @@ class CMSketch(  var delta: Double,
       } else {
         // insert new heap is updated automatically
 
+        // only update heap if we benefic from it
         val new_pair = new CMEstimate(estimate, key)
-        val old_pair = heavyHitters.insertWithOverflow( new_pair )
+        val old_pair = heavyHitters.tryinsert(new_pair)
 
         top_k -= old_pair.key
-        top_k +=( (key, new_pair ) )
+        top_k += ((key, new_pair))
       }
+
     }
-
-
   }
+
 
   def +( key : String, increment : Long ) = {
     update(key,increment)

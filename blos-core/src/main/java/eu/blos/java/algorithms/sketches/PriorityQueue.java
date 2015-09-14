@@ -30,6 +30,7 @@ package eu.blos.java.algorithms.sketches;
 public abstract class PriorityQueue<T> {
 	private int size;
 	private int maxSize;
+	private int seachMinSpace;
 	private T[] heap;
 
 	/**
@@ -42,7 +43,7 @@ public abstract class PriorityQueue<T> {
 
 	/**
 	 * This method can be overridden by extending classes to return a sentinel
-	 * object which will be used by {@link #initialize(int)} to fill the queue, so
+	 * object which will be used by {@link #initialize(int,int)} to fill the queue, so
 	 * that the code which uses that queue can always assume it's full and only
 	 * change the top without attempting to insert any new object.<br>
 	 * <p/>
@@ -70,7 +71,7 @@ public abstract class PriorityQueue<T> {
 	 * </pre>
 	 * <p/>
 	 * <b>NOTE:</b> if this method returns a non-null value, it will be called by
-	 * {@link #initialize(int)} {@link #size()} times, relying on a new object to
+	 * {@link #initialize(int,int)} {@link #size()} times, relying on a new object to
 	 * be returned and will not check if it's null again. Therefore you should
 	 * ensure any call to this method creates a new instance and behaves
 	 * consistently, e.g., it cannot return null if it previously returned
@@ -87,9 +88,10 @@ public abstract class PriorityQueue<T> {
 	 * Subclass constructors must call this.
 	 */
 	@SuppressWarnings("unchecked")
-	protected final void initialize(int maxSize) {
+	protected final void initialize(int maxSize, int seachMinSpace ) {
 		size = 0;
 		int heapSize;
+		this.seachMinSpace = seachMinSpace;
 		if (0 == maxSize)
 			// We allocate 1 extra to avoid if statement in top()
 			heapSize = 2;
@@ -148,7 +150,7 @@ public abstract class PriorityQueue<T> {
 	 * heap and now has been replaced by a larger one, or null
 	 * if the queue wasn't yet full with maxSize elements.
 	 */
-	public T insertWithOverflow(T element) {
+	/*public T insertWithOverflow(T element) {
 		if (size < maxSize) {
 			add(element);
 			return null;
@@ -160,7 +162,34 @@ public abstract class PriorityQueue<T> {
 		} else {
 			return element;
 		}
+	}*/
+
+	public T tryinsert(T element) {
+		System.out.println("try insert");
+		if (size < maxSize) {
+			add(element);
+			return null;
+		} else if (size > 0 && lessThan(element, heap[1])) {
+			T ret = heap[1];
+			heap[1] = element;
+			updateTop();
+			return ret;
+		} else {
+			// find best replacement
+			T bestReplacement = heap[size];
+			int bestIndex = size;
+			for(int k=size-1; k > 1 && k > size-this.seachMinSpace; k-- ){
+				if( lessThan(bestReplacement, heap[k])  ){
+					bestReplacement = heap[k];
+					bestIndex=k;
+				}
+			}
+			T ret = heap[bestIndex];
+			heap[bestIndex] = element;
+			return ret;
+		}
 	}
+
 
 	/**
 	 * Returns the least element of the PriorityQueue in constant time.
@@ -264,6 +293,7 @@ public abstract class PriorityQueue<T> {
 		}
 		heap[i] = node;                  // install saved node
 	}
+
 
 
 	/**

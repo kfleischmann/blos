@@ -10,7 +10,10 @@ import scala.collection.mutable.HashMap;
 
 
 public class CMSketchTest {
-	@Test
+
+
+	//@Test
+
 	public void testSingleIncrement (){
 		CMSketch sketch = new CMSketch(0.01, 0.1, 1 );
 		sketch.alloc();
@@ -60,7 +63,7 @@ public class CMSketchTest {
 
 	@Test
 	public void testHeavyHitters(){
-		CMSketch sketch = new CMSketch(0.01, 0.1, 3  );
+		CMSketch sketch = new CMSketch(0.01, 0.1, 7  );
 		sketch.alloc();
 
 		// count test1 -> 1
@@ -69,6 +72,7 @@ public class CMSketchTest {
 
 
 		sketch.update("test1");
+
 		sketch.update("test2");
 		sketch.update("test2");
 		sketch.update("test2");
@@ -79,6 +83,47 @@ public class CMSketchTest {
 		sketch.update("test3");
 		sketch.update("test3");
 
+		sketch.update("test1");
+		sketch.update("test1");
+		sketch.update("test1");
+		sketch.update("test1");
+
+		sketch.update("test4");
+		sketch.update("test4");
+		sketch.update("test4");
+		sketch.update("test4");
+		sketch.update("test4");
+
+		sketch.update("test5");
+
+		sketch.update("test6");
+
+		sketch.update("test7");
+		sketch.update("test7");
+		sketch.update("test7");
+		sketch.update("test7");
+
+
+		sketch.update("test8");
+		sketch.update("test8");
+		sketch.update("test8");
+		sketch.update("test8");
+		sketch.update("test8");
+		sketch.update("test8");
+		sketch.update("test8");
+		sketch.update("test8");
+		sketch.update("test8");
+		sketch.update("test8");
+
+		sketch.update("test9");
+		sketch.update("test10");
+		sketch.update("test11");
+		sketch.update("test12");
+		sketch.update("test13");
+		sketch.update("test14");
+		sketch.update("test16");
+		sketch.update("test17");
+		sketch.update("test18");
 
 		HeavyHitters hh = sketch.getHeavyHitters();
 		for( int i=0; i < hh.getHeapArray().length; i++ ){
