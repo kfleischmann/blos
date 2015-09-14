@@ -30,19 +30,15 @@ public class CMSketchTest {
 	public void testUniformHashFunction (){
 		CMSketch sketch = new CMSketch(0.01, 0.1, 1  );
 		sketch.alloc();
-
 		HashFunction[] hashfunctions = sketch.getHashfunctions();
-
 		for( int i=0; i < 10000000; i++ ){
 			sketch.update(""+i);
 		}
-
 		double epsilon = 0.008;
 		double avgdiff = 0.0;
 		double maxdiff = 0L;
 		double currdiff = 0.0;
 		long countdiff = 0L;
-
 		for( long _row=0; _row < hashfunctions.length; _row ++ )
 			for( long _col=0; _col < sketch.w(); _col++ )
 				for( long row=0; row < hashfunctions.length; row ++ )
@@ -54,7 +50,6 @@ public class CMSketchTest {
 						assert (currdiff < epsilon);
 					}
 		avgdiff /= countdiff;
-
 		assert( avgdiff < epsilon );
 	}//for
 

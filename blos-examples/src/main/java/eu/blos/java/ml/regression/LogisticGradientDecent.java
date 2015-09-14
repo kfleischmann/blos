@@ -20,7 +20,7 @@ public class LogisticGradientDecent {
 	public static long datasetSize = 0;
 	public static int numIterations = 0;
 	public static double[] consts = new double[2];
-	public static int numHeavyHitters = 10;
+	public static int numHeavyHitters = 5000;
 
 	public static FieldNormalizer<Double> normalizer;
 
@@ -63,6 +63,7 @@ public class LogisticGradientDecent {
 
 				bw.write(k+","+d.f0+","+d.f1 );
 				bw.newLine();
+
 			}
 		}
 		bw.close();
@@ -71,6 +72,7 @@ public class LogisticGradientDecent {
 
 		sketch.display();
 
+		learn();
 	}
 
 
@@ -114,7 +116,7 @@ public class LogisticGradientDecent {
 				datasetSize++;
 
 				// some debug messages
-				if( cmd.hasOption("verbose"))  if(lines%100000 == 0) System.out.println("read lines "+lines);
+				if( cmd.hasOption("verbose"))  if(lines%1000 == 0) System.out.println("read lines "+lines);
 
 				//Tuple1<Double> Yi = new Tuple1<Double>( Double.parseDouble(values[1]) );
 				//Tuple2<Double,Double> Xi = new Tuple2<>(  normalizer.normalize(1.0), normalizer.normalize(Double.parseDouble(values[2])) );
@@ -130,6 +132,7 @@ public class LogisticGradientDecent {
 
 				lookup = Xi.toString() ;
 				sketch.update(lookup);
+
 
 				// for each dimension
 				//for(int k=0; k < 2; k++ ) {
@@ -224,14 +227,13 @@ public class LogisticGradientDecent {
 		long freq;
 
 		for( int s=1; s < sketch.getHeavyHitters().getHeapArray().length; s++ ) {
-			CMEstimate topK = (CMEstimate)sketch.getHeavyHitters().getHeapArray()[k];
-			if (topK != null) {
-				String[] values = topK.key().replaceAll("[^-0-9,.E]", "").split(",");
+			CMEstimate topK = (CMEstimate)sketch.getHeavyHitters().getHeapArray()[s];
+			if(topK!=null) {
+				String[] values = topK.key().replaceAll("[^-0-9,.E]","").split(",");
 
 				// (y,x)
 				Tuple1<Double> Yi = new Tuple1<>(Double.parseDouble(values[0]));
 				Tuple2<Double, Double> Xi = new Tuple2<>( 1.0, Double.parseDouble(values[1]));
-
 				freq = topK.count();
 				total_freq += freq;
 				sum +=  G_k_theta( k, Xi, model )* freq;
