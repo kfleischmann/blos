@@ -45,9 +45,6 @@ public class LogisticGradientDecent {
 			is = new FileReader(new File(cmd.getOptionValue("input")));
 		}
 
-
-
-		/*
 		buildSketches(is);
 
 		String absolutePath = new File(cmd.getOptionValue("input")).getAbsolutePath();
@@ -69,9 +66,10 @@ public class LogisticGradientDecent {
 			}
 		}
 		bw.close();
-		*/
 
-		//sketch.display();
+
+
+		sketch.display();
 
 	}
 

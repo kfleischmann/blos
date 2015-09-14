@@ -8,8 +8,18 @@ case class HeavyHitters(var maxSize : Int ) extends PriorityQueue[CMEstimate] wi
   initialize( maxSize )
   def lessThan(a :CMEstimate, b : CMEstimate ) = a.count>b.count;
   def heapify( key : String ){
-    val index = this.getHeapArray.indexOf( (x : CMEstimate) => x.key.equals(key) )
-    //System.out.println("key: "+key+", index: "+index)
+    var index = -1;
+
+    for( i <- 1 until getHeapArray.length ){
+      val o = getHeapArray.toList(i);
+      if( o != null ){
+        val e = o.asInstanceOf[CMEstimate];
+        if( e.key.equals(key) ){
+          index = i
+        }
+      }
+    }
+
     if(index>0) {
       this.upHeap(index)
     }
@@ -89,15 +99,12 @@ class CMSketch(  var delta: Double,
     val estimate : Long = get(key)
 
     if(top_k.contains(key)){
-      System.out.println("key exists: "+key)
       val old_pair = top_k.get(key).get
       old_pair.count = estimate
       heavyHitters.heapify(key);
 
     } else  {
       // okay we do not know that element
-
-
       if(top_k.size < k ) {
         // do we have enough space?
 

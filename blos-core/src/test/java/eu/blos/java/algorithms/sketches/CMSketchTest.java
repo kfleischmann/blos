@@ -76,20 +76,16 @@ public class CMSketchTest {
 		sketch.update("test3");
 		sketch.update("test3");
 
+		sketch.update("test3");
+		sketch.update("test3");
+
+
 		HeavyHitters hh = sketch.getHeavyHitters();
 		for( int i=0; i < hh.getHeapArray().length; i++ ){
 			CMEstimate e = (CMEstimate)hh.getHeapArray()[i];
-			System.out.println(e);
+			System.out.println("hh: "+e);
 		}
 
-		HashMap<String, CMEstimate> map = sketch.getTopK();
-		Iterator<String> it = map.keysIterator();
-		while( it.hasNext() ){
-			String key = it.next();
-			CMEstimate e = map.get(key);
-
-
-		}
 
 	}
 }
