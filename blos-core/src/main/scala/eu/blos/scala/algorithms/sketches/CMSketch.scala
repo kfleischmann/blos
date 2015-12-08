@@ -1,17 +1,48 @@
 package eu.blos.scala.algorithms.sketches
 
 import pl.edu.icm.jlargearrays.LongLargeArray
-import eu.blos.java.algorithms.sketches.{Sketch, HashFunction, DigestHashFunction}
-import java.nio.charset.Charset
-import java.security.MessageDigest
-import java.security.NoSuchAlgorithmException
+import eu.blos.java.algorithms.sketches.{PriorityQueue, Sketch, HashFunction, DigestHashFunction}
 import org.apache.commons.lang3.StringUtils
 
-case class CMSketch(  var delta: Double,
-                      var epsilon: Double) extends Sketch with Serializable {
+case class HeavyHitters(var maxSize : Int ) extends PriorityQueue[CMEstimate] with Serializable {
+  val lnOf2 = scala.math.log(2)
+  def log2(x: Double): Double = scala.math.log(x) / lnOf2
+  def searchSpaceBestReplacement = math.pow( 2, log2(maxSize)-1 ).toInt+1
+
+  initialize( maxSize, searchSpaceBestReplacement )
+
+  def lessThan(a :CMEstimate, b : CMEstimate ) = a.count>b.count;
+  def heapify( key : String ){
+    var index = -1;
+    for( i <- 1 until getHeapArray.length ){
+      val o = getHeapArray.toList(i);
+      if( o != null ){
+        val e = o.asInstanceOf[CMEstimate];
+        if( e.key.equals(key) ){
+          index = i
+        }
+      }
+    }
+
+    if(index>0) {
+      this.upHeap(index)
+    }
+  }
+}
+
+case class CMEstimate( var count : Long,
+                       var key : String );
+
+class CMSketch(  var delta: Double,
+                      var epsilon: Double,
+                      var k : Integer )  extends Sketch with Serializable {
 
   def this() = {
-    this(1,1/*,1, None*/ )
+    this(1,1,0/*,1, None*/ )
+  }
+
+  def this(delta: Double, epsilon: Double ) = {
+    this(delta, epsilon,0/*,1, None*/ )
   }
 
   var hashfunctions = create_hashfunctions
@@ -19,6 +50,10 @@ case class CMSketch(  var delta: Double,
 
   def w = Math.ceil(Math.exp(1) /epsilon).toLong
   def d = Math.ceil(Math.log(1 / delta)).toLong
+
+
+  var heavyHitters = new HeavyHitters(k);
+  var top_k = collection.mutable.HashMap[String, CMEstimate ]();
 
   // sketh data
   var count : LongLargeArray = null;
@@ -35,6 +70,8 @@ case class CMSketch(  var delta: Double,
   def array_get(row : Long ,col : Long ) : Long = {
     count.get(row*w+col)
   }
+  def getHeavyHitters = heavyHitters
+  def getTopK = top_k
 
   def totalSumPerHash : Long = {
     var total_sum = 0L
@@ -59,7 +96,41 @@ case class CMSketch(  var delta: Double,
 
   def update( key : String ) {
     update( key, 1L )
+    update_heap( key );
   }
+
+  def update_heap(key : String ){
+    val estimate : Long = get(key)
+
+    if(top_k.contains(key)){
+      val old_pair = top_k.get(key).get
+      old_pair.count = estimate
+      heavyHitters.heapify(key);
+
+    } else  {
+      // okay we do not know that element
+      if(top_k.size < k ) {
+        // do we have enough space?
+
+        val new_pair = new CMEstimate(estimate, key)
+
+        heavyHitters.add( new_pair )
+        top_k +=( (key, new_pair ) )
+
+      } else {
+        // insert new heap is updated automatically
+
+        // only update heap if we benefic from it
+        val new_pair = new CMEstimate(estimate, key)
+        val old_pair = heavyHitters.tryinsert(new_pair)
+
+        top_k -= old_pair.key
+        top_k += ((key, new_pair))
+      }
+
+    }
+  }
+
 
   def +( key : String, increment : Long ) = {
     update(key,increment)

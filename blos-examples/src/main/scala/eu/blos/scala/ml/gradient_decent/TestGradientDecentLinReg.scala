@@ -81,8 +81,8 @@ class TestGradientDecentLinReg( val alpha : Double, val dataset : Array[(Int,Lis
 class TestGradientDecentLinRegWithSketch( override val alpha : Double, override val dataset : Array[(Int,List[Double],Double)] )
   extends TestGradientDecentLinReg(alpha, dataset) {
 
-  val sketch_labels = new CMSketch(0.1 /*factor*/, 0.0001 /*prob*/);
-  val sketch_samples = new CMSketch(0.1 /*factor*/, 0.00001 /*prob*/);
+  val sketch_labels = new CMSketch(0.1 /*factor*/, 0.0001 /*prob*/, 1 );
+  val sketch_samples = new CMSketch(0.1 /*factor*/, 0.00001 /*prob*/, 1);
 
   sketch_labels.alloc
   sketch_samples.alloc
