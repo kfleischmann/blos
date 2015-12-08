@@ -20,7 +20,7 @@ public class LogisticGradientDecent {
 	public static long datasetSize = 0;
 	public static int numIterations = 0;
 	public static double[] consts = new double[2];
-	public static int numHeavyHitters = 5000;
+	public static int numHeavyHitters = 100;
 
 	public static FieldNormalizer<Double> normalizer;
 
@@ -234,11 +234,13 @@ public class LogisticGradientDecent {
 				// (y,x)
 				Tuple1<Double> Yi = new Tuple1<>(Double.parseDouble(values[0]));
 				Tuple2<Double, Double> Xi = new Tuple2<>( 1.0, Double.parseDouble(values[1]));
-				freq = topK.count();
-				total_freq += freq;
-				sum +=  G_k_theta( k, Xi, model )* freq;
 
-				sumy += (Yi.f0 * (double)Xi.getField(k))*freq;
+				//System.out.println("learn on: "+Yi+", "+Xi);
+				freq = topK.count();
+				total_freq += 1;
+				sum +=  G_k_theta( k, Xi, model );
+
+				sumy += (Yi.f0 * (double)Xi.getField(k));
 			}
 		}
 
