@@ -47,7 +47,7 @@ public class Builder {
 		}
 
 		// TODO: replace that.
-		env.setDegreeOfParallelism(1);
+		env.setParallelism(1);
 
 		return env;
 	}

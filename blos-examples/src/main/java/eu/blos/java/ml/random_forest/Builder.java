@@ -17,8 +17,7 @@ public class Builder {
 	public static void main(String[] args ) throws Exception {
 		final ExecutionEnvironment env = ExecutionEnvironment.createRemoteEnvironment("localhost", 6123, "/home/kay/blos/blos.jar");
 		//final ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
-		env.setDegreeOfParallelism(1);
-
+		env.setParallelism(1);
 
 		final BloomFilter bfNodeLeft 	 = new BloomFilter(0.5, (int)(Preprocessor.NUM_SAMPLES* Preprocessor.NUM_SAMPLE_FEATURES * Preprocessor.HISTOGRAM_SPLIT_CANDIDATES*0.5) );
 		final BloomFilter bfNodeRight 	 = new BloomFilter(0.5, (int)(Preprocessor.NUM_SAMPLES* Preprocessor.NUM_SAMPLE_FEATURES * Preprocessor.HISTOGRAM_SPLIT_CANDIDATES*0.5) );
