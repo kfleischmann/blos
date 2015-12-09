@@ -13,7 +13,7 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class LogisticGradientDecent {
+public class SketchedLogisticRegression {
 
 
 	public static CMSketch sketch = new CMSketch();

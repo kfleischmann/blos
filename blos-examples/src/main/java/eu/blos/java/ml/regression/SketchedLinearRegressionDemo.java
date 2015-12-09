@@ -1,4 +1,4 @@
-package eu.blos.java.ml.linear_regression;
+package eu.blos.java.ml.regression;
 
 
 import eu.blos.java.algorithms.sketches.FieldNormalizer;
@@ -16,7 +16,7 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SketchedGradientDecentDemo {
+public class SketchedLinearRegressionDemo {
 	//public static List<Tuple2<Double,Double>> dataset = new ArrayList<Tuple2<Double,Double>>();
 
 	public static List<Tuple1<Double>> labels = new ArrayList<Tuple1<Double>>();

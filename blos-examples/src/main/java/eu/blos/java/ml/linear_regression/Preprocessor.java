@@ -57,7 +57,6 @@ public class Preprocessor {
 			samples = DataSetReader.fromStdin(env);
 		}
 
-
 		// output: (i, k, xk^i * y^i)
 		DataSet<Tuple4<String, Integer,Double, Object>> sketch1 =
 				samples.flatMap(new FlatMapFunction<String, Tuple4<String, Integer, Double, Object>>() {
@@ -111,12 +110,8 @@ public class Preprocessor {
 				});
 		sketch1.writeAsCsv( outputPath+"/sketch_labels", "\n", FIELD_SEPARATOR, FileSystem.WriteMode.OVERWRITE );
 		sketch2.writeAsCsv( outputPath+"/sketch_samples", "\n", FIELD_SEPARATOR, FileSystem.WriteMode.OVERWRITE );
-
 		// writing to std-output make no sense right now.
-
 		// execute program
 		env.execute("Preprocessing");
-
-
 	}
 }

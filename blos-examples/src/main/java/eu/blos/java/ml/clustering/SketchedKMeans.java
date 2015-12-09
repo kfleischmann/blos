@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-public class KMeans {
+public class SketchedKMeans {
 
 	public static CMSketch sketch = new CMSketch();
 	public static long datasetSize = 0;
@@ -139,6 +139,10 @@ public class KMeans {
 		}
 	}
 
+	/**
+	 * updates the positions for all centroids in each iteration by enumerating the whole input-space
+	 * @param centroids
+	 */
 	public static void updateClusterCentroidsWithHeavyHitters( Tuple2<Double,Double>[] centroids ){
 		long freq;
 		String lookup;
@@ -148,7 +152,6 @@ public class KMeans {
 		for( int l=0; l < sums.length; l++) sums[l] = new Tuple2<>(0.0,0.0);
 
 		long[] counts = new long[centroids.length] ;
-
 
 		for( int k=1; k < sketch.getHeavyHitters().getHeapArray().length; k++ ){
 			scala.Tuple2<Long, String > topK = (scala.Tuple2<Long, String >)sketch.getHeavyHitters().getHeapArray()[k];
@@ -160,7 +163,6 @@ public class KMeans {
 
 				if(freq>0) {
 					inputSpace++;
-					//if( cmd.hasOption("verbose")) System.out.println(lookup+" => "+freq );
 
 					int ibestCentroid = -1;
 					double currDistance = Double.MAX_VALUE;
@@ -184,23 +186,22 @@ public class KMeans {
 			}
 		}
 
-
 		// update centroids
 		for (int i = 0; i < centroids.length; i++) {
 			centroids[i].f0 = sums[i].f0 / counts[i];
 			centroids[i].f1 = sums[i].f1 / counts[i];
 			if( cmd.hasOption("verbose")) System.out.println("counted values for centroid "+i+" => "+counts[i]);
-
 		}//for
+
 		if( cmd.hasOption("verbose")) System.out.println("inputSpace size "+inputSpace);
 	}
 
 
 	/**
-	 *
-	 * @return
+	 * updates the positions for all centroids in each iteration by enumerating the whole input-space
+	 * @param centroids
 	 */
-	public static void updateClusterCentroids( Tuple2<Double,Double>[] centroids ){
+	public static void updateClusterCentroidsWithEnumeration( Tuple2<Double,Double>[] centroids ){
 		long freq;
 		String lookup;
 		long inputSpace=0;
