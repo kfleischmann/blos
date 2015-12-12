@@ -1,14 +1,12 @@
-package eu.blos.java.ml.linear_regression;
+package eu.blos.java.ml.distributed.linear_regression;
 
 import eu.blos.java.algorithms.sketches.FieldNormalizer;
-import eu.blos.java.algorithms.sketches.field_normalizer.ZeroOneNormalizer;
 import eu.blos.java.flink.helper.DataSetReader;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.flink.api.common.functions.FlatMapFunction;
 import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.ExecutionEnvironment;
-import org.apache.flink.api.java.tuple.Tuple3;
 import org.apache.flink.api.java.tuple.Tuple4;
 import org.apache.flink.api.java.tuple.Tuple5;
 import org.apache.flink.core.fs.FileSystem;

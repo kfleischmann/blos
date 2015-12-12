@@ -1,8 +1,8 @@
-package eu.blos.java.ml.linear_regression;
+package eu.blos.java.ml.distributed.linear_regression;
 
 import eu.blos.java.algorithms.sketches.FieldNormalizer;
 import eu.blos.java.algorithms.sketches.Sketch;
-import eu.blos.java.algorithms.sketches.field_normalizer.ZeroOneNormalizer;
+import eu.blos.java.algorithms.sketches.fieldnormalizer.ZeroOneNormalizer;
 import eu.blos.java.api.common.LearningFunction;
 import eu.blos.java.flink.helper.DataSetStatistics;
 import eu.blos.java.flink.sketch.api.SketchBuilder;
@@ -90,7 +90,7 @@ public class Learner {
 					new LineareRegressionLearningOperator(sketches)).setParallelism(1);
 
 		// emit result
-		if(eu.blos.java.ml.random_forest.Builder.fileOutput) {
+		if(eu.blos.java.ml.distributed.random_forest.Builder.fileOutput) {
 			trees.writeAsCsv(outputPath, "\n", ",", FileSystem.WriteMode.OVERWRITE);
 		} else {
 			trees.print();

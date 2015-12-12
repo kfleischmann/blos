@@ -1,10 +1,10 @@
 package eu.blos.scala.algorithms.sketches
 
 import pl.edu.icm.jlargearrays.LongLargeArray
-import eu.blos.java.algorithms.sketches.{PriorityQueue, Sketch, HashFunction, DigestHashFunction}
+import eu.blos.java.algorithms.sketches.{HeavyHittersPriorityQueue, Sketch, HashFunction, DigestHashFunction}
 import org.apache.commons.lang3.StringUtils
 
-case class HeavyHitters(var maxSize : Int ) extends PriorityQueue[CMEstimate] with Serializable {
+case class HeavyHitters(var maxSize : Int ) extends HeavyHittersPriorityQueue[CMEstimate] with Serializable {
   val lnOf2 = scala.math.log(2)
   def log2(x: Double): Double = scala.math.log(x) / lnOf2
   def searchSpaceBestReplacement = math.pow( 2, log2(maxSize)-1 ).toInt+1

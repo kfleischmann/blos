@@ -1,9 +1,9 @@
-package eu.blos.java.ml.linear_regression;
+package eu.blos.java.ml.distributed.linear_regression;
 
 
 import eu.blos.java.algorithms.sketches.FieldNormalizer;
 import eu.blos.java.algorithms.sketches.Sketch;
-import eu.blos.java.algorithms.sketches.field_normalizer.ZeroOneNormalizer;
+import eu.blos.java.algorithms.sketches.fieldnormalizer.ZeroOneNormalizer;
 import eu.blos.java.flink.helper.StatisticsBuilder;
 import eu.blos.java.flink.helper.SampleFormat;
 import eu.blos.java.flink.sketch.api.SketchBuilder;

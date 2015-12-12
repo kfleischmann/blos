@@ -2,7 +2,7 @@ package eu.blos.java.ml.clustering;
 
 
 import eu.blos.java.algorithms.sketches.FieldNormalizer;
-import eu.blos.java.algorithms.sketches.field_normalizer.RoundNormalizer;
+import eu.blos.java.algorithms.sketches.fieldnormalizer.RoundNormalizer;
 import eu.blos.scala.algorithms.sketches.CMSketch;
 import org.apache.commons.cli.*;
 import org.apache.flink.api.java.tuple.Tuple1;

@@ -1,4 +1,4 @@
-package eu.blos.java.ml.random_forest;
+package eu.blos.java.ml.distributed.random_forest;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;

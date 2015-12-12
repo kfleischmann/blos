@@ -1,10 +1,9 @@
 package eu.blos.java.ml.regression;
 
 import eu.blos.java.algorithms.sketches.FieldNormalizer;
-import eu.blos.java.algorithms.sketches.field_normalizer.RoundNormalizer;
+import eu.blos.java.algorithms.sketches.fieldnormalizer.RoundNormalizer;
 import eu.blos.scala.algorithms.sketches.CMEstimate;
 import eu.blos.scala.algorithms.sketches.CMSketch;
-import eu.blos.scala.algorithms.sketches.HeavyHitters;
 import org.apache.commons.cli.*;
 import org.apache.flink.api.java.tuple.Tuple1;
 import org.apache.flink.api.java.tuple.Tuple2;

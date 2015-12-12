@@ -18,7 +18,15 @@ package eu.blos.java.algorithms.sketches;
  */
 
 /**
- * A PriorityQueue maintains a partial ordering of its elements such that the
+ *
+ *
+ * MODIFIED BY KAY KAY FLEISCHMANN
+ *
+ * NEW FEATURES (SUPPORTING HEAVY HITTERS)
+ * - set max SIZE
+ * - if all elements are used replace the latest
+ *
+ * A HeavyHittersPriorityQueue maintains a partial ordering of its elements such that the
  * least element can always be found in constant time.  Put()'s and pop()'s
  * require log(size) time.
  * <p/>
@@ -27,7 +35,7 @@ package eu.blos.java.algorithms.sketches;
  *
  * @lucene.internal
  */
-public abstract class PriorityQueue<T> {
+public abstract class HeavyHittersPriorityQueue<T> {
 	private int size;
 	private int maxSize;
 	private int seachMinSpace;
@@ -60,7 +68,7 @@ public abstract class PriorityQueue<T> {
 	 * <p/>
 	 * <pre>
 	 * // extends getSentinelObject() to return a non-null value.
-	 * PriorityQueue<MyObject> pq = new MyQueue<MyObject>(numHits);
+	 * HeavyHittersPriorityQueue<MyObject> pq = new MyQueue<MyObject>(numHits);
 	 * // save the 'top' element, which is guaranteed to not be null.
 	 * MyObject pqTop = pq.top();
 	 * &lt;...&gt;
@@ -127,7 +135,7 @@ public abstract class PriorityQueue<T> {
 	}
 
 	/**
-	 * Adds an Object to a PriorityQueue in log(size) time. If one tries to add
+	 * Adds an Object to a HeavyHittersPriorityQueue in log(size) time. If one tries to add
 	 * more objects than maxSize from initialize an
 	 * {@link ArrayIndexOutOfBoundsException} is thrown.
 	 *
@@ -141,7 +149,7 @@ public abstract class PriorityQueue<T> {
 	}
 
 	/**
-	 * Adds an Object to a PriorityQueue in log(size) time.
+	 * Adds an Object to a HeavyHittersPriorityQueue in log(size) time.
 	 * It returns the object (if any) that was
 	 * dropped off the heap because it was full. This can be
 	 * the given parameter (in case it is smaller than the
@@ -164,6 +172,13 @@ public abstract class PriorityQueue<T> {
 		}
 	}*/
 
+	/**
+	 * try to insert new element. if enough space is available determined by maxSize just add element
+	 * in priority queue
+	 * otherwise try to find best replacement
+	 * @param element
+	 * @return
+	 */
 	public T tryinsert(T element) {
 		if (size < maxSize) {
 			add(element);
@@ -191,7 +206,7 @@ public abstract class PriorityQueue<T> {
 
 
 	/**
-	 * Returns the least element of the PriorityQueue in constant time.
+	 * Returns the least element of the HeavyHittersPriorityQueue in constant time.
 	 */
 	public final T top() {
 		// We don't need to check size here: if maxSize is 0,
@@ -201,7 +216,7 @@ public abstract class PriorityQueue<T> {
 	}
 
 	/**
-	 * Removes and returns the least element of the PriorityQueue in log(size)
+	 * Removes and returns the least element of the HeavyHittersPriorityQueue in log(size)
 	 * time.
 	 */
 	public final T pop() {
@@ -241,14 +256,14 @@ public abstract class PriorityQueue<T> {
 	}
 
 	/**
-	 * Returns the number of elements currently stored in the PriorityQueue.
+	 * Returns the number of elements currently stored in the HeavyHittersPriorityQueue.
 	 */
 	public final int size() {
 		return size;
 	}
 
 	/**
-	 * Removes all entries from the PriorityQueue.
+	 * Removes all entries from the HeavyHittersPriorityQueue.
 	 */
 	public final void clear() {
 		for (int i = 0; i <= size; i++) {

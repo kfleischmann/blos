@@ -1,4 +1,4 @@
-package eu.blos.java.ml.random_forest;
+package eu.blos.java.ml.distributed.random_forest;
 
 import org.apache.flink.api.java.tuple.Tuple2;
 

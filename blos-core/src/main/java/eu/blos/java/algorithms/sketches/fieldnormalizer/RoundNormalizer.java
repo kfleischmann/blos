@@ -1,8 +1,6 @@
-package eu.blos.java.algorithms.sketches.field_normalizer;
+package eu.blos.java.algorithms.sketches.fieldnormalizer;
 
 import eu.blos.java.algorithms.sketches.FieldNormalizer;
-
-import java.util.Random;
 
 public class RoundNormalizer implements FieldNormalizer<Double> {
 
