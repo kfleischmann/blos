@@ -29,12 +29,20 @@ public class SketchedKMeans {
 
 	public static void main(String[] args) throws Exception {
 		HelpFormatter lvFormater = new HelpFormatter();
-		cmd = parseArguments(args);
 
-		if (cmd.hasOption('h') || (cmd.getArgs().length == 0 && cmd.getOptions().length == 0)) {
-			lvFormater.printHelp("Sketched Regression", lvOptions);
+		try{
+			cmd = parseArguments(args);
+		} catch (Exception e){
+			System.out.println(e.getMessage());
+			lvFormater.printHelp( "SketchedKMeans", lvOptions);
 			return;
 		}
+
+		if ( cmd != null && (cmd.hasOption('h') || (cmd.getArgs().length == 0 && cmd.getOptions().length == 0) )) {
+			lvFormater.printHelp( "SketchedKMeans", lvOptions);
+			return;
+		}
+
 		numCentroids = Integer.parseInt ( cmd.getOptionValue("centroids") );
 
 		// make it possible to read from stdin
@@ -336,7 +344,7 @@ public class SketchedKMeans {
 
 		CommandLineParser lvParser = new BasicParser();
 		CommandLine cmd = null;
-		cmd = lvParser.parse(lvOptions, args);
+		cmd = lvParser.parse(lvOptions, args );
 		return cmd;
 	}
 }
