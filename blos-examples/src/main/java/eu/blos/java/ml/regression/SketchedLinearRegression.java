@@ -190,18 +190,9 @@ public class SketchedLinearRegression {
 		int d = theta.length;
 		//Double result=0.0;
 		Double sum = 0.0;
-		// real gradient decent
-		//for( int i=0; i < dataset.size(); i++ ) {
-			//result+= - labels.get(i).f0 * (double)dataset.get(i).getField(k) / (double)dataset.size();
-		//}//for
 		sum += -sketchEstimate( sketch1.get(k) , normalizer )  / (double)datasetSize;
 
 		for( int j=0; j < d; j++ ) {
-			// real gradient decent
-			//for (int i = 0; i < dataset.size(); i++) {
-				//result += theta[j] * (double)dataset.get(i).getField(j) * (double)dataset.get(i).getField(k) / (double)dataset.size();
-			//}//for
-
 			sum += theta[j] * sketchEstimate( sketch2.get(k*2+j) , normalizer ) / (double)datasetSize;
 		}//for
 
