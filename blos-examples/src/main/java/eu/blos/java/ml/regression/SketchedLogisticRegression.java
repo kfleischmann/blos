@@ -52,6 +52,7 @@ public class SketchedLogisticRegression {
 		BufferedWriter bw = new BufferedWriter(fw);
 		bw.write("index,y,x");
 		bw.newLine();
+
 		for( int k=1; k < sketch.getHeavyHitters().getHeapArray().length; k++ ){
 			CMEstimate topK = (CMEstimate)sketch.getHeavyHitters().getHeapArray()[k];
 			if(topK!=null) {

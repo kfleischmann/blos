@@ -3,6 +3,7 @@ package eu.blos.java.ml.clustering;
 
 import eu.blos.java.algorithms.sketches.FieldNormalizer;
 import eu.blos.java.algorithms.sketches.fieldnormalizer.RoundNormalizer;
+import eu.blos.scala.algorithms.sketches.CMEstimate;
 import eu.blos.scala.algorithms.sketches.CMSketch;
 import org.apache.commons.cli.*;
 import org.apache.flink.api.java.tuple.Tuple1;
@@ -19,7 +20,7 @@ public class SketchedKMeans {
 	public static long datasetSize = 0;
 	public static int numIterations = 0;
 	public static int numCentroids = 0;
-	public static int numHeavyHitters = 5000;
+	public static int numHeavyHitters = 100;
 
 	public static FieldNormalizer<Double> normalizer;
 
@@ -34,7 +35,7 @@ public class SketchedKMeans {
 			cmd = parseArguments(args);
 		} catch (Exception e){
 			System.out.println(e.getMessage());
-			lvFormater.printHelp( "SketchedKMeans", lvOptions);
+			lvFormater.printHelp("SketchedKMeans", lvOptions);
 			return;
 		}
 
@@ -44,6 +45,7 @@ public class SketchedKMeans {
 		}
 
 		numCentroids = Integer.parseInt ( cmd.getOptionValue("centroids") );
+		numHeavyHitters = Integer.parseInt( cmd.getOptionValue("heavyhitters") );
 
 		// make it possible to read from stdin
 		InputStreamReader is = null;
@@ -55,12 +57,19 @@ public class SketchedKMeans {
 
 		buildSketches(is);
 
-		for( int k=1; k < sketch.getHeavyHitters().getHeapArray().length; k++ ){
-			scala.Tuple2<Long, String > topK = (scala.Tuple2<Long, String >)sketch.getHeavyHitters().getHeapArray()[k];
-			if(topK!=null) {
-				String[] values = topK._2().replaceAll("[^0-9,.-E]","").split(",");
-				Tuple2<Double,Double> d = new Tuple2<>(Double.parseDouble(values[0]), Double.parseDouble(values[1]) ) ;
-				System.out.println("val ("+k+"): " + d);
+
+
+		if( cmd.hasOption("verbose")) sketch.display();
+
+		if( cmd.hasOption("verbose")) {
+			for (int k = 1; k < sketch.getHeavyHitters().getHeapArray().length; k++) {
+				CMEstimate topK = (CMEstimate) sketch.getHeavyHitters().getHeapArray()[k];
+
+				if (topK != null) {
+					String[] values = topK.key().replaceAll("[^-0-9,.E]","").split(",");
+					Tuple2<Double, Double> d = new Tuple2<>(Double.parseDouble(values[0]), Double.parseDouble(values[1]));
+					System.out.println("val (" + k + "): " + d);
+				}
 			}
 		}
 		learn();
@@ -111,14 +120,41 @@ public class SketchedKMeans {
 
 				Tuple2<Double,Double> Xi = new Tuple2<>(  normalizer.normalize(Double.parseDouble(values[0])), normalizer.normalize(Double.parseDouble(values[1])) );
 
-
 				lookup = Xi.toString() ;
 				sketch.update(lookup);
 
 				lines++;
 			}
+			if( cmd.hasOption("verbose"))   System.out.println("reading input data finished. " + (lines)+" lines ");
 		} catch (IOException e) {
 			e.printStackTrace();
+		}
+	}
+
+
+	public static void initCentroidsRandomly(Tuple2<Double,Double>[] centroids){
+		// init centroids randomly
+		Random r = new java.util.Random();
+		for( int c=0; c < centroids.length; c++ ) {
+			centroids[c] = new Tuple2<>(r.nextDouble() * 2 - 1, r.nextDouble() * 2 - 1);
+			if( cmd.hasOption("verbose")) System.out.println("init centroid "+normalizer.normalize(c)+" => "+centroids[c]);
+		}
+	}
+
+
+	public static void initCentroidsHH(Tuple2<Double,Double>[] centroids) throws Exception {
+		for( int c=0; c < centroids.length; c++ ) {
+			CMEstimate topK = (CMEstimate) sketch.getHeavyHitters().getHeapArray()[c+1];
+			if (topK != null) {
+				String[] values = topK.key().replaceAll("[^-0-9,.E]", "").split(",");
+				Tuple2<Double, Double> value = new Tuple2<>(Double.parseDouble(values[0]), Double.parseDouble(values[1]));
+				centroids[c] = new Tuple2<>( value.f0, value.f1 );
+			} else {
+
+				throw new Exception("invalid HH init for "+c);
+
+			}
+			if( cmd.hasOption("verbose")) System.out.println("init centroid "+normalizer.normalize(c)+" => "+centroids[c]);
 		}
 	}
 
@@ -126,17 +162,15 @@ public class SketchedKMeans {
 	/**
 	 * learn the model
 	 */
-	public static void learn() {
+	public static void learn() throws Exception {
 		Tuple2<Double,Double>[] centroids = new Tuple2[numCentroids];
 
-		// init centroids randomly
-		Random r = new java.util.Random();
-		for( int c=0; c < centroids.length; c++ ){
-			centroids[c] =  new Tuple2<>(r.nextDouble()*2-1, r.nextDouble()*2-1);
-			if( cmd.hasOption("verbose")) System.out.println("init centroid "+c+" => "+centroids[c]);
-		}
+		initCentroidsHH(centroids);
+
+
 		for( int i=0; i < numIterations; i++ ){
 			updateClusterCentroidsWithHeavyHitters(centroids);
+			//updateClusterCentroidsWithEnumeration(centroids);
 
 			if( cmd.hasOption("verbose")) {
 				for (int k = 0; k < centroids.length; k++) {
@@ -157,17 +191,23 @@ public class SketchedKMeans {
 		long inputSpace=0;
 
 		Tuple2<Double,Double>[] sums = new Tuple2[centroids.length];
-		for( int l=0; l < sums.length; l++) sums[l] = new Tuple2<>(0.0,0.0);
+		for( int l=0; l < sums.length; l++) {
+			sums[l] = new Tuple2<>(0.0,0.0);
+		}
 
 		long[] counts = new long[centroids.length] ;
 
+		System.out.println("");
+
 		for( int k=1; k < sketch.getHeavyHitters().getHeapArray().length; k++ ){
-			scala.Tuple2<Long, String > topK = (scala.Tuple2<Long, String >)sketch.getHeavyHitters().getHeapArray()[k];
+			CMEstimate topK = (CMEstimate)sketch.getHeavyHitters().getHeapArray()[k];
+
+
 			if(topK!=null) {
-				String[] values = topK._2().replaceAll("[^0-9,.-E]","").split(",");
+				String[] values = topK.key().replaceAll("[^-0-9,.E]","").split(",");
 				Tuple2<Double,Double> value = new Tuple2<>(Double.parseDouble(values[0]), Double.parseDouble(values[1]) ) ;
 
-				freq = topK._1();
+				freq = topK.count();
 
 				if(freq>0) {
 					inputSpace++;
@@ -185,7 +225,7 @@ public class SketchedKMeans {
 					}//for
 
 					// what is the closest center to that point?
-					counts[ibestCentroid] += freq;
+					counts[ibestCentroid] += 1; //freq;
 
 					sums[ibestCentroid].f0 += value.f0;
 					sums[ibestCentroid].f1 += value.f1;
@@ -196,9 +236,9 @@ public class SketchedKMeans {
 
 		// update centroids
 		for (int i = 0; i < centroids.length; i++) {
-			centroids[i].f0 = sums[i].f0 / counts[i];
-			centroids[i].f1 = sums[i].f1 / counts[i];
-			if( cmd.hasOption("verbose")) System.out.println("counted values for centroid "+i+" => "+counts[i]);
+			centroids[i].f0 = sums[i].f0 / (counts[i] == 0? 1 : counts[i]);
+			centroids[i].f1 = sums[i].f1 / (counts[i] == 0? 1 : counts[i]);
+			if( cmd.hasOption("verbose")) System.out.println("counted values for centroid "+i+" "+centroids[i]+" => "+counts[i]);
 		}//for
 
 		if( cmd.hasOption("verbose")) System.out.println("inputSpace size "+inputSpace);
@@ -229,7 +269,6 @@ public class SketchedKMeans {
 
 				if(freq>0) {
 					inputSpace++;
-					//if( cmd.hasOption("verbose")) System.out.println(lookup+" => "+freq );
 
 					int ibestCentroid = -1;
 					double currDistance = Double.MAX_VALUE;
@@ -339,6 +378,17 @@ public class SketchedKMeans {
 								//.withValueSeparator('=')
 						.hasArg()
 						.create("p")
+		);
+
+
+		lvOptions.addOption(
+				OptionBuilder
+						.withLongOpt("heavyhitters")
+						.withDescription("HeavyHitters")
+						.isRequired()
+								//.withValueSeparator('=')
+						.hasArg()
+						.create("H")
 		);
 
 
