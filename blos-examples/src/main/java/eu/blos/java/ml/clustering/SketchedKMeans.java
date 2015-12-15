@@ -191,17 +191,13 @@ public class SketchedKMeans {
 		long inputSpace=0;
 
 		Tuple2<Double,Double>[] sums = new Tuple2[centroids.length];
-		for( int l=0; l < sums.length; l++) {
-			sums[l] = new Tuple2<>(0.0,0.0);
-		}
+		for( int l=0; l < sums.length; l++) sums[l] = new Tuple2<>(0.0,0.0);
 
 		long[] counts = new long[centroids.length] ;
 
-		System.out.println("");
 
-		for( int k=1; k < sketch.getHeavyHitters().getHeapArray().length; k++ ){
-			CMEstimate topK = (CMEstimate)sketch.getHeavyHitters().getHeapArray()[k];
-
+		for( int k=0; k < sketch.getHeavyHitters().getHeapArray().length-1; k++ ){
+			CMEstimate topK = (CMEstimate)sketch.getHeavyHitters().getHeapArray()[k+1];
 
 			if(topK!=null) {
 				String[] values = topK.key().replaceAll("[^-0-9,.E]","").split(",");
@@ -224,22 +220,25 @@ public class SketchedKMeans {
 						}
 					}//for
 
+
 					// what is the closest center to that point?
-					counts[ibestCentroid] += 1; //freq;
+					counts[ibestCentroid] += freq;
 
-					sums[ibestCentroid].f0 += value.f0;
-					sums[ibestCentroid].f1 += value.f1;
-				}
+					sums[ibestCentroid].f0 += value.f0*freq;
+					sums[ibestCentroid].f1 += value.f1*freq;
+				}//if
+			}//if
+		}//for
 
-			}
-		}
 
 		// update centroids
 		for (int i = 0; i < centroids.length; i++) {
-			centroids[i].f0 = sums[i].f0 / (counts[i] == 0? 1 : counts[i]);
-			centroids[i].f1 = sums[i].f1 / (counts[i] == 0? 1 : counts[i]);
-			if( cmd.hasOption("verbose")) System.out.println("counted values for centroid "+i+" "+centroids[i]+" => "+counts[i]);
+			centroids[i].f0 = sums[i].f0 / counts[i];
+			centroids[i].f1 = sums[i].f1 / counts[i];
+			if( cmd.hasOption("verbose")) System.out.println("counted values for centroid "+i+" => "+counts[i]);
+
 		}//for
+
 
 		if( cmd.hasOption("verbose")) System.out.println("inputSpace size "+inputSpace);
 	}
@@ -285,8 +284,8 @@ public class SketchedKMeans {
 					// what is the closest center to that point?
 					counts[ibestCentroid] += freq;
 
-					sums[ibestCentroid].f0 += value.f0;
-					sums[ibestCentroid].f1 += value.f1;
+					sums[ibestCentroid].f0 += value.f0*freq;
+					sums[ibestCentroid].f1 += value.f1*freq;
 				}
 
 			}//For
