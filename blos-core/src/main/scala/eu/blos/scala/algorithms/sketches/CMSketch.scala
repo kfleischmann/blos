@@ -180,7 +180,7 @@ class CMSketch(  var delta: Double,
     for( row <- 0 until get_hashfunctions.size ){
       for( col <- 0L until w ) {
         result = array_get(row, col)
-        System.out.print( StringUtils.leftPad( ""+result, 3, " " )+" " );
+        System.out.print( StringUtils.leftPad( ""+result, 4, " " )+" " );
       }
       System.out.println();
     }
