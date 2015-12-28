@@ -31,11 +31,14 @@ case class HeavyHitters(var maxSize : Int ) extends HeavyHittersPriorityQueue[CM
 }
 
 case class CMEstimate( var count : Long,
-                       var key : String );
+                       var key : String,
+                       var w_val : Long = 0,
+                       var d_val : Long = 0 );
 
-class CMSketch(  var delta: Double,
-                      var epsilon: Double,
-                      var k : Integer )  extends Sketch with Serializable {
+class CMSketch( var delta: Double,
+                var epsilon: Double,
+                var k : Integer )
+                extends Sketch with Serializable {
 
   def this() = {
     this(1,1,0/*,1, None*/ )
@@ -87,21 +90,23 @@ class CMSketch(  var delta: Double,
     count.set(row * w + col, value )
   }
 
-  def update( key : String, increment : Long ) {
+  def update( key : String, increment : Long ) : Long = {
+    var max_count = Long.MaxValue;
     for( row <- 0 until get_hashfunctions.size ){
       val col = get_hashfunctions.get(row).hash( beforeHash( key ) )
-      array_set(row,col, array_get(row,col)+increment ) //, count(row)(col)
+      val newcount = array_get(row,col)+increment
+      array_set(row,col, newcount ) //, count(row)(col)
+      max_count = Math.min( newcount, max_count )
     }
+    max_count
   }
 
   def update( key : String ) {
-    update( key, 1L )
-    update_heap( key );
+    val max_count = update( key, 1L )
+    update_heap( key, max_count )
   }
 
-  def update_heap(key : String ){
-    val estimate : Long = get(key)
-
+  def update_heap(key : String, estimate : Long ){
     if(top_k.contains(key)){
       val old_pair = top_k.get(key).get
       old_pair.count = estimate
@@ -127,22 +132,20 @@ class CMSketch(  var delta: Double,
         top_k -= old_pair.key
         top_k += ((key, new_pair))
       }
-
     }
   }
-
 
   def +( key : String, increment : Long ) = {
     update(key,increment)
   }
 
   def get( key : String ) : Long = {
-    var result = Long.MaxValue
+    var max_count = Long.MaxValue
     for( row <- 0 until get_hashfunctions.size ){
       val col = get_hashfunctions.get(row).hash(beforeHash(key))
-      result = Math.min( array_get(row, col), result )
+      max_count = Math.min( array_get(row, col), max_count )
     }
-    result
+    max_count
   }
 
   def create_hashfunctions = {
