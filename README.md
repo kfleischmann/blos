@@ -59,6 +59,10 @@ Finally learned model: 0.5998466649164175 0.10477879077668788
 
 Examples
 =============
+sketched linear regression
+
+sketched logistic regression
+
 sketched kmeans
 ```
 $blos examples run eu.blos.java.ml.clustering.SketchedKMeans
