@@ -57,19 +57,24 @@ public class SketchedKMeans {
 
 		buildSketches(is);
 
-		if( cmd.hasOption("verbose") || cmd.hasOption("print-sketch") )
+		if( cmd.hasOption("verbose") || cmd.hasOption("print-sketch") ) {
+			System.out.println("sketch");
 			sketch.display();
+			System.out.println("");
+		}//if
 
 		if( cmd.hasOption("verbose") || cmd.hasOption("print-sketch") ) {
+			System.out.println("heavyhitters");
 			for (int k = 1; k < sketch.getHeavyHitters().getHeapArray().length; k++) {
 				CMEstimate topK = (CMEstimate) sketch.getHeavyHitters().getHeapArray()[k];
-
 				if (topK != null) {
 					String[] values = topK.key().replaceAll("[^-0-9,.E]","").split(",");
 					Tuple2<Double, Double> d = new Tuple2<>(Double.parseDouble(values[0]), Double.parseDouble(values[1]));
-					LOG(""+k+" " + d);
+
+					System.out.println(""+k+" "+d.f0+" "+d.f1);
 				}//if
 			}//for
+			System.out.println("");
 		}//if
 
 		if( !cmd.hasOption("print-sketch")) {
@@ -413,7 +418,7 @@ public class SketchedKMeans {
 		return cmd;
 	}
 
-	private static void LOG(String log ){
-
+	private static void LOG(String msg ){
+		System.out.println("LOG: "+msg);
 	}
 }
