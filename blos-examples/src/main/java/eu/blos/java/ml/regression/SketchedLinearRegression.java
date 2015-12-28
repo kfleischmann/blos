@@ -1,7 +1,7 @@
 package eu.blos.java.ml.regression;
 
 
-import eu.blos.java.algorithms.sketches.FieldNormalizer;
+import eu.blos.java.algorithms.sketches.InputSpaceNormalizer;
 import eu.blos.java.algorithms.sketches.fieldnormalizer.RoundNormalizer;
 import eu.blos.scala.algorithms.sketches.CMSketch;
 import org.apache.commons.cli.*;
@@ -21,7 +21,7 @@ public class SketchedLinearRegression {
 	public static long datasetSize = 0;
 	public static int numIterations = 0;
 
-	public static FieldNormalizer normalizer;
+	public static InputSpaceNormalizer normalizer;
 
 	public static CommandLine cmd;
 
@@ -205,7 +205,7 @@ public class SketchedLinearRegression {
 	 * @param normalizer normalizer to reconstruct the "real" value if encoded. Can be potential the identity function
 	 * @return
 	 */
-	public static Double sketchEstimate(CMSketch sketch, FieldNormalizer normalizer ){
+	public static Double sketchEstimate(CMSketch sketch, InputSpaceNormalizer normalizer ){
 		double sum = 0.0;
 		long counter = sketch.totalSumPerHash();
 		long freq;

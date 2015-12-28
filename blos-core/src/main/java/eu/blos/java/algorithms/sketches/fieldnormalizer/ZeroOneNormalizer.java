@@ -1,10 +1,10 @@
 package eu.blos.java.algorithms.sketches.fieldnormalizer;
 
-import eu.blos.java.algorithms.sketches.FieldNormalizer;
+import eu.blos.java.algorithms.sketches.InputSpaceNormalizer;
 
 import java.util.Random;
 
-public class ZeroOneNormalizer implements FieldNormalizer<Integer> {
+public class ZeroOneNormalizer implements InputSpaceNormalizer<Integer> {
 
 	private int pow;
 	private Random r = new java.util.Random();

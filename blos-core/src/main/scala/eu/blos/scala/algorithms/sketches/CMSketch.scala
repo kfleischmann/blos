@@ -31,9 +31,7 @@ case class HeavyHitters(var maxSize : Int ) extends HeavyHittersPriorityQueue[CM
 }
 
 case class CMEstimate( var count : Long,
-                       var key : String,
-                       var w_val : Long = 0,
-                       var d_val : Long = 0 );
+                       var key : String )
 
 class CMSketch( var delta: Double,
                 var epsilon: Double,
@@ -53,7 +51,6 @@ class CMSketch( var delta: Double,
 
   def w = Math.ceil(Math.exp(1) /epsilon).toLong
   def d = Math.ceil(Math.log(1 / delta)).toLong
-
 
   var heavyHitters = new HeavyHitters(k);
   var top_k = collection.mutable.HashMap[String, CMEstimate ]();
@@ -111,24 +108,19 @@ class CMSketch( var delta: Double,
       val old_pair = top_k.get(key).get
       old_pair.count = estimate
       heavyHitters.heapify(key);
-
     } else  {
-      // okay we do not know that element
+      // enough space available?
+      // heap insert
       if(top_k.size < k ) {
-        // do we have enough space?
-
         val new_pair = new CMEstimate(estimate, key)
-
         heavyHitters.add( new_pair )
         top_k +=( (key, new_pair ) )
 
       } else {
-        // insert new heap is updated automatically
-
-        // only update heap if we benefic from it
+        // not enough space available?
+        // find best one to replace
         val new_pair = new CMEstimate(estimate, key)
         val old_pair = heavyHitters.tryinsert(new_pair)
-
         top_k -= old_pair.key
         top_k += ((key, new_pair))
       }

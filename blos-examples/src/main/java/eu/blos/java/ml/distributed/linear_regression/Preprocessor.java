@@ -1,6 +1,6 @@
 package eu.blos.java.ml.distributed.linear_regression;
 
-import eu.blos.java.algorithms.sketches.FieldNormalizer;
+import eu.blos.java.algorithms.sketches.InputSpaceNormalizer;
 import eu.blos.java.flink.helper.DataSetReader;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -38,7 +38,7 @@ public class Preprocessor {
 	 * @param args
 	 * @throws Exception
 	 */
-	public static void transform(final ExecutionEnvironment env, String inputPath, String outputPath, final FieldNormalizer normalizer, String ... args ) throws Exception {
+	public static void transform(final ExecutionEnvironment env, String inputPath, String outputPath, final InputSpaceNormalizer normalizer, String ... args ) throws Exception {
 		LOG.info("start preprocessing phase");
 
 		if(!outputPath.equals("stdout")) {

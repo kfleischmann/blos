@@ -1,6 +1,6 @@
 package eu.blos.java.ml.regression;
 
-import eu.blos.java.algorithms.sketches.FieldNormalizer;
+import eu.blos.java.algorithms.sketches.InputSpaceNormalizer;
 import eu.blos.java.algorithms.sketches.fieldnormalizer.RoundNormalizer;
 import eu.blos.scala.algorithms.sketches.CMEstimate;
 import eu.blos.scala.algorithms.sketches.CMSketch;
@@ -21,7 +21,7 @@ public class SketchedLogisticRegression {
 	public static double[] consts = new double[2];
 	public static int numHeavyHitters = 100;
 
-	public static FieldNormalizer<Double> normalizer;
+	public static InputSpaceNormalizer<Double> normalizer;
 
 	public static CommandLine cmd;
 	public static List<Tuple2<Double,Double>> dataset = new ArrayList<>();

@@ -1,7 +1,5 @@
 package eu.blos.java.ml.clustering;
 
-
-import eu.blos.java.algorithms.sketches.FieldNormalizer;
 import eu.blos.java.algorithms.sketches.fieldnormalizer.RoundNormalizer;
 import eu.blos.scala.algorithms.sketches.CMEstimate;
 import eu.blos.scala.algorithms.sketches.CMSketch;
@@ -15,18 +13,16 @@ import java.util.List;
 import java.util.Random;
 
 public class SketchedKMeans {
-
 	public static CMSketch sketch = new CMSketch();
 	public static long datasetSize = 0;
 	public static int numIterations = 0;
 	public static int numCentroids = 0;
 	public static int numHeavyHitters = 100;
-
-	public static FieldNormalizer<Double> normalizer;
-
+	public static RoundNormalizer normalizer;
 	public static CommandLine cmd;
 	public static List<Tuple2<Double,Double>> dataset = new ArrayList<>();
 	public static List<Tuple1<Double>> labels = new ArrayList<>();
+	public static Tuple2<Double,Double>[] centroids;
 
 	public static void main(String[] args) throws Exception {
 		HelpFormatter lvFormater = new HelpFormatter();
@@ -46,6 +42,7 @@ public class SketchedKMeans {
 
 		numCentroids = Integer.parseInt ( cmd.getOptionValue("centroids") );
 		numHeavyHitters = Integer.parseInt( cmd.getOptionValue("heavyhitters") );
+		centroids = new Tuple2[numCentroids];
 
 		// make it possible to read from stdin
 		InputStreamReader is = null;
@@ -78,10 +75,9 @@ public class SketchedKMeans {
 		}//if
 
 		if( !cmd.hasOption("print-sketch")) {
-			learn();
+			learn(centroids);
 		}//if
 	}
-
 
 	/**
 	 * read 2d points from input source
@@ -138,15 +134,24 @@ public class SketchedKMeans {
 		}
 	}
 
+	/**
+	 * this procedure initializes the centroids randomly within the projected inout-space
+	 * @param centroids
+	 */
 	public static void initCentroidsRandomly(Tuple2<Double,Double>[] centroids){
-		// init centroids randomly
 		Random r = new java.util.Random();
 		for( int c=0; c < centroids.length; c++ ) {
-			centroids[c] = new Tuple2<>(r.nextDouble() * 2 - 1, r.nextDouble() * 2 - 1);
+			// use zero - one normalizer and put the
+			centroids[c] = new Tuple2<>( normalizer.getRandom(), normalizer.getRandom() );
 			if( cmd.hasOption("verbose")) LOG("init centroid "+normalizer.normalize(c)+" => "+centroids[c]);
 		}
 	}
 
+	/**
+	 * this procedure initializes the centroids by the top heavy hitters found by reading the sketch
+	 * @param centroids
+	 * @throws Exception
+	 */
 	public static void initCentroidsHH(Tuple2<Double,Double>[] centroids) throws Exception {
 		for( int c=0; c < centroids.length; c++ ) {
 			CMEstimate topK = (CMEstimate) sketch.getHeavyHitters().getHeapArray()[c+1];
@@ -166,10 +171,13 @@ public class SketchedKMeans {
 	/**
 	 * learn the model
 	 */
-	public static void learn() throws Exception {
-		Tuple2<Double,Double>[] centroids = new Tuple2[numCentroids];
+	public static void learn(Tuple2<Double,Double>[] centroids) throws Exception {
 
-		initCentroidsHH(centroids);
+		if( cmd.hasOption("init-randomly")){
+			initCentroidsRandomly(centroids);
+		} else {
+			initCentroidsHH(centroids);
+		}
 
 		for( int i=0; i < numIterations; i++ ){
 			if( cmd.hasOption("enumeration") ){
@@ -411,6 +419,14 @@ public class SketchedKMeans {
 						.withDescription("only print sketch without running learning")
 						.create("P")
 		);
+
+		lvOptions.addOption(
+				OptionBuilder
+						.withLongOpt("init-randomly")
+						.withDescription("only print sketch without running learning")
+						.create("r")
+		);
+
 
 		CommandLineParser lvParser = new BasicParser();
 		CommandLine cmd = null;

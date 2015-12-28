@@ -1,6 +1,6 @@
 package eu.blos.java.ml.distributed.linear_regression;
 
-import eu.blos.java.algorithms.sketches.FieldNormalizer;
+import eu.blos.java.algorithms.sketches.InputSpaceNormalizer;
 import eu.blos.java.algorithms.sketches.Sketch;
 import eu.blos.java.algorithms.sketches.fieldnormalizer.ZeroOneNormalizer;
 import eu.blos.java.api.common.LearningFunction;
@@ -212,7 +212,7 @@ public class Learner {
 
 			System.out.println(row_sum);
 
-			FieldNormalizer normalizer = new ZeroOneNormalizer(20);
+			InputSpaceNormalizer normalizer = new ZeroOneNormalizer(20);
 
 			Double step_sum = 0.0;
 			long step_totoal_sum = 0L;

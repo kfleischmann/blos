@@ -1,8 +1,8 @@
 package eu.blos.java.algorithms.sketches.fieldnormalizer;
 
-import eu.blos.java.algorithms.sketches.FieldNormalizer;
+import eu.blos.java.algorithms.sketches.InputSpaceNormalizer;
 
-public class RoundNormalizer implements FieldNormalizer<Double> {
+public class RoundNormalizer implements InputSpaceNormalizer<Double> {
 
 	private static Double round (double value, int precision) {
 		int scale = (int) Math.pow(10, precision);

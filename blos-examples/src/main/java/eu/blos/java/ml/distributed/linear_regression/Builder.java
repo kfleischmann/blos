@@ -1,7 +1,7 @@
 package eu.blos.java.ml.distributed.linear_regression;
 
 
-import eu.blos.java.algorithms.sketches.FieldNormalizer;
+import eu.blos.java.algorithms.sketches.InputSpaceNormalizer;
 import eu.blos.java.algorithms.sketches.Sketch;
 import eu.blos.java.algorithms.sketches.fieldnormalizer.ZeroOneNormalizer;
 import eu.blos.java.flink.helper.StatisticsBuilder;
@@ -116,7 +116,7 @@ public class Builder {
 		Learner.statistics = StatisticsBuilder.read(env, getStatisticsPath(outputPath) );
 
 
-		FieldNormalizer normalizer = new ZeroOneNormalizer(20);
+		InputSpaceNormalizer normalizer = new ZeroOneNormalizer(20);
 
 		// build sketches which are distributed
 		Sketch[] sketches = {sketch_labels, sketch_samples };
@@ -189,7 +189,7 @@ public class Builder {
 	 * @param input
 	 * @param preprocessPath
 	 */
-	public static void preprocess(final ExecutionEnvironment env, String input, String preprocessPath, FieldNormalizer normalizer ) throws Exception {
+	public static void preprocess(final ExecutionEnvironment env, String input, String preprocessPath, InputSpaceNormalizer normalizer ) throws Exception {
 		Preprocessor.transform(env, input, preprocessPath, normalizer);
 	}
 
