@@ -1,3 +1,4 @@
+
 Install & Build
 =============
 Environement variables needed
@@ -8,17 +9,16 @@ FLINK_PATH=/direct-me-to-flinkpath
 
 For scripts framework
 ```
+git clone blos-repo
+cd blos/
 sudo apt-get install jshon
 mvn clean package
 ```
 
-This library is built on flink.apache.org
+This library is built on  flink.apache.org. 
 
-
-Scripts
+How to generate and visualize datasets
 =============
-
-
 Samples 10.000 datapoints from a polynomial function within the range from -1 to 1 and visualize the output.
 OutputFormat: CSV
 Function: f(x) = 1*x^1 + 2*X^2 + ... {factor}:{exp} (more are possible)
@@ -26,21 +26,11 @@ Function: f(x) = 1*x^1 + 2*X^2 + ... {factor}:{exp} (more are possible)
  blos generators poly --sigma 0.01 -f 1:1,2:2 --range="-1:1" --count 10000 | blos visualize scatter2d
  blos generators poly --sigma 0.05 -f "100:0,0.5:1" --range="-1:1" --count 10000 | blos visualize scatter2d
  ```
-
 Read data do regression and visualize data and show result. Please keep in your mind, that `regression linear` only allows the regression on linear m*x+c datasets. More regression may be supported in the future.
 
 ```
 cat data | blos regression linear | blos visualize curve2d
 cat data | blos regression poly | blos visualize curve2d
-```
-
-Merge datasets
-```
-{
-blos stream add dataset1; blos generators poly --sigma 0.01 -f 1:1,1:2 --range="-1:1" --count 10000 ;
-blos stream add dataset2; blos generators poly --sigma 0.01 -f 1:1,1:2 --range="-1:1" --count 10000 ;
-}
-| blos visualize scatter2d-stream
 ```
 
 Linear-regression with visualization
@@ -69,16 +59,36 @@ Finally learned model: 0.5998466649164175 0.10477879077668788
 
 Examples
 =============
-linear regression
-```
-blos run-examples linear-regression-on-sketches --preprocessor --input-path /dataset --output-path hdfs://blos/linreg1
-blos run-examples linear-regression-on-sketches --sketcher --input-path hdfs:///blos/dataset --output-path hdfs:///blos/linreg1
-blos run-examples linear-regression-on-sketches --learner --input-path hdfs:///blos/dataset --output-path hdfs:///blos/linreg1 
-cat lin-reg-model | blos visualize curve2d
+sketched linear regression
 
-# Run preprocessor sketcher and learner
-blos run-examples linear-regression-on-sketches  -p -s -l --input-path hdfs:///blos/dataset --output-path hdfs://blos/linreg1
-```
+sketched logistic regression
 
-Generic Usage
-=============
+sketched kmeans
+```
+$blos examples run eu.blos.java.ml.clustering.SketchedKMeans
+LOG: Missing required options: i, k, s, n, p, H
+usage: SketchedKMeans
+ -a,--all-results                 show all model results
+ -e,--enumeration <arg>           enumerate input space for reconstruction
+ -H,--heavyhitters <arg>          HeavyHitters
+ -h,--help                        shows valid arguments and options
+ -i,--input                       set the input dataset to process
+ -k,--centroids <arg>             set the number of centroids
+ -n,--iterations <arg>            number of iterations
+ -P,--print-sketch                only print sketch without running
+                                  learning
+ -p,--normalization-space <arg>   normalization-space
+ -r,--init-randomly               only print sketch without running
+                                  learning
+ -s,--sketch <arg>                sketch size
+ -v,--verbose                     verbose
+
+
+$blos examples run eu.blos.java.ml.clustering.SketchedKMean \
+-i <datasets>/kmeans/dataset5_20k/points \
+-k 5 \
+-n 100 \
+-p 4  \
+-s 0.01:0.01 \
+-H 100 \
+```
