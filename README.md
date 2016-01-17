@@ -1,19 +1,20 @@
 
 Install & Build
 =============
-Environement variables needed
-```
-BLOS_PATH=/direct-me-to-blospath
-FLINK_PATH=/direct-me-to-flinkpath
-```
 
-For scripts framework
 ```
-git clone blos-repo
+git clone
 cd blos/
 sudo apt-get install jshon
 mvn clean package
 ```
+
+Environement variables needed
+```
+BLOS_PATH=/path/to/blos
+FLINK_PATH=/path/to/flink
+```
+
 
 This library is built on  flink.apache.org. 
 
