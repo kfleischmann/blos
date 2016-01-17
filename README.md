@@ -45,25 +45,25 @@ cat dataset9|blos math gd
 blos generators poly --sigma 0.01 -f 1:0,2:1 --range="-1:1" --count 4000| blos math gd
 ```
 
-Linear-Regression with Gradient-Decent the skeched way
+Linear-Regression with Gradient-Decent the sketches
 ```
-cat dataset9 | blos run-examples sketched-gradient-decent-demo -i stdin -n 10 -s 1 -s1 0.1:0.2 -s2 0.1:0.2 -s3 0.1:0.2 -s4 0.1:0.2 -s5 0.1:0.2 -s6 0.1:0.2 -v -d
+cat dataset9 | blos run-examples SketchedLinearRegression -i stdin -n 10 -s 1 -s1 0.1:0.2 -s2 0.1:0.2 -s3 0.1:0.2 -s4 0.1:0.2 -s5 0.1:0.2 -s6 0.1:0.2 -v -d
 ```
 
 Linear-Regression for real-model: y=0.6+0.1*x with 1Mio datapoints. Totoal Sketchsize 3mb
 ```
-blos generators poly --sigma 0 -f 0.6:0,0.1:1 --range="-1:1" --count 1000000 -H no | blos run-examples sketched-gradient-decent-demo -i stdin -n 50 -s 4 -s1 0.1:0.0001 -s2 0.1:0.0001 -s3 0.1:0.0001 -s4 0.1:0.0001 -s5 0.1:0.0001 -s6 0.1:0.0001 -v -d
+blos generators poly --sigma 0 -f 0.6:0,0.1:1 --range="-1:1" --count 1000000 -H no | blos run-examples SketchedLinearRegression -i stdin -n 50 -s 4 -s1 0.1:0.0001 -s2 0.1:0.0001 -s3 0.1:0.0001 -s4 0.1:0.0001 -s5 0.1:0.0001 -s6 0.1:0.0001 -v -d
 ```
 Finally learned model: 0.5998466649164175 0.10477879077668788
 
 
 Examples
 =============
-sketched linear regression
+SketchedLinearRegression
 
-sketched logistic regression
+SketchedLogisticRegression
 
-sketched kmeans
+SketchedKMeans
 ```
 $blos examples run eu.blos.java.ml.clustering.SketchedKMeans
 LOG: Missing required options: i, k, s, n, p, H
