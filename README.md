@@ -18,6 +18,10 @@ FLINK_PATH=/path/to/flink
 
 This library is built on  flink.apache.org. 
 
+Used libraries
+
+http://matplotlib.org/
+
 How to generate and visualize datasets
 =============
 Samples 10.000 datapoints from a polynomial function within the range from -1 to 1 and visualize the output.
