@@ -302,7 +302,7 @@ public class SketchedKMeans {
 
 					sums[ibestCentroid].f0 += value.f0*freq;
 					sums[ibestCentroid].f1 += value.f1*freq;
-				}
+				}//if
 
 			}//for
 		}//for
@@ -409,7 +409,6 @@ public class SketchedKMeans {
 						.withLongOpt("enumeration")
 						.withDescription("enumerate input space for reconstruction")
 								//.withValueSeparator('=')
-						.hasArg()
 						.create("e")
 		);
 
