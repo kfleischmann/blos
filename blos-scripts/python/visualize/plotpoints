@@ -51,8 +51,12 @@ if sys.argv[1] == 'points':
 		# plot data
 		plt.clf()
 		plt.scatter(xs, ys, s=25, c="#999999", edgecolors='None', alpha=1.0)
-		plt.ylim([minY,maxY])
-		plt.xlim([minX,maxX])
+
+                #plt.ylim([minY,maxY])
+                #plt.ylim([-1,1])
+                #plt.xlim([minX,maxX])
+                #plt.xlim([-1,1])
+
 
 elif sys.argv[1] == 'result':
 
@@ -71,9 +75,11 @@ elif sys.argv[1] == 'result':
 
 		# plot data
 		plt.clf()
-		plt.scatter(xs, ys, s=25, c=cs, edgecolors='None', alpha=1.0)
-		plt.ylim([minY,maxY])
-		plt.xlim([minX,maxX])
+		plt.scatter(xs, ys, s=25, c=cs, edgecolors='None', alpha=1.0, )
+		#plt.ylim([minY,maxY])
+		#plt.ylim([-1,1])
+		#plt.xlim([minX,maxX])
+		#plt.xlim([-1,1])
 
 
 plt.savefig(outFile, dpi=600)

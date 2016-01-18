@@ -1,0 +1,56 @@
+#!/bin/bash
+
+DATA_DIR=/tmp/blos/kmeans/exp1
+
+# cleanup
+rm -r ${DATA_DIR}
+
+# prepare folders
+mkdir -p ${DATA_DIR}/dataset
+mkdir -p ${DATA_DIR}/sketch 
+mkdir -p ${DATA_DIR}/flink
+
+# generate sample dataset
+NUM_SAMPLES=5000
+NUM_CENTROIDS=5
+STDDEV=0.03
+
+
+# generate data
+# OUTPUT: points and its centers
+blos examples run eu.blos.java.ml.clustering.KMeansDatasetGenerator \
+	-points ${NUM_SAMPLES} \
+	-k ${NUM_CENTROIDS} \
+	-stddev ${STDDEV} \
+	-range 1.0 \
+	-output ${DATA_DIR}/dataset \
+	-resolution 4
+
+# visualize the dataset
+# OUTPUT: dataset-plot.pdf
+blos visualize plotpoints points ${DATA_DIR}/dataset/points ${DATA_DIR}/dataset/points
+
+#find closest center for each point for visualization
+cat ${DATA_DIR}/dataset/points | blos visualize apply-centroids ${DATA_DIR}/dataset/centers >> ${DATA_DIR}/dataset/result
+
+blos visualize plotpoints result ${DATA_DIR}/dataset/result ${DATA_DIR}/dataset/result
+
+
+# run kmeans from apache flink
+
+# generate random sampled
+blos examples run eu.blos.java.ml.clustering.KMeansDatasetGenerator \
+	-output-centroids ${DATA_DIR}/flink \
+	-k ${NUM_CENTROIDS} \
+	 -range 1.0 \
+        -resolution 4
+	
+
+blos examples run org.apache.flink.examples.java.clustering.KMeans \
+	${DATA_DIR}/dataset/points \
+	${DATA_DIR}/flink/centers \
+	${DATA_DIR}/flink/out/ \
+	100
+
+cat ${DATA_DIR}/flink/out/* >> ${DATA_DIR}/flink/result
+blos visualize plotpoints result ${DATA_DIR}/flink/result ${DATA_DIR}/flink/result

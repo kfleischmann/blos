@@ -13,7 +13,7 @@ centroids = []
 with open(in_centroids, 'rb') as file:
 	for line in file:
 		f=line.split(" ")
-		centroids.append( ( float(f[0]), float(f[1]) ) )
+		centroids.append( ( int(f[0]), float(f[1]), float(f[2]) ) )
 for line in sys.stdin:
 	fields=line.split(" ")
 	x=float(fields[0])
@@ -22,9 +22,9 @@ for line in sys.stdin:
 	dmin=float("inf")
 		
 	for i,e in enumerate(centroids):
-		d=math.sqrt( (x-e[0])*(x-e[0]) + (y-e[1])*(y-e[1]) )
+		d=math.sqrt( (x-e[1])*(x-e[1]) + (y-e[2])*(y-e[2]) )
 		if d < dmin:
-			c=i
+			c=e[0]
 			dmin=d
 
 		
