@@ -89,11 +89,11 @@ usage: SketchedKMeans
  -v,--verbose                     verbose
 
 
-$blos examples run eu.blos.java.ml.clustering.SketchedKMean \
+$blos examples run eu.blos.java.ml.clustering.SketchedKMeans \
 -i <datasets>/kmeans/dataset5_20k/points \
 -k 5 \
 -n 100 \
 -p 4  \
 -s 0.01:0.01 \
--H 100 \
+-H 100 
 ```
