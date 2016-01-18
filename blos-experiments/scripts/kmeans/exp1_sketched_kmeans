@@ -11,9 +11,11 @@ mkdir -p ${DATA_DIR}/sketch
 mkdir -p ${DATA_DIR}/flink
 
 # generate sample dataset
-NUM_SAMPLES=5000
-NUM_CENTROIDS=5
-STDDEV=0.03
+NUM_SAMPLES=50000
+NUM_CENTROIDS=50
+STDDEV=0.3
+RESOLUTION=5
+RANGE=1.0
 
 
 # generate data
@@ -22,9 +24,9 @@ blos examples run eu.blos.java.ml.clustering.KMeansDatasetGenerator \
 	-points ${NUM_SAMPLES} \
 	-k ${NUM_CENTROIDS} \
 	-stddev ${STDDEV} \
-	-range 1.0 \
+	-range ${RANGE} \
 	-output ${DATA_DIR}/dataset \
-	-resolution 4
+	-resolution ${RESOLUTION}
 
 # visualize the dataset
 # OUTPUT: dataset-plot.pdf
@@ -32,7 +34,6 @@ blos visualize plotpoints points ${DATA_DIR}/dataset/points ${DATA_DIR}/dataset/
 
 #find closest center for each point for visualization
 cat ${DATA_DIR}/dataset/points | blos visualize apply-centroids ${DATA_DIR}/dataset/centers >> ${DATA_DIR}/dataset/result
-
 blos visualize plotpoints result ${DATA_DIR}/dataset/result ${DATA_DIR}/dataset/result
 
 
@@ -42,8 +43,8 @@ blos visualize plotpoints result ${DATA_DIR}/dataset/result ${DATA_DIR}/dataset/
 blos examples run eu.blos.java.ml.clustering.KMeansDatasetGenerator \
 	-output-centroids ${DATA_DIR}/flink \
 	-k ${NUM_CENTROIDS} \
-	 -range 1.0 \
-        -resolution 4
+	 -range ${RANGE} \
+        -resolution ${RESOLUTION}
 	
 
 blos examples run org.apache.flink.examples.java.clustering.KMeans \
@@ -54,3 +55,20 @@ blos examples run org.apache.flink.examples.java.clustering.KMeans \
 
 cat ${DATA_DIR}/flink/out/* >> ${DATA_DIR}/flink/result
 blos visualize plotpoints result ${DATA_DIR}/flink/result ${DATA_DIR}/flink/result
+
+
+# run skeched kmeans
+blos examples run eu.blos.java.ml.clustering.SketchedKMeans \
+	-i ${DATA_DIR}/dataset/points \
+	-o ${DATA_DIR}/sketch \
+	-k ${NUM_CENTROIDS} \
+	-n 100 \
+	-p 5  \
+	-s 0.01:0.01 \
+	-H 100 \
+	-print-sketch
+# plot results
+cat ${DATA_DIR}/dataset/points | blos visualize apply-centroids ${DATA_DIR}/sketch/centers >> ${DATA_DIR}/sketch/result
+blos visualize plotpoints result ${DATA_DIR}/sketch/result ${DATA_DIR}/sketch/result
+
+

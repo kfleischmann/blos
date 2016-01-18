@@ -230,7 +230,7 @@ public class Learner {
 			System.out.println( step_sum );
 
 
-			sketch_samples.display();
+			sketch_samples.display(System.out);
 
 
 			step_sum = 0.0;

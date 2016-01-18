@@ -54,10 +54,20 @@ public class SketchedKMeans {
 
 		buildSketches(is);
 
-		if( cmd.hasOption("verbose") || cmd.hasOption("print-sketch") ) {
-			System.out.println("sketch");
-			sketch.display();
-			System.out.println("");
+		if( cmd.hasOption("verbose")){
+			sketch.display(System.out);
+		}
+
+		if( cmd.hasOption("print-sketch") ) {
+			// write output
+			if( cmd.hasOption("output")) {
+				sketch.display(System.out);
+			} else {
+				PrintStream out = new PrintStream(new FileOutputStream( cmd.getOptionValue("output")+"/sketch"));
+				sketch.display(out);
+				out.close();
+			}
+
 		}//if
 
 		if( cmd.hasOption("verbose") || cmd.hasOption("print-sketch") ) {
@@ -74,9 +84,22 @@ public class SketchedKMeans {
 			System.out.println("");
 		}//if
 
-		if( !cmd.hasOption("print-sketch")) {
-			learn(centroids);
-		}//if
+		learn(centroids);
+
+		// write output
+		if( cmd.hasOption("output")) {
+			PrintStream out = new PrintStream(new FileOutputStream( cmd.getOptionValue("output")+"/centers"));
+			for (int k = 0; k < centroids.length; k++) {
+				out.println( k+" "+centroids[k].f0 + " " + centroids[k].f1);
+			}//for
+			out.close();
+
+		} else {
+			for (int k = 0; k < centroids.length; k++) {
+				System.out.println(k+" "+ centroids[k].f0 + " " + centroids[k].f1);
+			}//for
+		}
+
 	}
 
 	/**
@@ -193,11 +216,6 @@ public class SketchedKMeans {
 			}//if
 		}//for
 
-
-		//output final learned model / centroids
-		for (int k = 0; k < centroids.length; k++) {
-			System.out.println(centroids[k].f0+" "+centroids[k].f1 );
-		}//for
 	}
 
 	/**
@@ -335,6 +353,16 @@ public class SketchedKMeans {
 								//.withValueSeparator('=')
 						.hasArg()
 						.create("i")
+		);
+
+		lvOptions.addOption(
+				OptionBuilder
+						.withLongOpt("output")
+						.withDescription("set the output path")
+						.isRequired()
+								//.withValueSeparator('=')
+						.hasArg()
+						.create("o")
 		);
 
 		lvOptions.addOption(

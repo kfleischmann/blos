@@ -3,6 +3,7 @@ package eu.blos.scala.algorithms.sketches
 import pl.edu.icm.jlargearrays.LongLargeArray
 import eu.blos.java.algorithms.sketches.{HeavyHittersPriorityQueue, Sketch, HashFunction, DigestHashFunction}
 import org.apache.commons.lang3.StringUtils
+import java.io.PrintStream
 
 case class HeavyHitters(var maxSize : Int ) extends HeavyHittersPriorityQueue[CMEstimate] with Serializable {
   val lnOf2 = scala.math.log(2)
@@ -170,14 +171,14 @@ class CMSketch( var delta: Double,
     System.out.println(toString)
   }
 
-  def display {
+  def display( out : PrintStream ) {
     var result = Long.MaxValue
     for( row <- 0 until get_hashfunctions.size ){
       for( col <- 0L until w ) {
         result = array_get(row, col)
-        System.out.print( StringUtils.leftPad( ""+result, 4, " " )+" " );
+        out.print( StringUtils.leftPad( ""+result, 4, " " )+" " );
       }
-      System.out.println();
+      out.println();
     }
   }
 }

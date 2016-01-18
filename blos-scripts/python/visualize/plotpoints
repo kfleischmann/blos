@@ -83,6 +83,7 @@ elif sys.argv[1] == 'result':
 
 
 plt.savefig(outFile, dpi=600)
+#plt.savefig(  os.path.join(".", outFile,".png"), dpi=600 )
 print "\nPlotted file: %s" % outFile
 
 sys.exit(0)

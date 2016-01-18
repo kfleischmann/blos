@@ -70,7 +70,7 @@ public class SketchedLogisticRegression {
 
 
 
-		sketch.display();
+		sketch.display(System.out);
 
 		learn();
 	}

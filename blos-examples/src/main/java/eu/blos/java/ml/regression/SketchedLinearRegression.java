@@ -127,14 +127,14 @@ public class SketchedLinearRegression {
 
 		if( cmd.hasOption("display-sketches")) {
 			for( CMSketch s : sketch1 ){
-				s.display();
+				s.display(System.out);
 				System.out.println();
 			}//for
 		}//if
 
 		if( cmd.hasOption("display-sketches")) {
 			for (CMSketch s : sketch2) {
-				s.display();
+				s.display(System.out);
 				System.out.println();
 			}//for
 		}//if

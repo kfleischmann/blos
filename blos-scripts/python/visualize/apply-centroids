@@ -5,7 +5,7 @@ import csv
 import os
 import fileinput
 import math
-
+import numpy as np
 
 in_centroids = sys.argv[1]
 centroids = []
