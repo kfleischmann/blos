@@ -58,7 +58,7 @@ if sys.argv[1] == 'points':
                 #plt.xlim([-1,1])
 
 
-elif sys.argv[1] == 'result':
+uplif sys.argv[1] == 'result':
 
 	with open(inFile, 'rb') as file:
 		for line in file:

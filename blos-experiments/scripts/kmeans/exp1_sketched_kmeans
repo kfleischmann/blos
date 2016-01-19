@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DATA_DIR=/tmp/blos/kmeans/exp1
+DATA_DIR=/tmp/blos/kmeans/exp1/
 
 # cleanup
 rm -r ${DATA_DIR}
@@ -11,12 +11,25 @@ mkdir -p ${DATA_DIR}/sketch
 mkdir -p ${DATA_DIR}/flink
 
 # generate sample dataset
-NUM_SAMPLES=50000
-NUM_CENTROIDS=50
+NUM_SAMPLES=10000
+NUM_CENTROIDS=5
 STDDEV=0.3
-RESOLUTION=5
+RESOLUTION=4
 RANGE=1.0
+ZITERATIONS=100
+SKETCH_SIZE=0.1:0.05
+SKETCH_P=3
+SKETCH_HH=50
+START=$(date +%s)
 
+
+function TIME_START {
+	START=$(date +%s)
+}
+function TIME_END {
+	END=$(date +%s)
+	DIFF=$(( $END - $START ))
+}
 
 # generate data
 # OUTPUT: points and its centers
@@ -44,31 +57,41 @@ blos examples run eu.blos.java.ml.clustering.KMeansDatasetGenerator \
 	-output-centroids ${DATA_DIR}/flink \
 	-k ${NUM_CENTROIDS} \
 	 -range ${RANGE} \
-        -resolution ${RESOLUTION}
-	
+        -resolution ${RESOLUTION} \
+	&> /dev/null	
 
+echo "FLINK: tart running Flink KMeans"
+TIME_START
 blos examples run org.apache.flink.examples.java.clustering.KMeans \
 	${DATA_DIR}/dataset/points \
 	${DATA_DIR}/flink/centers \
 	${DATA_DIR}/flink/out/ \
-	100
+	${ITERATIONS} \
+	 &> /dev/null
+TIME_END
+echo "FLINK:RUNNING-TIME: $DIFF seconds"
 
 cat ${DATA_DIR}/flink/out/* >> ${DATA_DIR}/flink/result
 blos visualize plotpoints result ${DATA_DIR}/flink/result ${DATA_DIR}/flink/result
 
 
 # run skeched kmeans
+echo "SKETCHED:Start running Sketched KMeans"
+
+TIME_START
 blos examples run eu.blos.java.ml.clustering.SketchedKMeans \
 	-i ${DATA_DIR}/dataset/points \
 	-o ${DATA_DIR}/sketch \
 	-k ${NUM_CENTROIDS} \
-	-n 100 \
-	-p 5  \
-	-s 0.01:0.01 \
-	-H 100 \
-	-print-sketch
+	-n ${ITERATIONS} \
+	-p ${SKETCH_P}  \
+	-s ${SKETCH_SIZE} \
+	-H ${SKETCH_HH} 
+#	-print-sketch
+TIME_END
+echo "SKETCHED:RUNNING-TIME: $DIFF seconds"
+
 # plot results
 cat ${DATA_DIR}/dataset/points | blos visualize apply-centroids ${DATA_DIR}/sketch/centers >> ${DATA_DIR}/sketch/result
 blos visualize plotpoints result ${DATA_DIR}/sketch/result ${DATA_DIR}/sketch/result
-
 
