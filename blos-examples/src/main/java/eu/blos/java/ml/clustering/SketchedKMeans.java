@@ -221,10 +221,13 @@ public class SketchedKMeans {
 	 */
 	public static void learn(Tuple2<Double,Double>[] centroids) throws Exception {
 
-		if( cmd.hasOption("init-randomly")){
-			initCentroidsRandomly(centroids);
-		} else {
+		if( cmd.hasOption("init-hh")){
 			initCentroidsHH(centroids);
+			if( cmd.hasOption("verbose")) LOG("init centroid by hh");
+		} else {
+
+			initCentroidsRandomly(centroids);
+			if( cmd.hasOption("verbose")) LOG("init centroid randomly");
 		}
 
 		for( int i=0; i < numIterations; i++ ){
@@ -482,9 +485,9 @@ public class SketchedKMeans {
 
 		lvOptions.addOption(
 				OptionBuilder
-						.withLongOpt("init-randomly")
-						.withDescription("only print sketch without running learning")
-						.create("r")
+						.withLongOpt("init-hh")
+						.withDescription("init centroids based on the first hh")
+						.create("I")
 		);
 
 
