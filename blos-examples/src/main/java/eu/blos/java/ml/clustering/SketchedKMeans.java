@@ -54,11 +54,8 @@ public class SketchedKMeans {
 
 		buildSketches(is);
 
-		if( cmd.hasOption("verbose")){
-			sketch.display(System.out);
-		}
 
-		if( cmd.hasOption("print-sketch") ) {
+		if( cmd.hasOption("print-sketch") ||  cmd.hasOption("verbose") ) {
 			// write output
 			if( cmd.hasOption("output")) {
 				sketch.display(System.out);
@@ -71,33 +68,51 @@ public class SketchedKMeans {
 		}//if
 
 		if( cmd.hasOption("verbose") || cmd.hasOption("print-sketch") ) {
-			System.out.println("heavyhitters");
-			for (int k = 1; k < sketch.getHeavyHitters().getHeapArray().length; k++) {
-				CMEstimate topK = (CMEstimate) sketch.getHeavyHitters().getHeapArray()[k];
-				if (topK != null) {
-					String[] values = topK.key().replaceAll("[^-0-9,.E]","").split(",");
-					Tuple2<Double, Double> d = new Tuple2<>(Double.parseDouble(values[0]), Double.parseDouble(values[1]));
+			if( cmd.hasOption("output")) {
+				System.out.println("heavyhitters");
+				for (int k = 1; k < sketch.getHeavyHitters().getHeapArray().length; k++) {
+					CMEstimate topK = (CMEstimate) sketch.getHeavyHitters().getHeapArray()[k];
+					if (topK != null) {
+						String[] values = topK.key().replaceAll("[^-0-9,.E]", "").split(",");
+						Tuple2<Double, Double> d = new Tuple2<>(Double.parseDouble(values[0]), Double.parseDouble(values[1]));
 
-					System.out.println(""+k+" "+d.f0+" "+d.f1);
-				}//if
-			}//for
-			System.out.println("");
+						System.out.println("" + k + " " + d.f0 + " " + d.f1);
+					}//if
+				}//for
+				System.out.println("");
+			} else {
+				PrintStream out = new PrintStream(new FileOutputStream( cmd.getOptionValue("output")+"/heavyhitters"));
+				for (int k = 1; k < sketch.getHeavyHitters().getHeapArray().length; k++) {
+					CMEstimate topK = (CMEstimate) sketch.getHeavyHitters().getHeapArray()[k];
+					if (topK != null) {
+						String[] values = topK.key().replaceAll("[^-0-9,.E]", "").split(",");
+						Tuple2<Double, Double> d = new Tuple2<>(Double.parseDouble(values[0]), Double.parseDouble(values[1]));
+
+						out.println("" + k + " " + d.f0 + " " + d.f1);
+					}//if
+				}//for
+				out.println("");
+				out.close();
+			}
 		}//if
 
-		learn(centroids);
+		if( !cmd.hasOption("skip-learning") ){
 
-		// write output
-		if( cmd.hasOption("output")) {
-			PrintStream out = new PrintStream(new FileOutputStream( cmd.getOptionValue("output")+"/centers"));
-			for (int k = 0; k < centroids.length; k++) {
-				out.println( k+" "+centroids[k].f0 + " " + centroids[k].f1);
-			}//for
-			out.close();
+			learn(centroids);
 
-		} else {
-			for (int k = 0; k < centroids.length; k++) {
-				System.out.println(k+" "+ centroids[k].f0 + " " + centroids[k].f1);
-			}//for
+			// write output
+			if( cmd.hasOption("output")) {
+				PrintStream out = new PrintStream(new FileOutputStream( cmd.getOptionValue("output")+"/centers"));
+				for (int k = 0; k < centroids.length; k++) {
+					out.println( k+" "+centroids[k].f0 + " " + centroids[k].f1);
+				}//for
+				out.close();
+
+			} else {
+				for (int k = 0; k < centroids.length; k++) {
+					System.out.println(k+" "+ centroids[k].f0 + " " + centroids[k].f1);
+				}//for
+			}
 		}
 
 	}
@@ -137,6 +152,8 @@ public class SketchedKMeans {
 
 			String lookup;
 
+			PrintStream out = new PrintStream(new FileOutputStream(cmd.getOptionValue("output") + "/hashed"));
+
 			while ((line = br.readLine()) != null) {
 				String[] values =line.split(" ");
 				datasetSize++;
@@ -149,8 +166,16 @@ public class SketchedKMeans {
 				lookup = Xi.toString() ;
 				sketch.update(lookup);
 
+				if( cmd.hasOption("show-hashed-values")){
+					if( cmd.hasOption("output")) {
+						out.println(lookup);
+					} else {
+					}
+				}
 				lines++;
 			}
+			out.close();
+
 			if( cmd.hasOption("verbose"))   LOG("reading input data finished. " + (lines)+" lines ");
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -171,7 +196,7 @@ public class SketchedKMeans {
 	}
 
 	/**
-	 * this procedure initializes the centroids by the top heavy hitters found by reading the sketch
+	 * this procedure initializes the centroids by the top [c] heavy hitters found by reading the sketch
 	 * @param centroids
 	 * @throws Exception
 	 */
@@ -204,6 +229,7 @@ public class SketchedKMeans {
 
 		for( int i=0; i < numIterations; i++ ){
 			if( cmd.hasOption("enumeration") ){
+				if( cmd.hasOption("verbose")) System.out.println("Start iteration "+i);
 				updateClusterCentroidsWithEnumeration(centroids);
 			} else {
 				updateClusterCentroidsWithHeavyHitters(centroids);
@@ -386,6 +412,13 @@ public class SketchedKMeans {
 
 		lvOptions.addOption(
 				OptionBuilder
+						.withLongOpt("sketch")
+						.withDescription("skip-learning")
+						.create("S")
+		);
+
+		lvOptions.addOption(
+				OptionBuilder
 						.withLongOpt("iterations")
 						.withDescription("number of iterations")
 						.isRequired()
@@ -443,7 +476,7 @@ public class SketchedKMeans {
 		lvOptions.addOption(
 				OptionBuilder
 						.withLongOpt("print-sketch")
-						.withDescription("only print sketch without running learning")
+						.withDescription("print sketch")
 						.create("P")
 		);
 
@@ -454,6 +487,13 @@ public class SketchedKMeans {
 						.create("r")
 		);
 
+
+		lvOptions.addOption(
+				OptionBuilder
+						.withLongOpt("show-hashed-values")
+						.withDescription("write out hashed values std or /hashed")
+						.create("V")
+		);
 
 		CommandLineParser lvParser = new BasicParser();
 		CommandLine cmd = null;

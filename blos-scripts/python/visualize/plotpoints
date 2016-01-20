@@ -15,6 +15,8 @@ outFilePx = sys.argv[3]
 inFileName = os.path.splitext(os.path.basename(inFile))[0]
 outFile = os.path.join(".", outFilePx+"-plot.pdf")
 
+
+
 ########### READ DATA
 
 cs = []
@@ -50,15 +52,12 @@ if sys.argv[1] == 'points':
 
 		# plot data
 		plt.clf()
-		plt.scatter(xs, ys, s=25, c="#999999", edgecolors='None', alpha=1.0)
-
-                #plt.ylim([minY,maxY])
-                #plt.ylim([-1,1])
-                #plt.xlim([minX,maxX])
-                #plt.xlim([-1,1])
+		plt.scatter(xs, ys, s=25, c="#999999", edgecolors='None', alpha=0.5)
 
 
-uplif sys.argv[1] == 'result':
+elif sys.argv[1] == 'result':
+	fig = plt.figure()
+	ax1 = fig.add_subplot(111)
 
 	with open(inFile, 'rb') as file:
 		for line in file:
@@ -74,14 +73,30 @@ uplif sys.argv[1] == 'result':
 			ys.append(y)
 
 		# plot data
-		plt.clf()
-		plt.scatter(xs, ys, s=25, c=cs, edgecolors='None', alpha=1.0, )
-		#plt.ylim([minY,maxY])
-		#plt.ylim([-1,1])
-		#plt.xlim([minX,maxX])
-		#plt.xlim([-1,1])
+		ax1.scatter(xs, ys, s=25, c=cs, edgecolors='None', alpha=0.3)
 
+	if len(sys.argv) == 5:
+		cs1=[]
+		xs1=[]
+		ys1=[]
+		centroids = sys.argv[4]
+	        with open(centroids, 'rb') as file:
+	                for line in file:
+        	                # parse data
+                	        csvData = line.strip().split(' ')
 
+                      	  	c = int(csvData[0])
+                      	  	x = float(csvData[1])
+                      	  	y = float(csvData[2])
+
+                       	 	cs1.append(c)
+                        	xs1.append(x)
+                        	ys1.append(y)
+
+                	# plot data
+                	ax1.scatter(xs1, ys1, s=100, c=cs1, edgecolors='k', alpha=1.0, marker='s')
+
+	
 plt.savefig(outFile, dpi=600)
 #plt.savefig(  os.path.join(".", outFile,".png"), dpi=600 )
 print "\nPlotted file: %s" % outFile
