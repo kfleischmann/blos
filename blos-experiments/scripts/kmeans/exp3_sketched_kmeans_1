@@ -11,13 +11,13 @@ mkdir -p ${DATA_DIR}/sketch
 mkdir -p ${DATA_DIR}/flink
 
 # generate sample dataset
-NUM_SAMPLES=50000
-NUM_CENTROIDS=3
+NUM_SAMPLES=100000
+NUM_CENTROIDS=5
 STDDEV=0.04
-RESOLUTION=5
+RESOLUTION=3
 RANGE=1.0
-ITERATIONS=100
-SKETCH_SIZE=0.5:0.1
+ITERATIONS=2
+SKETCH_SIZE=0.01:0.0005
 SKETCH_P=2
 SKETCH_HH=100
 START=$(date +%s)
@@ -48,7 +48,7 @@ blos visualize plotpoints points ${DATA_DIR}/dataset/points ${DATA_DIR}/dataset/
 
 #find closest center for each point for visualization
 cat ${DATA_DIR}/dataset/points | blos visualize apply-centroids ${DATA_DIR}/dataset/centers >> ${DATA_DIR}/dataset/result
-blos visualize plotpoints result ${DATA_DIR}/dataset/result ${DATA_DIR}/dataset/result ${DATA_DIR}/dataset/centers
+blos visualize plotpoints result ${DATA_DIR}/dataset/result ${DATA_DIR}/dataset/result ${DATA_DIR}/dataset/init_centers
 
 
 # run kmeans from apache flink
@@ -92,10 +92,14 @@ blos examples run eu.blos.java.ml.clustering.SketchedKMeans \
 	-H ${SKETCH_HH}\
 	--print-sketch \
 	--show-hashed-values \
-	--verbose \
 	--init-file ${DATA_DIR}/dataset/init_centers \
+	--verbose \
 	--heavyhitters 200 \
 	--enumeration
+
+
+#	--init-file ${DATA_DIR}/dataset/init_centers \
+
 TIME_END
 echo "SKETCHED:RUNNING-TIME: $DIFF seconds"
 
@@ -103,3 +107,4 @@ echo "SKETCHED:RUNNING-TIME: $DIFF seconds"
 cat ${DATA_DIR}/dataset/points | blos visualize apply-centroids ${DATA_DIR}/sketch/centers >> ${DATA_DIR}/sketch/result
 blos visualize plotpoints result ${DATA_DIR}/sketch/result ${DATA_DIR}/sketch/result ${DATA_DIR}/sketch/centers
 
+blos visualize sketch2  ${DATA_DIR}/sketch/reconstructed_input_space  ${DATA_DIR}/sketch/reconstructed_inputspace.pdf

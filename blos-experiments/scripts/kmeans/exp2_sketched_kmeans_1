@@ -13,11 +13,11 @@ mkdir -p ${DATA_DIR}/flink
 # generate sample dataset
 NUM_SAMPLES=50000
 NUM_CENTROIDS=3
-STDDEV=0.04
+STDDEV=0.05
 RESOLUTION=5
 RANGE=1.0
 ITERATIONS=100
-SKETCH_SIZE=0.5:0.1
+SKETCH_SIZE=0.1:0.005
 SKETCH_P=2
 SKETCH_HH=100
 START=$(date +%s)
@@ -40,7 +40,7 @@ blos examples run eu.blos.java.ml.clustering.KMeansDatasetGenerator \
 	-range ${RANGE} \
 	-output ${DATA_DIR}/dataset \
 	-resolution ${RESOLUTION} \
-	-seed 3
+	-seed 1
 
 # visualize the dataset
 # OUTPUT: dataset-plot.pdf
@@ -94,8 +94,8 @@ blos examples run eu.blos.java.ml.clustering.SketchedKMeans \
 	--show-hashed-values \
 	--verbose \
 	--init-file ${DATA_DIR}/dataset/init_centers \
-	--heavyhitters 200 \
-	--enumeration
+	--heavyhitters 200
+#	--enumeration
 TIME_END
 echo "SKETCHED:RUNNING-TIME: $DIFF seconds"
 

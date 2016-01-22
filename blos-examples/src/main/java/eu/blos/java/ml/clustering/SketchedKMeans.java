@@ -205,14 +205,39 @@ public class SketchedKMeans {
 			CMEstimate topK = (CMEstimate) sketch.getHeavyHitters().getHeapArray()[c+1];
 			if (topK != null) {
 				String[] values = topK.key().replaceAll("[^-0-9,.E]", "").split(",");
-				Tuple2<Double, Double> value = new Tuple2<>(Double.parseDouble(values[0]), Double.parseDouble(values[1]));
-				centroids[c] = new Tuple2<>( value.f0, value.f1 );
+				centroids[c] =  new Tuple2<>(Double.parseDouble(values[0]), Double.parseDouble(values[1]));
 			} else {
 
 				throw new Exception("invalid HH init for "+c);
 
 			}
 			if( cmd.hasOption("verbose")) LOG("init centroid "+normalizer.normalize(c)+" => "+centroids[c]);
+		}
+	}
+
+	/**
+	 * read centroids from input file and init centroids with its values
+	 * @param centroids
+	 * @param file
+	 */
+	public static void initCentroidsbyFile(Tuple2<Double,Double>[] centroids, String file ){
+		try {
+			InputStreamReader is = new FileReader(new File(file));
+			BufferedReader br = new BufferedReader( is );
+			String line;
+			int c=0;
+			while ((line = br.readLine()) != null) {
+				String[] values = line.split(" ");
+				centroids[c] = new Tuple2<>(Double.parseDouble(values[1]), Double.parseDouble(values[2]));
+				System.out.println("pre-init:"+centroids[c] );
+				c++;
+			}
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		finally {
 		}
 	}
 
@@ -224,8 +249,12 @@ public class SketchedKMeans {
 		if( cmd.hasOption("init-hh")){
 			initCentroidsHH(centroids);
 			if( cmd.hasOption("verbose")) LOG("init centroid by hh");
-		} else {
-
+		}
+		else if(cmd.hasOption("init-file")){
+			initCentroidsbyFile(centroids, cmd.getOptionValue("init-file"));
+			if( cmd.hasOption("verbose")) LOG("init centroid by file");
+		}
+		else {
 			initCentroidsRandomly(centroids);
 			if( cmd.hasOption("verbose")) LOG("init centroid randomly");
 		}
@@ -279,7 +308,7 @@ public class SketchedKMeans {
 					for (int i = 0; i < centroids.length; i++) {
 						double d = Math.sqrt(
 								(value.f0 - centroids[i].f0) * (value.f0 - centroids[i].f0) +
-										(value.f1 - centroids[i].f1) * (value.f1 - centroids[i].f1)  );
+								(value.f1 - centroids[i].f1) * (value.f1 - centroids[i].f1)  );
 						if( d < currDistance){
 							ibestCentroid = i;
 							currDistance= d;
@@ -311,7 +340,7 @@ public class SketchedKMeans {
 	 * updates the positions for all centroids in each iteration by enumerating the whole input-space
 	 * @param centroids
 	 */
-	public static void updateClusterCentroidsWithEnumeration( Tuple2<Double,Double>[] centroids ){
+	public static void updateClusterCentroidsWithEnumeration( Tuple2<Double,Double>[] centroids ) throws FileNotFoundException {
 		long freq;
 		String lookup;
 		long inputSpace=0;
@@ -321,13 +350,17 @@ public class SketchedKMeans {
 
 		long[] counts = new long[centroids.length] ;
 
+		PrintStream out = new PrintStream(new FileOutputStream(cmd.getOptionValue("output") + "/reconstructed_input_space"));
+
 		// iterate through the whole input-space
-		for (double x = (double) normalizer.getMin(); x < (double) normalizer.getMax(); x += (double) normalizer.getStep()) {
-			for (double y = (double) normalizer.getMin(); y < (double) normalizer.getMax(); y += (double) normalizer.getStep()) {
+		for (double y = (double) normalizer.getMin(); y < (double) normalizer.getMax(); y += (double) normalizer.getStep()) {
+			for (double x = (double) normalizer.getMin(); x < (double) normalizer.getMax(); x += (double) normalizer.getStep()) {
 
 				Tuple2<Double,Double> value = new Tuple2<>(normalizer.normalize(x),normalizer.normalize(y));
 				lookup = "("+normalizer.normalize(x)+"," + normalizer.normalize(y) + ")";
 				freq = sketch.get(lookup);
+
+				out.print(freq+" ");
 
 				if(freq>0) {
 					inputSpace++;
@@ -352,6 +385,8 @@ public class SketchedKMeans {
 				}//if
 
 			}//for
+			out.println();
+
 		}//for
 
 		// update centroids
@@ -362,6 +397,8 @@ public class SketchedKMeans {
 
 		}//for
 		if( cmd.hasOption("verbose")) LOG("inputSpace size "+inputSpace);
+
+		out.close();
 	}
 
 
@@ -497,6 +534,16 @@ public class SketchedKMeans {
 						.withDescription("write out hashed values std or /hashed")
 						.create("V")
 		);
+
+		lvOptions.addOption(
+				OptionBuilder
+						.withLongOpt("init-file")
+						.hasArg()
+						.withDescription("init centroids with provided ile")
+						.create("F")
+		);
+
+
 
 		CommandLineParser lvParser = new BasicParser();
 		CommandLine cmd = null;

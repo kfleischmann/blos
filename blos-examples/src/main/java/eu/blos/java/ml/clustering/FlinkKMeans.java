@@ -94,6 +94,8 @@ public class FlinkKMeans {
 		DataSet<Point> points = getPointDataSet(env);
 		DataSet<Centroid> centroids = getCentroidDataSet(env);
 
+
+
 		// set number of bulk iterations for KMeans algorithm
 		IterativeDataSet<Centroid> loop = centroids.iterate(numIterations);
 
@@ -113,9 +115,18 @@ public class FlinkKMeans {
 				// assign points to final clusters
 				.map(new SelectNearestCenter()).withBroadcastSet(finalCentroids, "centroids");
 
+		System.out.println( "total count centroids:"+ finalCentroids.count() );
+
 		// emit result
 		if (fileOutput) {
 			clusteredPoints.writeAsCsv(outputPath, "\n", " ");
+			finalCentroids.map( new MapFunction<Centroid, Tuple3<Integer, Double, Double>>() {
+									@Override
+									public Tuple3<Integer, Double, Double> map(Centroid centroid) throws Exception {
+										return new Tuple3<Integer, Double, Double>(centroid.id, centroid.x, centroid.y);
+									}
+								})
+							.writeAsCsv(outputPathCentroids, "\n", " ");
 
 			// since file sinks are lazy, we trigger the execution explicitly
 			env.execute("KMeans Example");
@@ -291,19 +302,21 @@ public class FlinkKMeans {
 	private static String centersPath = null;
 	private static String outputPath = null;
 	private static int numIterations = 10;
+	private static String outputPathCentroids = null;
 
 	private static boolean parseParameters(String[] programArguments) {
 
 		if(programArguments.length > 0) {
 			// parse input arguments
 			fileOutput = true;
-			if(programArguments.length == 4) {
+			if(programArguments.length == 5) {
 				pointsPath = programArguments[0];
 				centersPath = programArguments[1];
 				outputPath = programArguments[2];
 				numIterations = Integer.parseInt(programArguments[3]);
+				outputPathCentroids = programArguments[4];
 			} else {
-				System.err.println("Usage: KMeans <points path> <centers path> <result path> <num iterations>");
+				System.err.println("Usage: KMeans <points path> <centers path> <result path> <num iterations>  <output centroids>");
 				return false;
 			}
 		} else {
@@ -311,7 +324,7 @@ public class FlinkKMeans {
 			System.out.println("  Provide parameters to read input data from files.");
 			System.out.println("  See the documentation for the correct format of input files.");
 			System.out.println("  We provide a data generator to create synthetic input files for this program.");
-			System.out.println("  Usage: KMeans <points path> <centers path> <result path> <num iterations>");
+			System.out.println("  Usage: KMeans <points path> <centers path> <result path> <num iterations> <output centroids>");
 		}
 		return true;
 	}

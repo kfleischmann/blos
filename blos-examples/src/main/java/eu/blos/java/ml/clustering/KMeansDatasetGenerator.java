@@ -111,16 +111,27 @@ public class KMeansDatasetGenerator {
 		if( (params.get("output") != null &&  params.get("output").length() > 0) ||
 			(params.get("output-centroids") != null &&  params.get("output-centroids").length() > 0) ) {
 			BufferedWriter centersOut = null;
+			BufferedWriter centersOutInit = null;
 			try {
 				centersOut = new BufferedWriter(new FileWriter(new File(outCentroidsDir + "/" + CENTERS_FILE)));
+				centersOutInit = new BufferedWriter(new FileWriter(new File(outCentroidsDir + "/init_" + CENTERS_FILE)));
 				StringBuilder buffer = new StringBuilder();
 
 				for (int i = 0; i < k; i++) {
 					writeCenter(i + 1, means[i], buffer, centersOut);
 				}//for
+
+				double[][] centers = uniformRandomCenters(random, k, dimensionality, range);
+
+				for (int i = 0; i < k; i++) {
+					writeCenter(i + 1, centers[i], buffer, centersOutInit);
+				}//for
 			} finally {
 				if (centersOut != null) {
 					centersOut.close();
+				}//if
+				if (centersOutInit != null) {
+					centersOutInit.close();
 				}//if
 			}
 
