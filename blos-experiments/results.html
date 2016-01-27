@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<style>
+div.plot {
+float:left;
+}
+div.plot img {
+width:500px;
+height:500px;
+}
+div.plot p{
+width:500px;
+font-style:italic;
+text-align:center;
+}
+div.group {
+padding:10px;
+float:left;
+height:600px;
+}
+
+</style>
+<body>
+
+<div class="group">
+	<h2>Dataset</h2>
+        <div class="plot">
+                <img src="dataset/points-plot.png"/>
+                <p>Original dataset</p>
+        </div>
+        <div class="plot">
+                <img src="dataset/result-plot.png"/>
+                <p>dataset clustered with its original centers (colored). On top some random centers, used for running kmeans</p>
+        </div>
+</div>
+
+
+<div class="group">
+        <h2>Sketched</h2>
+        <div class="plot">
+                <img src="sketch/reconstructed_inputspace.png"/>
+                <p>Reconstructed input-space using the sketch</p>
+        </div>
+        <div class="plot">
+                <img src="sketch/result-plot.png"/>
+                <p>Result of Sketched-KMeans. Discover technique: enumeration</p>
+        </div>
+</div>
+
+<div class="group">
+        <h2>Flink KMeans</h2>
+        <div class="plot">
+                <img src="flink/result-plot.png"/>
+                <p>dataset clustered with its original centers (colored). On top some random centers, used for running kmeans</p>
+        </div>
+</div>
+
+
+</body>
+</html>
+~                                                                                                                                                             
+~                 

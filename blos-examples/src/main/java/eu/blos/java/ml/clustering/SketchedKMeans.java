@@ -228,7 +228,22 @@ public class SketchedKMeans {
 			int c=0;
 			while ((line = br.readLine()) != null) {
 				String[] values = line.split(" ");
-				centroids[c] = new Tuple2<>(Double.parseDouble(values[1]), Double.parseDouble(values[2]));
+				centroids[c] = new Tuple2<>(Double.parseDouble(values[1]), Double.parseDo
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+uble(values[2]));
 				System.out.println("pre-init:"+centroids[c] );
 				c++;
 			}
@@ -261,7 +276,7 @@ public class SketchedKMeans {
 
 		for( int i=0; i < numIterations; i++ ){
 			if( cmd.hasOption("enumeration") ){
-				if( cmd.hasOption("verbose")) System.out.println("Start iteration "+i);
+				if( cmd.hasOption("verbose")) System.out.println("Start
 				updateClusterCentroidsWithEnumeration(centroids);
 			} else {
 				updateClusterCentroidsWithHeavyHitters(centroids);
@@ -353,8 +368,8 @@ public class SketchedKMeans {
 		PrintStream out = new PrintStream(new FileOutputStream(cmd.getOptionValue("output") + "/reconstructed_input_space"));
 
 		// iterate through the whole input-space
-		for (double y = (double) normalizer.getMin(); y < (double) normalizer.getMax(); y += (double) normalizer.getStep()) {
-			for (double x = (double) normalizer.getMin(); x < (double) normalizer.getMax(); x += (double) normalizer.getStep()) {
+		for (double y = (double) normalizer.getMax(); y >= (double) normalizer.getMin(); y -= (double) normalizer.getStep()) {
+			for (double x = (double) normalizer.getMin(); x <= (double) normalizer.getMax(); x += (double) normalizer.getStep()) {
 
 				Tuple2<Double,Double> value = new Tuple2<>(normalizer.normalize(x),normalizer.normalize(y));
 				lookup = "("+normalizer.normalize(x)+"," + normalizer.normalize(y) + ")";
@@ -452,8 +467,8 @@ public class SketchedKMeans {
 
 		lvOptions.addOption(
 				OptionBuilder
-						.withLongOpt("sketch")
-						.withDescription("skip-learning")
+						.withLongOpt("skip-learning")
+						.withDescription("do not run learning process.")
 						.create("S")
 		);
 

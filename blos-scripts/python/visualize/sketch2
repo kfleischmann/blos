@@ -27,9 +27,11 @@ with open(input, 'rb') as file:
 img = np.zeros((dim_x,dim_y))
 for (yi,y) in enumerate(counts):
 	for (xi,f) in enumerate(y):
-		img[xi,yi] = f
+		img[yi,xi] = f
+
 
 plt.matshow(img)
+plt.colorbar()
 
 if len( sys.argv) > 2:
 	out = sys.argv[2]

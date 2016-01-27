@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DATA_DIR=/tmp/blos/kmeans/exp2
+DATA_DIR=/home/kay/tmp/blos/kmeans/exp3
 
 # cleanup
 rm -r ${DATA_DIR}

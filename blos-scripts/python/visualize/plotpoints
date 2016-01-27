@@ -5,7 +5,7 @@ import csv
 import os
 
 if len(sys.argv) < 4 or not sys.argv[1] in ['points', 'result']:
-	print "Usage: plot-clusters.py (points|result) <src-file> <pdf-file-prefix>"
+	print "Usage: plot-clusters.py (points|result) <src-file> <output-file-prefix>"
 	sys.exit(1)
 
 inFile = sys.argv[1]
@@ -13,7 +13,7 @@ inFile = sys.argv[2]
 outFilePx = sys.argv[3]
 
 inFileName = os.path.splitext(os.path.basename(inFile))[0]
-outFile = os.path.join(".", outFilePx+"-plot.pdf")
+outFile = os.path.join(".", outFilePx+"-plot.png")
 
 
 
@@ -97,7 +97,7 @@ elif sys.argv[1] == 'result':
                 	ax1.scatter(xs1, ys1, s=100, c=cs1, edgecolors='k', alpha=1.0, marker='s')
 
 	
-plt.savefig(outFile, dpi=600)
+plt.savefig(outFile)
 #plt.savefig(  os.path.join(".", outFile,".png"), dpi=600 )
 print "\nPlotted file: %s" % outFile
 
