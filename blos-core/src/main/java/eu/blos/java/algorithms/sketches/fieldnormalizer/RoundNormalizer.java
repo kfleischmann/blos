@@ -9,9 +9,11 @@ public class RoundNormalizer implements InputSpaceNormalizer<Double> {
 		return (double)Math.round(value * scale) / scale;
 	}
 	private int precision;
+	private long total_elements;
 
 	public RoundNormalizer(int precision){
 		this.precision = precision;
+		this.total_elements = (long)Math.pow(10, precision);
 	}
 
 	@Override
@@ -42,5 +44,10 @@ public class RoundNormalizer implements InputSpaceNormalizer<Double> {
 	@Override
 	public Double getRandom() {
 		return new java.util.Random().nextFloat()*2.0 - 1.0;
+	}
+
+	@Override
+	public long getTotalElements() {
+		return this.total_elements;
 	}
 }

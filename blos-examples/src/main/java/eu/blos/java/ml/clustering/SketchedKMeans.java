@@ -98,7 +98,7 @@ public class SketchedKMeans {
 		}//if
 
 
-		if( cmd.hasOption("verbose") || cmd.hasOption("print-sketch")) reconstructInputSpace();
+		if( cmd.hasOption("discover-inputspace")) reconstructInputSpace();
 
 		if( !cmd.hasOption("skip-learning") ){
 
@@ -415,18 +415,24 @@ public class SketchedKMeans {
 	 */
 	public static void reconstructInputSpace() throws FileNotFoundException {
 		long freq;
+		long elements=0;
+		long total_elements=normalizer.getTotalElements()*normalizer.getTotalElements();
 		String lookup;
-
+		int percentage = -1;
 		PrintStream out = new PrintStream(new FileOutputStream(cmd.getOptionValue("output") + "/reconstructed-input-space"));
 		// iterate through the whole input-space
 		for (double y = (double) normalizer.getMax(); y >= (double) normalizer.getMin(); y -= (double) normalizer.getStep()) {
 			for (double x = (double) normalizer.getMin(); x <= (double) normalizer.getMax(); x += (double) normalizer.getStep()) {
-
+				elements++;
 				Tuple2<Double,Double> value = new Tuple2<>(normalizer.normalize(x),normalizer.normalize(y));
 				lookup = "("+normalizer.normalize(x)+"," + normalizer.normalize(y) + ")";
 				freq = sketch.get(lookup);
 
 				out.print(freq+" ");
+				if( (int)(((float)elements/(float)total_elements)*10000) != percentage){
+					percentage=	(int)(((float)elements/(float)total_elements)*10000);
+					System.out.println((float)percentage/100.0+"% discovered" );
+				}
 			}//for
 			out.println();
 		}//for
@@ -550,6 +556,13 @@ public class SketchedKMeans {
 						.withLongOpt("print-sketch")
 						.withDescription("print sketch")
 						.create("P")
+		);
+
+		lvOptions.addOption(
+				OptionBuilder
+						.withLongOpt("discover-inputspace")
+						.withDescription("discover input-space for reconstruction")
+						.create("D")
 		);
 
 		lvOptions.addOption(

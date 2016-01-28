@@ -5,7 +5,6 @@ import eu.blos.java.algorithms.sketches.InputSpaceNormalizer;
 import java.util.Random;
 
 public class ZeroOneNormalizer implements InputSpaceNormalizer<Integer> {
-
 	private int pow;
 	private Random r = new java.util.Random();
 	public ZeroOneNormalizer(int pow ){
@@ -40,6 +39,11 @@ public class ZeroOneNormalizer implements InputSpaceNormalizer<Integer> {
 	@Override
 	public Integer getRandom() {
 		return r.nextInt( 2*(int)Math.pow(2, pow) ) - (int)Math.pow(2, pow) ;
+	}
+
+	@Override
+	public long getTotalElements() {
+		return -1;
 	}
 }
 

@@ -9,4 +9,5 @@ public interface InputSpaceNormalizer<T> extends Serializable{
 	public T getMin();
 	public T getStep();
 	public T getRandom();
+	public long getTotalElements();
 }

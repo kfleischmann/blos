@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# DEFAULT VALUES
+SKETCH_HH=100
+SKETCH_SIZE_DELTA="0.5 0.1 0.05 0.01"
+SKETCH_SIZE_EPSILON="0.1 0.01 0.001 0.0001"
+DPI=100
+FORMAT=png
 
 # some arguments don't have a corresponding value to go with it such
 # as in the --default example).
@@ -9,20 +15,8 @@ do
 key="$1"
 
 case $key in
-    -d|--data-dir)
+    -d|--dataset-dir)
     DATA_DIR="$2"
-    shift # past argument
-    ;;
-    -s|--number-samples)
-    NUM_SAMPLES="$2"
-    shift # past argument
-    ;;
-    -c|--number-centroids)
-    NUM_CENTROIDS="$2"
-    shift # past argument
-    ;;
-    -r|--resolution)
-    RESOLUTION="$2"
     shift # past argument
     ;;
     -p|--sketch-p)
@@ -37,6 +31,18 @@ case $key in
     SKETCH_SIZE_EPSILON="$2"
     shift # past argument
     ;;
+    -h|--heavy-hitters)
+    SKETCH_HH="$2"
+    shift # past argument
+    ;;
+    -R|--image-resolution)
+    DPI="$2"
+    shift # past argument
+    ;;
+    -f|--format)
+    FORMAT="$2"
+    shift # past argument
+    ;;
     --default)
     DEFAULT=YES
     ;;
@@ -48,40 +54,35 @@ shift # past argument or value
 done
 
 # cleanup
-rm -r ${DATA_DIR}
+# we do not cleanup. we assume the dataset was generated
+# rm -r ${DATA_DIR}
 
 # prepare folders
 mkdir -p ${DATA_DIR}/dataset
 mkdir -p ${DATA_DIR}/sketch
 
 # generate sample dataset
-NUM_SAMPLES=50000
-NUM_CENTROIDS=3
-STDDEV=0.04
+# NUM_SAMPLES=50000
+# NUM_CENTROIDS=3
 # resolution of the generated dataset
-RESOLUTION=2
-# range for the generated dataset
-RANGE=1.0
+# RESOLUTION=2
 # sketch size parameters
-SKETCH_SIZE_DELTA="0.5 0.1 0.05 0.01"
-SKETCH_SIZE_EPSILON="0.1 0.01 0.001 0.0001"
 # resolution of the projected input-space
-SKETCH_P=2
+# SKETCH_P=2
 # number of heavy hitters
-SKETCH_HH=100
-START=$(date +%s)
-ITERATIONS=0
-SEED=3
+# START=$(date +%s)
+# ITERATIONS=0
+# SEED=3
 
 # generate data
-blos examples run eu.blos.java.ml.clustering.KMeansDatasetGenerator \
-	-points ${NUM_SAMPLES} \
-	-k ${NUM_CENTROIDS} \
-	-stddev ${STDDEV} \
-	-range ${RANGE} \
-	-output ${DATA_DIR}/dataset \
-	-resolution ${RESOLUTION} \
-	-seed ${SEED}
+#blos examples run eu.blos.java.ml.clustering.KMeansDatasetGenerator \
+#	-points ${NUM_SAMPLES} \
+#	-k ${NUM_CENTROIDS} \
+#	-stddev ${STDDEV} \
+#	-range ${RANGE} \
+#	-output ${DATA_DIR}/dataset \
+#	-resolution ${RESOLUTION} \
+#	-seed ${SEED}
 
 IFS=', ' read -r -a LIST_SKETCH_SIZE_DELTA <<< "$SKETCH_SIZE_DELTA"
 IFS=', ' read -r -a LIST_SKETCH_SIZE_EPSILON <<< "$SKETCH_SIZE_EPSILON"
@@ -91,31 +92,44 @@ do
 	do
 		SKETCH_SIZE="${d}:${e}"
 		SKETCH_FILE=${d}_${e}
-		echo "scatterplot for $SKETCH_SIZE into $SKETCH_FILE"
+
+		rm -r ${DATA_DIR}/sketch/${SKETCH_FILE}
 		mkdir ${DATA_DIR}/sketch/${SKETCH_FILE}
+
+		echo "scatterplot for $SKETCH_SIZE into $SKETCH_FILE"
+
+		echo "build sketch..."
+		exec 5>&1
 		OUT=$(blos examples run eu.blos.java.ml.clustering.SketchedKMeans \
 				-i ${DATA_DIR}/dataset/points \
 				-o ${DATA_DIR}/sketch/${SKETCH_FILE} \
-				-k ${NUM_CENTROIDS} \
-				-n ${ITERATIONS} \
+				-k 1 \
+				-n 0 \
+				-n 0 \
 				-p ${SKETCH_P}  \
 				-s ${SKETCH_SIZE} \
 				-H ${SKETCH_HH} \
+				--discover-inputspace \
 				--skip-learning \
-				--print-sketch)
+				--print-sketch \
+				|tee >(cat - | grep "discovered" >&5))
 
 		# read output parameters
 		PARAM_SIZE=$(echo 	"$OUT"|grep 	"size(mb)="| awk -F "=" '{print $2}')
 		PARAM_D=$(echo 		"$OUT"|grep 	"d="| awk -F "=" '{print $2}')
 		PARAM_W=$(echo 		"$OUT"|grep 	"w="| awk -F "=" '{print $2}')
 
-		DESC="delta=${d},epsilon=${e},size=${$PARAM_SIZE},w=${PARAM_W},d=${PARAM_D}"
+
+		DESC="delta:$d,epsilon:$e,size:$PARAM_SIZE,w:$PARAM_W,d:$PARAM_D"
+		echo "sketch details $DESC"
+		echo "plotting..."
 		blos visualize sketch-inputspace \
 				-i ${DATA_DIR}/sketch/${SKETCH_FILE}/reconstructed-input-space \
 				-o ${DATA_DIR}/sketch/${SKETCH_FILE}/reconstructed-input-space \
 				-t "${DESC}" \
-				-f png
-		#		-d 600
+				-f ${FORMAT} \
+				-C \
+				-d ${DPI}
 	done
 done
 
