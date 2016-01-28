@@ -119,14 +119,14 @@ blos examples run eu.blos.java.ml.clustering.KMeansDatasetGenerator \
 	-k 3 \
 	-stddev 0.07 \
 	-range 1.0 \
-	-output kmeans100k_3c/dataset \
+	-output kmeans100k_3c/ \
 	-resolution 3 \
 	-seed 0
 	
 # sketch scatterplot
-blos sketch scatterplot \
- --dataset-dir <datasetdir> \
- --sketch-p 3 \
- --sketch-delta "0.5 0.1 0.05 0.01" \
- --sketch-epsilon "0.1 0.01 0.001 0.0001"
+blos sketch scatterplot 
+	-d kmeans100k_3c/ 
+	-p 2 
+	-D 0.5,0.1,0.001,0.001,0.0001 
+	-E 0.1,0.01,0.005,0.004,0.003,0.002,0.001,0.0001
 ```
