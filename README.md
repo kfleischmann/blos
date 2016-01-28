@@ -61,6 +61,18 @@ blos generators poly --sigma 0 -f 0.6:0,0.1:1 --range="-1:1" --count 1000000 -H 
 ```
 Finally learned model: 0.5998466649164175 0.10477879077668788
 
+KMeans dataset
+```
+blos examples run eu.blos.java.ml.clustering.KMeansDatasetGenerator \
+	-points ${NUM_SAMPLES} \
+	-k ${NUM_CENTROIDS} \
+	-stddev ${STDDEV} \
+	-range ${RANGE} \
+	-output ${DATA_DIR}/dataset \
+	-resolution ${RESOLUTION} \
+	-seed ${SEED}
+```
+
 
 Examples
 =============
@@ -96,4 +108,25 @@ $blos examples run eu.blos.java.ml.clustering.SketchedKMeans \
 -p 4  \
 -s 0.01:0.01 \
 -H 100 
+```
+
+Sketch scatter-plot
+===
+```
+# generate data
+blos examples run eu.blos.java.ml.clustering.KMeansDatasetGenerator \
+	-points 100000 \
+	-k 3 \
+	-stddev 0.07 \
+	-range 1.0 \
+	-output kmeans100k_3c/dataset \
+	-resolution 3 \
+	-seed 0
+	
+# sketch scatterplot
+blos sketch scatterplot \
+ --dataset-dir <datasetdir> \
+ --sketch-p 3 \
+ --sketch-delta "0.5 0.1 0.05 0.01" \
+ --sketch-epsilon "0.1 0.01 0.001 0.0001"
 ```
