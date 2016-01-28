@@ -134,4 +134,4 @@ do
 done
 
 # merge images into a scatterplot
-montage ${DATA_DIR}/sketch/*/reconstructed-input-space.png -title "" -geometry +0+0 ${DATA_DIR}/sketch/sketch-scatterplot.png
+montage ${DATA_DIR}/sketch/*/reconstructed-input-space.png -title "" -tile ${#LIST_SKETCH_SIZE_EPSILON[@]}x${#LIST_SKETCH_SIZE_DELTA[@]} -geometry +7+0 ${DATA_DIR}/sketch/sketch-scatterplot.png

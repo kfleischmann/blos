@@ -13,7 +13,8 @@ public class RoundNormalizer implements InputSpaceNormalizer<Double> {
 
 	public RoundNormalizer(int precision){
 		this.precision = precision;
-		this.total_elements = (long)Math.pow(10, precision);
+		// 2 times because of -1 to 1
+		this.total_elements = 2*(long)Math.pow(10, precision);
 	}
 
 	@Override

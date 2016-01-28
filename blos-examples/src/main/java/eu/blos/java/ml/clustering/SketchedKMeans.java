@@ -429,9 +429,9 @@ public class SketchedKMeans {
 				freq = sketch.get(lookup);
 
 				out.print(freq+" ");
-				if( (int)(((float)elements/(float)total_elements)*10000) != percentage){
-					percentage=	(int)(((float)elements/(float)total_elements)*10000);
-					System.out.println((float)percentage/100.0+"% discovered" );
+				if( (int)(((float)elements/(float)total_elements)*100) != percentage){
+					percentage=	(int)(((float)elements/(float)total_elements)*100);
+					System.out.println(percentage+"% discovered" );
 				}
 			}//for
 			out.println();
