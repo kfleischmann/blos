@@ -96,6 +96,9 @@ public class SketchedKMeans {
 			}
 		}//if
 
+
+		if( cmd.hasOption("verbose")) reconstructInputSpace();
+
 		if( !cmd.hasOption("skip-learning") ){
 
 			learn(centroids);
@@ -228,22 +231,7 @@ public class SketchedKMeans {
 			int c=0;
 			while ((line = br.readLine()) != null) {
 				String[] values = line.split(" ");
-				centroids[c] = new Tuple2<>(Double.parseDouble(values[1]), Double.parseDo
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-uble(values[2]));
+				centroids[c] = new Tuple2<>(Double.parseDouble(values[1]), Double.parseDouble(values[2]));
 				System.out.println("pre-init:"+centroids[c] );
 				c++;
 			}
@@ -276,7 +264,7 @@ uble(values[2]));
 
 		for( int i=0; i < numIterations; i++ ){
 			if( cmd.hasOption("enumeration") ){
-				if( cmd.hasOption("verbose")) System.out.println("Start
+				if( cmd.hasOption("verbose")) System.out.println("Start iteration "+i);
 				updateClusterCentroidsWithEnumeration(centroids);
 			} else {
 				updateClusterCentroidsWithHeavyHitters(centroids);
@@ -365,7 +353,7 @@ uble(values[2]));
 
 		long[] counts = new long[centroids.length] ;
 
-		PrintStream out = new PrintStream(new FileOutputStream(cmd.getOptionValue("output") + "/reconstructed_input_space"));
+		PrintStream out = new PrintStream(new FileOutputStream(cmd.getOptionValue("output") + "/query-input-space"));
 
 		// iterate through the whole input-space
 		for (double y = (double) normalizer.getMax(); y >= (double) normalizer.getMin(); y -= (double) normalizer.getStep()) {
@@ -413,6 +401,34 @@ uble(values[2]));
 		}//for
 		if( cmd.hasOption("verbose")) LOG("inputSpace size "+inputSpace);
 
+		out.close();
+	}
+
+
+	/**
+	 *
+	 * @throws FileNotFoundException
+	 */
+	public static void reconstructInputSpace() throws FileNotFoundException {
+		long freq;
+		String lookup;
+		long inputSpace=0;
+
+		PrintStream out = new PrintStream(new FileOutputStream(cmd.getOptionValue("output") + "/reconstructed-input-space"));
+		// iterate through the whole input-space
+		for (double y = (double) normalizer.getMax(); y >= (double) normalizer.getMin(); y -= (double) normalizer.getStep()) {
+			for (double x = (double) normalizer.getMin(); x <= (double) normalizer.getMax(); x += (double) normalizer.getStep()) {
+
+				Tuple2<Double,Double> value = new Tuple2<>(normalizer.normalize(x),normalizer.normalize(y));
+				lookup = "("+normalizer.normalize(x)+"," + normalizer.normalize(y) + ")";
+				freq = sketch.get(lookup);
+
+				out.print(freq+" ");
+
+			}//for
+			out.println();
+
+		}//for
 		out.close();
 	}
 
@@ -468,7 +484,7 @@ uble(values[2]));
 		lvOptions.addOption(
 				OptionBuilder
 						.withLongOpt("skip-learning")
-						.withDescription("do not run learning process.")
+						.withDescription("skip-learning")
 						.create("S")
 		);
 

@@ -1,23 +1,23 @@
 #!/bin/bash
 
-DATA_DIR=/home/kay/tmp/blos/kmeans/exp3_1
+DATA_DIR=/home/kay/tmp/blos/kmeans/exp3_2
 
 # cleanup
-rm -r ${DATA_DIR}
+#rm -r ${DATA_DIR}
 
 # prepare folders
-mkdir -p ${DATA_DIR}/dataset
-mkdir -p ${DATA_DIR}/sketch 
-mkdir -p ${DATA_DIR}/flink
+#mkdir -p ${DATA_DIR}/dataset
+#mkdir -p ${DATA_DIR}/sketch 
+#mkdir -p ${DATA_DIR}/flink
 
 # generate sample dataset
-NUM_SAMPLES=100000
+NUM_SAMPLES=1000000000
 NUM_CENTROIDS=6
 STDDEV=0.06
 RESOLUTION=3
 RANGE=1.0
 ITERATIONS=0
-SKETCH_SIZE=0.1:0.00001
+SKETCH_SIZE=0.05:0.000004
 SKETCH_P=3
 SKETCH_HH=100
 START=$(date +%s)
@@ -33,21 +33,21 @@ function TIME_END {
 
 # generate data
 # OUTPUT: points and its centers
-blos examples run eu.blos.java.ml.clustering.KMeansDatasetGenerator \
-	-points ${NUM_SAMPLES} \
-	-k ${NUM_CENTROIDS} \
-	-stddev ${STDDEV} \
-	-range ${RANGE} \
-	-output ${DATA_DIR}/dataset \
-	-resolution ${RESOLUTION}
+#blos examples run eu.blos.java.ml.clustering.KMeansDatasetGenerator \
+#	-points ${NUM_SAMPLES} \
+#	-k ${NUM_CENTROIDS} \
+#	-stddev ${STDDEV} \
+#	-range ${RANGE} \
+#	-output ${DATA_DIR}/dataset \
+#	-resolution ${RESOLUTION}
 
 # visualize the dataset
 # OUTPUT: dataset-plot.pdf
-blos visualize plotpoints points ${DATA_DIR}/dataset/points ${DATA_DIR}/dataset/points
+#blos visualize plotpoints points ${DATA_DIR}/dataset/points ${DATA_DIR}/dataset/points
 
 #find closest center for each point for visualization
-cat ${DATA_DIR}/dataset/points | blos visualize apply-centroids ${DATA_DIR}/dataset/centers >> ${DATA_DIR}/dataset/result
-blos visualize plotpoints result ${DATA_DIR}/dataset/result ${DATA_DIR}/dataset/result ${DATA_DIR}/dataset/init_centers
+#cat ${DATA_DIR}/dataset/points | blos visualize apply-centroids ${DATA_DIR}/dataset/centers >> ${DATA_DIR}/dataset/result
+#blos visualize plotpoints result ${DATA_DIR}/dataset/result ${DATA_DIR}/dataset/result ${DATA_DIR}/dataset/init_centers
 
 
 # run kmeans from apache flink
@@ -62,19 +62,19 @@ blos visualize plotpoints result ${DATA_DIR}/dataset/result ${DATA_DIR}/dataset/
 
 echo "FLINK: tart running Flink KMeans"
 TIME_START
-blos examples run eu.blos.java.ml.clustering.FlinkKMeans \
-	${DATA_DIR}/dataset/points \
-	${DATA_DIR}/dataset/init_centers \
-	${DATA_DIR}/flink/out/points/ \
-	${ITERATIONS} \
-	${DATA_DIR}/flink/out/centers/
-	 &> /dev/null
+#blos examples run eu.blos.java.ml.clustering.FlinkKMeans \
+#	${DATA_DIR}/dataset/points \
+#	${DATA_DIR}/dataset/init_centers \
+#	${DATA_DIR}/flink/out/points/ \
+#	${ITERATIONS} \
+#	${DATA_DIR}/flink/out/centers/
+#	 &> /dev/null
 TIME_END
 echo "FLINK:RUNNING-TIME: $DIFF seconds"
 
-cat ${DATA_DIR}/flink/out/points/* >> ${DATA_DIR}/flink/result
-cat ${DATA_DIR}/flink/out/centers/* >> ${DATA_DIR}/flink/centers
-blos visualize plotpoints result ${DATA_DIR}/flink/result ${DATA_DIR}/flink/result ${DATA_DIR}/flink/centers
+#cat ${DATA_DIR}/flink/out/points/* >> ${DATA_DIR}/flink/result
+#cat ${DATA_DIR}/flink/out/centers/* >> ${DATA_DIR}/flink/centers
+#blos visualize plotpoints result ${DATA_DIR}/flink/result ${DATA_DIR}/flink/result ${DATA_DIR}/flink/centers
 
 
 # run skeched kmeans
@@ -102,8 +102,8 @@ TIME_END
 echo "SKETCHED:RUNNING-TIME: $DIFF seconds"
 
 # plot results
-cat ${DATA_DIR}/dataset/points | blos visualize apply-centroids ${DATA_DIR}/sketch/centers >> ${DATA_DIR}/sketch/result
-blos visualize plotpoints result ${DATA_DIR}/sketch/result ${DATA_DIR}/sketch/result ${DATA_DIR}/sketch/centers
+#cat ${DATA_DIR}/dataset/points | blos visualize apply-centroids ${DATA_DIR}/sketch/centers >> ${DATA_DIR}/sketch/result
+#blos visualize plotpoints result ${DATA_DIR}/sketch/result ${DATA_DIR}/sketch/result ${DATA_DIR}/sketch/centers
 
 blos visualize sketch2  ${DATA_DIR}/sketch/reconstructed-input-space  ${DATA_DIR}/sketch/reconstructed-input-space.png
 

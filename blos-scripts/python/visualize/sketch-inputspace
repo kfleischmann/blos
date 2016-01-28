@@ -34,55 +34,55 @@
 #
 #
 ################################################################################
+import sys
 import matplotlib.pyplot as plt
-from numpy.random import rand
-from PIL import Image
-from os.path import basename
+import numpy as np
 
 
 def run(**kwargs):
-	format=kwargs['output_size'].split("x")
-	max_d = 0
-	max_w = 0
-	max_count = 0
 
-	# read statistics
-	with open(kwargs['sketch']) as f:
-		for line in f:
-			fields=line.strip().split(',')
-			w=int(fields[0])
-			d=int(fields[1])
-			count=int(fields[2])
+	counts = []
+	dim_x = 0
+	dim_y = 0
+	input=kwargs['input']
+	output=kwargs['output']
+	format=kwargs['format']
+	bar=kwargs['colorbar']
+	dpi=int(kwargs['dpi'])
+	display=bool(kwargs['display'])
+	with open(input, 'rb') as file:
+		for line in file:
+			# parse data
+			freq = line.strip().split(' ')
 
-			max_w = max(w,max_w)
-			max_d = max(d,max_d)
-			max_count = max(count,max_count)
+			counts.append( map( lambda x:int(x), freq ) )
+			dim_x = max( len(freq), dim_x)
+			dim_y+=1
 
-	white = (255,255,255)
-	img = Image.new("RGB", [max_w+1,max_d+1], white)
+	img = np.zeros((dim_x,dim_y))
+	for (yi,y) in enumerate(counts):
+		for (xi,f) in enumerate(y):
+			img[yi,xi] = f
 
-	print "Max w:", max_w
-	print "Max d:", max_d
-	print "Max count:", max_count
+	fig = plt.figure()
+	ax = fig.add_subplot(111)
+	cax = ax.matshow(img)
 
-	# read statistics
-	with open(kwargs['sketch']) as f:
-		for line in f:
-			fields=line.strip().split(',')
-			w=int(fields[0])
-			d=int(fields[1])
-			count=int(fields[2])
+	ax.set_xticklabels(["",-1.0, -0.5, 0.0, 0.5, 1.0])
+	ax.set_yticklabels(["",-1.0, -0.5, 0.0, 0.5, 1.0])
 
-			s = int( float(count)/float(max_count)*255.0)
-			color = ( s ,s ,s )
-			img.putpixel((w, d), color)
+	if kwargs['text']:
+		fig.suptitle(kwargs['text'], fontsize=14 )
 
-	img2=img.resize((int(format[0]),int(format[1])))
-	output=kwargs['output_dir']+basename(kwargs['sketch'])+"."+kwargs['output_format']
-	img2.save(output)
+	if bool(kwargs['colorbar']):
+		fig.colorbar(cax)
 
-	if bool(kwargs['display']):
-		img2.show()
+
+	if output:
+		fig.savefig(output+"."+format, format=format, dpi=dpi )
+
+	if display:
+		fig.show()
 
 
 if __name__=='__main__':
@@ -92,17 +92,19 @@ if __name__=='__main__':
 	from argparse import RawTextHelpFormatter
 
 	argparser = argparse.ArgumentParser(description="""
-		visualize the sketch
+		visualize the sketch input-space
 	""", formatter_class=RawTextHelpFormatter)
 
 
 	# specify arguments
 	argparser.add_argument("-v", "--verbose", action="store_true", help="turns on verbosity")
-	argparser.add_argument("-s", "--sketch", action="store", required=True, help="sketch file")
-	argparser.add_argument("-o", "--output_dir", action="store", required=True, help="Path to output directory")
-	argparser.add_argument("-S", "--output_size", action="store", required=False, help="output image format", default="1000x100")
-	argparser.add_argument("-f", "--output_format", action="store", required=False, help="output image format", default="jpg")
-	argparser.add_argument("-d", "--display", action="store_true", required=False, help="display image" )
+	argparser.add_argument("-i", "--input", action="store", required=True, help="sketch input file")
+	argparser.add_argument("-o", "--output", action="store", required=True, help="output file")
+	argparser.add_argument("-f", "--format", action="store", required=False, help="output image format", default="png")
+	argparser.add_argument("-d", "--dpi", action="store", required=False, help="output image format dpi", default="600")
+	argparser.add_argument("-D", "--display", action="store_true", required=False, help="display image" )
+	argparser.add_argument("-C", "--colorbar", action="store_true", required=False, help="display colorbar" )
+	argparser.add_argument("-t", "--text", action="store", required=False, help="show text" )
 
 	# validate arguments
 	args = argparser.parse_args()
