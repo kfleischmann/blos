@@ -21,7 +21,7 @@ SKETCH_SIZE=0.5:0.1
 SKETCH_P=2
 SKETCH_HH=100
 START=$(date +%s)
-
+SEED=3
 
 function TIME_START {
 	START=$(date +%s)
@@ -40,7 +40,7 @@ blos examples run eu.blos.java.ml.clustering.KMeansDatasetGenerator \
 	-range ${RANGE} \
 	-output ${DATA_DIR}/dataset \
 	-resolution ${RESOLUTION} \
-	-seed 3
+	-seed ${SEED}
 
 # visualize the dataset
 # OUTPUT: dataset-plot.pdf

@@ -8,6 +8,7 @@ import org.apache.flink.api.java.tuple.Tuple1;
 import org.apache.flink.api.java.tuple.Tuple2;
 
 import java.io.*;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -68,7 +69,7 @@ public class SketchedKMeans {
 		}//if
 
 		if( cmd.hasOption("verbose") || cmd.hasOption("print-sketch") ) {
-			if( cmd.hasOption("output")) {
+			if( !cmd.hasOption("output")) {
 				System.out.println("heavyhitters");
 				for (int k = 1; k < sketch.getHeavyHitters().getHeapArray().length; k++) {
 					CMEstimate topK = (CMEstimate) sketch.getHeavyHitters().getHeapArray()[k];
@@ -97,7 +98,7 @@ public class SketchedKMeans {
 		}//if
 
 
-		if( cmd.hasOption("verbose")) reconstructInputSpace();
+		if( cmd.hasOption("verbose") || cmd.hasOption("print-sketch")) reconstructInputSpace();
 
 		if( !cmd.hasOption("skip-learning") ){
 
@@ -143,8 +144,11 @@ public class SketchedKMeans {
 		sketch.alloc();
 		total_size = sketch.alloc_size();
 
-		if( cmd.hasOption("verbose")) LOG("Sketch-size: w="+sketch.w()+", d="+sketch.d());
-		if( cmd.hasOption("verbose")) LOG("total sketch-size: "+ (total_size/1024.0/1024.0 )+"mb");
+		DecimalFormat df = new DecimalFormat("#.###");
+
+		LOG("w="+sketch.w());
+		LOG("d="+sketch.d());
+		LOG("size(mb)="+ df.format(total_size/1024.0/1024.0 ));
 
 		double max=0.0;
 		double min=0.0;
@@ -412,7 +416,6 @@ public class SketchedKMeans {
 	public static void reconstructInputSpace() throws FileNotFoundException {
 		long freq;
 		String lookup;
-		long inputSpace=0;
 
 		PrintStream out = new PrintStream(new FileOutputStream(cmd.getOptionValue("output") + "/reconstructed-input-space"));
 		// iterate through the whole input-space
@@ -424,10 +427,8 @@ public class SketchedKMeans {
 				freq = sketch.get(lookup);
 
 				out.print(freq+" ");
-
 			}//for
 			out.println();
-
 		}//for
 		out.close();
 	}
@@ -575,7 +576,6 @@ public class SketchedKMeans {
 		);
 
 
-
 		CommandLineParser lvParser = new BasicParser();
 		CommandLine cmd = null;
 		cmd = lvParser.parse(lvOptions, args );
@@ -583,6 +583,6 @@ public class SketchedKMeans {
 	}
 
 	private static void LOG(String msg ){
-		System.out.println("LOG: "+msg);
+		System.out.println(msg);
 	}
 }
