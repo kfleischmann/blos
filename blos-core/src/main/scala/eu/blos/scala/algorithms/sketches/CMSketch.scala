@@ -50,7 +50,8 @@ class CMSketch( var delta: Double,
   var hashfunctions = create_hashfunctions
   val BIG_PRIME : Long = 9223372036854775783L
 
-  def w = Math.ceil(Math.exp(1) /epsilon).toLong
+  def e = 1
+  def w = Math.ceil(2*e /epsilon).toLong
   def d = Math.ceil(Math.log(1 / delta)).toLong
 
   var heavyHitters = new HeavyHitters(k);
@@ -63,8 +64,9 @@ class CMSketch( var delta: Double,
     count = new LongLargeArray(w*d, true /*init memory with zeros*/ )
   }
 
-  def size = if(count == null) 0 else d*w*8.0 // Bytes
-  def alloc_size = d*w*8.0 // Bytes
+  def bucket_size_in_bytes=8
+  def size = if(count == null) 0 else d*w*bucket_size_in_bytes // Bytes
+  def alloc_size = d*w*bucket_size_in_bytes // Bytes
   def estimate(t: (Float,String)) = -get(t._2)
   def get_hashfunctions = hashfunctions
   def getHashfunctions = hashfunctions.toArray( new Array[HashFunction]( hashfunctions.size() ) )

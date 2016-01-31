@@ -1,0 +1,53 @@
+#!/bin/bash
+
+# KMeans
+# Experiement1
+#
+#
+# datapoints 1mio
+# 3 centers
+# input space per dimension: [-1...+1]
+# resolution #.###
+
+DATA_DIR=~/tmp/blos/kmeans/exp1a
+
+# cleanup
+rm -r ${DATA_DIR}
+
+# prepare folders
+mkdir -p ${DATA_DIR}/dataset
+mkdir -p ${DATA_DIR}/sketch
+
+NUM_SAMPLES=1000000
+NUM_CENTROIDS=3
+STDDEV=0.06
+RESOLUTION=3
+RANGE=1.0
+ITERATIONS=100
+SKETCH_SIZE_DELTA=0.5,0.1,0.01,0.001,0.001,0.0001
+SKETCH_SIZE_EPSILON=0.0001,0.00008,0.000005,0.000001
+SKETCH_P=3
+SKETCH_HH=100
+
+
+# prepare dataset
+
+blos examples run eu.blos.java.ml.clustering.KMeansDatasetGenerator \
+        -points ${NUM_SAMPLES} \
+        -k ${NUM_CENTROIDS} \
+        -stddev ${STDDEV} \
+        -range ${RANGE} \
+        -output ${DATA_DIR}/dataset \
+        -resolution ${RESOLUTION} \
+	-seed 0
+
+
+# sketch scatterplot
+blos sketch scatterplot \
+    -d ${DATA_DIR} \
+    -p ${SKETCH_P} \
+    -D ${SKETCH_SIZE_DELTA} \
+    -E ${SKETCH_SIZE_EPSILON} \
+    -t "${NUM_SAMPLES} points, stddev: ${STDDEV}, ${NUM_CENTROIDS} centroids"
+
+# kmeans learning
