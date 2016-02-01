@@ -5,12 +5,6 @@ import eu.blos.scala.algorithms.sketches.CMEstimate;
 import eu.blos.scala.algorithms.sketches.CMSketch;
 import eu.blos.scala.algorithms.sketches.HeavyHitters;
 import org.junit.Test;
-import scala.collection.Iterator;
-import scala.collection.mutable.HashMap;
-
-import org.apache.commons.math3.distribution.NormalDistribution;
-
-import java.util.Arrays;
 import java.util.Random;
 
 public class CMSketchTest {
@@ -63,8 +57,8 @@ public class CMSketchTest {
 	public void testSketch () {
 
 
-		double delta = 0.01;        // certaintly
-		double epsilon = 0.0001;        // error percentage
+		double delta 	= 0.01;        // certaintly
+		double epsilon 	= 0.0001;        // error percentage
 
 		CMSketch sketch = new CMSketch(delta, epsilon, 1);
 		sketch.alloc();
