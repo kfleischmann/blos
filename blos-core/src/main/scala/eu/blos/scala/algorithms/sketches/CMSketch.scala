@@ -50,8 +50,7 @@ class CMSketch( var delta: Double,
   var hashfunctions = create_hashfunctions
   val BIG_PRIME : Long = 9223372036854775783L
 
-  def e = 1
-  def w = Math.ceil(2*e /epsilon).toLong
+  def w = Math.ceil( 2 /epsilon).toLong
   def d = Math.ceil(Math.log(1 / delta)).toLong
 
   var heavyHitters = new HeavyHitters(k);

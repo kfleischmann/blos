@@ -8,6 +8,10 @@ import org.junit.Test;
 import scala.collection.Iterator;
 import scala.collection.mutable.HashMap;
 
+import org.apache.commons.math3.distribution.NormalDistribution;
+
+import java.util.Arrays;
+import java.util.Random;
 
 public class CMSketchTest {
 
@@ -26,33 +30,89 @@ public class CMSketchTest {
 	}
 
 
+	public int[][] generateTestDataset(int n, int N){
+		int [][] data = new int [n][n];
+		// default values shold be zero
+		Random rng1 = new Random();
+		Random rng2 = new Random();
+
+		for (int k = 0; k < N; ++k) {
+			double x = rng1.nextGaussian();
+			double y = rng2.nextGaussian();
+
+			int i = Math.abs((int)(((x+3)/5)*(float)n));
+			int j = Math.abs((int)(((y+3)/5)*(float)n));
+
+			if( i < n & j < n)
+				data[i][j] += 1;
+		}
+		return data;
+	}
+
+
 	@Test
-	public void testUniformHashFunction (){
-		CMSketch sketch = new CMSketch(0.01, 0.1, 1  );
+	/**
+	 * Test sketch
+	 *
+	 * generate sketch
+	 * elta=0.01 and epsilon=0.1
+	 * N=1mio
+	 * total sum is 1mio
+	 *
+	 */
+	public void testSketch () {
+
+
+		double delta = 0.01;        // certaintly
+		double epsilon = 0.0001;        // error percentage
+
+		CMSketch sketch = new CMSketch(delta, epsilon, 1);
 		sketch.alloc();
 		HashFunction[] hashfunctions = sketch.getHashfunctions();
-		for( int i=0; i < 10000000; i++ ){
-			sketch.update(""+i);
-		}
-		double epsilon = 0.008;
-		double avgdiff = 0.0;
-		double maxdiff = 0L;
-		double currdiff = 0.0;
-		long countdiff = 0L;
-		for( long _row=0; _row < hashfunctions.length; _row ++ )
-			for( long _col=0; _col < sketch.w(); _col++ )
-				for( long row=0; row < hashfunctions.length; row ++ )
-					for( long col=0; col < sketch.w(); col++ ) {
-						currdiff = Math.abs(sketch.array_get(_row, _col) - sketch.array_get(row, col)) / (double)Math.abs(sketch.array_get(_row, _col));
-						maxdiff = (double)Math.max(maxdiff, currdiff);
-						avgdiff += maxdiff;
-						countdiff += 1;
-						assert (currdiff < epsilon);
-					}
-		avgdiff /= countdiff;
-		assert( avgdiff < epsilon );
-	}//for
 
+		long 	N  	= 0;
+		int		d 	= 1000;
+		int[][] dataset = generateTestDataset( d, 10000000 );
+		int		n 	= dataset.length*dataset[0].length;
+
+		int real;
+
+		// update sketch
+		for (int i = 0; i < dataset.length; i++) {
+			for (int j = 0; j < dataset[i].length; j++) {
+				real = dataset[i][j];
+				N += real;
+				sketch.update(""+i+""+j, real );
+			}
+		}
+
+		long errors = (long) (epsilon * (float) N);        // upper bound (2/w))*epsilon = #errors
+		long errors2 = (2 * N / sketch.w());            // upper bound (2*N)/w = #errors
+
+		assert (errors == errors2);
+
+		long count = 0L;
+		long bounded = 0L;
+		long w = sketch.w();
+		long total_errors = 0;
+
+		sketch.print();
+
+		for (int i = 0; i < dataset.length; i++) {
+			for (int j = 0; j < dataset[i].length; j++) {
+				count = sketch.get(""+i+""+j);
+				real = dataset[i][j];
+				// true value i=1
+				// expected c <= real+(2*N/w)
+				total_errors += Math.abs(real-count);
+				if (count <= real + errors ) {
+					bounded++;
+				} // if
+			} // for
+		} // for
+		// check certainty
+		assert( (1.0-(float)bounded/(float)n) <= delta );
+	}
 
 	@Test
 	public void testHeavyHitters(){
@@ -128,11 +188,10 @@ public class CMSketchTest {
 
 		HeavyHitters hh = sketch.getHeavyHitters();
 
-		/*
 		for( int i=0; i < hh.getHeapArray().length; i++ ){
 			CMEstimate e = (CMEstimate)hh.getHeapArray()[i];
 			System.out.println("hh: "+e);
-		}*/
+		}
 
 		assert( ((CMEstimate)hh.getHeapArray()[1]).count() == 10 && ((CMEstimate)hh.getHeapArray()[1]).key().equals("test8") );
 		assert( ((CMEstimate)hh.getHeapArray()[2]).count() == 5 && ((CMEstimate)hh.getHeapArray()[2]).key().equals("test1") );
