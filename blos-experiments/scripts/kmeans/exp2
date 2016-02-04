@@ -38,8 +38,7 @@ blos examples run eu.blos.java.ml.clustering.KMeansDatasetGenerator \
         -stddev ${STDDEV} \
         -range ${RANGE} \
         -output ${DATA_DIR}/dataset \
-        -resolution ${RESOLUTION} \
-	-seed 0
+        -resolution ${RESOLUTION}
 
 
 # sketch scatterplot
@@ -47,7 +46,5 @@ blos sketch scatterplot \
     -d ${DATA_DIR} \
     -p ${SKETCH_P} \
     -D ${SKETCH_SIZE_DELTA} \
-    -E ${SKETCH_SIZE_EPSILON} \
-    -t "${NUM_SAMPLES} points, stddev: ${STDDEV}, ${NUM_CENTROIDS} centroids"
-
+    -E ${SKETCH_SIZE_EPSILON} 
 # kmeans learning
