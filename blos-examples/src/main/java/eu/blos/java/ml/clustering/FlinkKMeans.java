@@ -93,23 +93,27 @@ public class FlinkKMeans {
 		// get input data
 		DataSet<Point> points = getPointDataSet(env);
 		DataSet<Centroid> centroids = getCentroidDataSet(env);
+		DataSet<Centroid> finalCentroids = null;
 
+		if(numIterations>0) {
+			// set number of bulk iterations for KMeans algorithm
+			IterativeDataSet<Centroid> loop = centroids.iterate(numIterations);
 
+			DataSet<Centroid> newCentroids = points
+					// compute closest centroid for each point
+					.map(new SelectNearestCenter()).withBroadcastSet(loop, "centroids")
+							// count and sum point coordinates for each centroid
+					.map(new CountAppender())
+					.groupBy(0).reduce(new CentroidAccumulator())
+							// compute new centroids from point counts and coordinate sums
+					.map(new CentroidAverager());
 
-		// set number of bulk iterations for KMeans algorithm
-		IterativeDataSet<Centroid> loop = centroids.iterate(numIterations);
-
-		DataSet<Centroid> newCentroids = points
-				// compute closest centroid for each point
-				.map(new SelectNearestCenter()).withBroadcastSet(loop, "centroids")
-						// count and sum point coordinates for each centroid
-				.map(new CountAppender())
-				.groupBy(0).reduce(new CentroidAccumulator())
-						// compute new centroids from point counts and coordinate sums
-				.map(new CentroidAverager());
-
-		// feed new centroids back into next iteration
-		DataSet<Centroid> finalCentroids = loop.closeWith(newCentroids);
+			// feed new centroids back into next iteration
+			finalCentroids = loop.closeWith(newCentroids);
+		}
+		else {
+			finalCentroids = centroids;
+		}
 
 		DataSet<Tuple2<Integer, Point>> clusteredPoints = points
 				// assign points to final clusters

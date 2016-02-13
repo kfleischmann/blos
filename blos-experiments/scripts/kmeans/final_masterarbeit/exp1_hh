@@ -9,7 +9,7 @@
 # input space per dimension: [-1...+1]
 # resolution #.###
 
-DATA_DIR=~/tmp/blos/kmeans/exp1
+DATA_DIR=~/tmp/blos/kmeans/exp1_hh
 
 # cleanup
 rm -r ${DATA_DIR}
@@ -28,7 +28,7 @@ SKETCH_SIZE_DELTA=0.5,0.1,0.01,0.001,0.001,0.0001
 #SKETCH_SIZE_EPSILON=0.1,0.01,0.005,0.002,0.001,0.0001
 SKETCH_SIZE_EPSILON=0.01,0.001,0.0003,0.0002,0.0001
 SKETCH_P=2
-SKETCH_HH=500
+SKETCH_HH=800
 
 
 # prepare dataset
@@ -51,6 +51,5 @@ blos sketch scatterplot \
     	-E ${SKETCH_SIZE_EPSILON} \
         --heavy-hitters ${SKETCH_HH} \
         --iterations ${ITERATIONS} \
-	--enumeration yes \
 	--generate-results yes
 # kmeans learning

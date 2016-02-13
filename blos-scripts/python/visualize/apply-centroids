@@ -1,31 +1,32 @@
 #!/usr/bin/python
+# USAGE ./apply-centroids file-centroids file-datapoints
+# OUTPUT: c x y
+
+
 import sys
-#import matplotlib.pyplot as plt
-import csv
-import os
-import fileinput
 import math
-import numpy as np
 
 in_centroids = sys.argv[1]
+in_datapoints = sys.argv[2]
 centroids = []
 
 with open(in_centroids, 'rb') as file:
 	for line in file:
 		f=line.split(" ")
 		centroids.append( ( int(f[0]), float(f[1]), float(f[2]) ) )
-for line in sys.stdin:
-	fields=line.split(" ")
-	x=float(fields[0])
-	y=float(fields[1])
-	c=0
-	dmin=float("inf")
-		
-	for i,e in enumerate(centroids):
-		d=math.sqrt( (x-e[1])*(x-e[1]) + (y-e[2])*(y-e[2]) )
-		if d < dmin:
-			c=e[0]
-			dmin=d
 
-		
-	print(str(c)+" "+str(x)+" "+str(y))
+with open(in_datapoints, 'rb') as file:
+	for line in file:
+		fields=line.split(" ")
+		x=float(fields[0])
+		y=float(fields[1])
+		c=0
+		dmin=float("inf")
+
+		for i,e in enumerate(centroids):
+			d=math.sqrt( (x-e[1])*(x-e[1]) + (y-e[2])*(y-e[2]) )
+			if d < dmin:
+				c=e[0]
+				dmin=d
+
+		print(str(c)+" "+str(x)+" "+str(y))

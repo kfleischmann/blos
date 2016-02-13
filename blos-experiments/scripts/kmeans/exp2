@@ -9,7 +9,7 @@
 # input space per dimension: [-1...+1]
 # resolution #.###
 
-DATA_DIR=~/tmp/blos/kmeans/exp1a
+DATA_DIR=~/tmp/blos/kmeans/exp2
 
 # cleanup
 rm -r ${DATA_DIR}
@@ -46,5 +46,6 @@ blos sketch scatterplot \
     -d ${DATA_DIR} \
     -p ${SKETCH_P} \
     -D ${SKETCH_SIZE_DELTA} \
-    -E ${SKETCH_SIZE_EPSILON} 
+    -E ${SKETCH_SIZE_EPSILON} \
+    --generate-results
 # kmeans learning

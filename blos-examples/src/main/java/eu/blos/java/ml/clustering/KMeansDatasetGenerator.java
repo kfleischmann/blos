@@ -55,7 +55,7 @@ public class KMeansDatasetGenerator {
 		// check parameter count
 		if (args.length < 2) {
 			System.out.println("KMeansDataGenerator -points <num> -k <num clusters> [-output <output-path>] [-output-centroids] [-stddev <relative stddev>] [-range <centroid range>] [-seed <seed>]");
-			System.exit(1); 
+			System.exit(1);
 		}
 
 		// parse parameters

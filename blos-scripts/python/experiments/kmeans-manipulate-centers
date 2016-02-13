@@ -1,0 +1,18 @@
+#!/usr/bin/python
+# USAGE ./kmeans-manipulate-centers {centers file} {distance} [{seed}]
+# OUTPUT: c x y
+
+import sys
+import random
+
+in_centroids = sys.argv[1]
+distance = float(sys.argv[2])
+
+if len(sys.argv) == 4:
+	random.seed( int(sys.argv[3]) )
+
+with open(in_centroids, 'rb') as file:
+	for line in file:
+		f=line.split(" ")
+		print( str(int(f[0]))+" "+str(float(f[1])+random.uniform(-distance, distance))+" "+str(float(f[2])+random.uniform(-distance, distance)) )
+

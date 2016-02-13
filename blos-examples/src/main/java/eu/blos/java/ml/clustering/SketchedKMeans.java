@@ -10,6 +10,7 @@ import org.apache.flink.api.java.tuple.Tuple2;
 import java.io.*;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 
@@ -336,7 +337,7 @@ public class SketchedKMeans {
 		for (int i = 0; i < centroids.length; i++) {
 			centroids[i].f0 = sums[i].f0 / counts[i];
 			centroids[i].f1 = sums[i].f1 / counts[i];
-			if( cmd.hasOption("verbose")) LOG("counted values for centroid "+i+" => "+counts[i]);
+			if( cmd.hasOption("verbose")) LOG("HH: counted values for centroid "+i+" => "+counts[i]);
 
 		}//for
 		if( cmd.hasOption("verbose")) LOG("inputSpace size "+inputSpace);
@@ -400,7 +401,7 @@ public class SketchedKMeans {
 		for (int i = 0; i < centroids.length; i++) {
 			centroids[i].f0 = sums[i].f0 / counts[i];
 			centroids[i].f1 = sums[i].f1 / counts[i];
-			if( cmd.hasOption("verbose")) LOG("counted values for centroid "+i+" => "+counts[i]);
+			if( cmd.hasOption("verbose")) LOG("ENUM: counted values for centroid "+i+" => "+counts[i]);
 
 		}//for
 		if( cmd.hasOption("verbose")) LOG("inputSpace size "+inputSpace);
@@ -414,29 +415,53 @@ public class SketchedKMeans {
 	 * @throws FileNotFoundException
 	 */
 	public static void reconstructInputSpace() throws FileNotFoundException {
+		String lookup;
+		HashMap<String, Long> hh = new HashMap<>();
+
+		for( int k=0; k < sketch.getHeavyHitters().getHeapArray().length-1; k++ ) {
+			CMEstimate topK = (CMEstimate) sketch.getHeavyHitters().getHeapArray()[k + 1];
+			if (topK != null) {
+				hh.put(topK.key(), topK.count());
+			}//if
+		}//for
+
+
 		long freq;
 		long elements=0;
 		long total_elements=normalizer.getTotalElements()*normalizer.getTotalElements();
-		String lookup;
 		int percentage = -1;
-		PrintStream out = new PrintStream(new FileOutputStream(cmd.getOptionValue("output") + "/reconstructed-input-space"));
+		PrintStream out_enum = new PrintStream(new FileOutputStream(cmd.getOptionValue("output") + "/enumerated-input-space"));
+		PrintStream out_hh = new PrintStream(new FileOutputStream(cmd.getOptionValue("output") + "/hh-input-space"));
+
 		// iterate through the whole input-space
 		for (double y = (double) normalizer.getMax(); y >= (double) normalizer.getMin(); y -= (double) normalizer.getStep()) {
 			for (double x = (double) normalizer.getMin(); x <= (double) normalizer.getMax(); x += (double) normalizer.getStep()) {
 				elements++;
+
+				// enumerate
 				Tuple2<Double,Double> value = new Tuple2<>(normalizer.normalize(x),normalizer.normalize(y));
 				lookup = "("+normalizer.normalize(x)+"," + normalizer.normalize(y) + ")";
 				freq = sketch.get(lookup);
+				out_enum.print(freq+" ");
 
-				out.print(freq+" ");
+				// hh
+				if( hh.containsKey(lookup) ) {
+					freq = hh.get(lookup);
+					out_hh.print(freq+" ");
+				}else {
+					out_hh.print(0+" ");
+				}
+
 				if( (int)(((float)elements/(float)total_elements)*100) != percentage){
 					percentage=	(int)(((float)elements/(float)total_elements)*100);
 					System.out.println(percentage+"% discovered" );
 				}
 			}//for
-			out.println();
+			out_enum.println();
+			out_hh.println();
 		}//for
-		out.close();
+		out_enum.close();
+		out_hh.close();
 	}
 
 
