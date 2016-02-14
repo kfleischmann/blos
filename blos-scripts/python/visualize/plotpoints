@@ -60,7 +60,7 @@ if sys.argv[1] == 'points':
 		# plot data
 		ax1.scatter(xs, ys, s=25, c="#5b5b5b", edgecolors='None', alpha=0.5)
 
-	if len(sys.argv) == 5:
+	if len(sys.argv) >= 5:
 		cs1=[]
 		xs1=[]
 		ys1=[]

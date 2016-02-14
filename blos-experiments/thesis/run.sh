@@ -2,6 +2,8 @@
 
 
 # run kmeans example
-bash ./chap3.1/kmeans-example
+./chap3.1/kmeans-example
+
+./chap3.1/kmeans-example-skeched
 
 

@@ -31,7 +31,14 @@ blos examples run eu.blos.java.ml.clustering.KMeansDatasetGenerator \
         -stddev ${STDDEV} \
         -range ${RANGE} \
         -resolution ${RESOLUTION} \
-	-output ${DATA_DIR}/dataset 
+	-output ${DATA_DIR}/dataset
+
+
+blos visualize kmeans-plotter -i ${DATA_DIR}/dataset/points -o ${DATA_DIR}/dataset/kmeans-dataset-grid5.eps --dpi=${DPI} -s dataset --grid --gres=-1:1:0.5 --hideaxis
+
+blos visualize kmeans-plotter -i ${DATA_DIR}/dataset/points -o ${DATA_DIR}/dataset/kmeans-dataset-grid2.eps --dpi=${DPI} -s dataset --grid --gres=-1:1:0.2 --hideaxis
+
+blos visualize kmeans-plotter -i ${DATA_DIR}/dataset/points -o ${DATA_DIR}/dataset/kmeans-dataset-grid1.eps --dpi=${DPI} -s dataset --grid --gres=-1:1:0.1 --hideaxis
 
 # produce good init
 blos experiments kmeans-manipulate-centers \
@@ -45,6 +52,12 @@ blos experiments kmeans-manipulate-centers \
 blos visualize plotpoints points \
 	${DATA_DIR}/dataset/points  \
 	${DATA_DIR}/dataset/kmeans-dataset.eps:${DPI}
+
+blos visualize plotpoints points \
+        ${DATA_DIR}/dataset/points  \
+        ${DATA_DIR}/dataset/kmeans-dataset-grid.eps:${DPI} \
+	grid
+
 
 blos visualize plotpoints points \
         ${DATA_DIR}/dataset/points  \

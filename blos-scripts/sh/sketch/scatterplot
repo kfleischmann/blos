@@ -44,10 +44,13 @@ case $key in
     DPI="$2"
     shift # past argument
     ;;
-    -e|--enumeration)
-    ENUM_HH="--enumeration"
-    sh
-    ift # past argument
+    -e|--learn-enumeration)
+    ENUM_HH="$ENUM_HH --enumeration"
+    shift # past argument
+    ;;
+    -e|--learn-hh)
+    ENUM_HH="$ENUM_HH --heavyhitters"
+    shift # past argument
     ;;
     -f|--format)
     FORMAT="$2"
@@ -96,6 +99,7 @@ mkdir -p ${DATA_DIR}/sketch
 # SEED=3
 
 # generate data
+# done in a previous step
 #blos examples run eu.blos.java.ml.clustering.KMeansDatasetGenerator \
 #	-points ${NUM_SAMPLES} \
 #	-k ${NUM_CENTROIDS} \
@@ -159,7 +163,7 @@ do
 				-n $ITERATIONS \
 				-p ${SKETCH_P}  \
 				-s ${SKETCH_SIZE} \
-				-H ${SKETCH_HH} \
+				--num-heavyhitters ${SKETCH_HH} \
 				--discover-inputspace \
 				--print-sketch \
 				--verbose \
@@ -177,31 +181,36 @@ do
 		echo "plotting..."
 		blos visualize sketch-inputspace \
 				-i ${DATA_DIR}/sketch/${SKETCH_FILE}/enumerated-input-space \
-				-o ${DATA_DIR}/sketch/${SKETCH_FILE}/enumerated-input-space \
-				-t "${DESC}" \
+				--output="${DATA_DIR}/sketch/${SKETCH_FILE}/enumerated-input-space-${SKETCH_FILE}" \
 				-f ${FORMAT} \
 				-C \
 				-d ${DPI}
 
 		blos visualize sketch-inputspace \
 				-i ${DATA_DIR}/sketch/${SKETCH_FILE}/hh-input-space \
-				-o ${DATA_DIR}/sketch/${SKETCH_FILE}/hh-input-space \
-				-t "${DESC}" \
+				--output="${DATA_DIR}/sketch/${SKETCH_FILE}/hh-input-space-${SKETCH_FILE}" \
 				-f ${FORMAT} \
 				-C \
 				-d ${DPI}
 
-
+		# compute nearest centers for each data point
+		blos visualize apply-centroids ${DATA_DIR}/sketch/${SKETCH_FILE}/centers-enum ${DATA_DIR}/dataset/points >  "${DATA_DIR}/sketch/${SKETCH_FILE}/sketch-result-enum-${SKETCH_FILE}"
 
 		# compute nearest centers for each data point
-		blos visualize apply-centroids ${DATA_DIR}/sketch/${SKETCH_FILE}/centers ${DATA_DIR}/dataset/points >  ${DATA_DIR}/sketch/${SKETCH_FILE}/result
+		blos visualize apply-centroids ${DATA_DIR}/sketch/${SKETCH_FILE}/centers-hh ${DATA_DIR}/dataset/points >  "${DATA_DIR}/sketch/${SKETCH_FILE}/sketch-result-hh-${SKETCH_FILE}"
 
 
-		# plot datapoints with its computed centers
+		# plot datapoints with its computed centers using enumeration
 		blos visualize plotpoints result \
-			${DATA_DIR}/sketch/${SKETCH_FILE}/result  \
-			${DATA_DIR}/sketch/${SKETCH_FILE}/result-plot.png:${DPI} \
-			${DATA_DIR}/sketch/${SKETCH_FILE}/centers
+			${DATA_DIR}/sketch/${SKETCH_FILE}/sketch-result-enum-${SKETCH_FILE}  \
+			${DATA_DIR}/sketch/${SKETCH_FILE}/sketch-result-enum-plot-${SKETCH_FILE}.${FORMAT}:${DPI} \
+			${DATA_DIR}/sketch/${SKETCH_FILE}/centers-enum
+
+		# plot datapoints with its computed centers using heavyhitters
+		blos visualize plotpoints result \
+			${DATA_DIR}/sketch/${SKETCH_FILE}/sketch-result-hh-${SKETCH_FILE}  \
+			${DATA_DIR}/sketch/${SKETCH_FILE}/sketch-result-hh-plot-${SKETCH_FILE}.${FORMAT}:${DPI} \
+			${DATA_DIR}/sketch/${SKETCH_FILE}/centers-hh
 
 	done
 

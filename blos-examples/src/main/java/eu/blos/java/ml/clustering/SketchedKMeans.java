@@ -29,21 +29,21 @@ public class SketchedKMeans {
 	public static void main(String[] args) throws Exception {
 		HelpFormatter lvFormater = new HelpFormatter();
 
-		try{
+		try {
 			cmd = parseArguments(args);
-		} catch (Exception e){
+		} catch (Exception e) {
 			LOG(e.getMessage());
 			lvFormater.printHelp("SketchedKMeans", lvOptions);
 			return;
 		}
 
-		if ( cmd != null && (cmd.hasOption('h') || (cmd.getArgs().length == 0 && cmd.getOptions().length == 0) )) {
-			lvFormater.printHelp( "SketchedKMeans", lvOptions);
+		if (cmd != null && (cmd.hasOption('h') || (cmd.getArgs().length == 0 && cmd.getOptions().length == 0))) {
+			lvFormater.printHelp("SketchedKMeans", lvOptions);
 			return;
 		}
 
-		numCentroids = Integer.parseInt ( cmd.getOptionValue("centroids") );
-		numHeavyHitters = Integer.parseInt( cmd.getOptionValue("heavyhitters") );
+		numCentroids = Integer.parseInt(cmd.getOptionValue("centroids"));
+		numHeavyHitters = Integer.parseInt(cmd.getOptionValue("num-heavyhitters"));
 		centroids = new Tuple2[numCentroids];
 
 		// make it possible to read from stdin
@@ -57,21 +57,21 @@ public class SketchedKMeans {
 		buildSketches(is);
 
 
-		if( cmd.hasOption("print-sketch") ||  cmd.hasOption("verbose") ) {
+		if (cmd.hasOption("print-sketch") || cmd.hasOption("verbose")) {
 			// write output
-			if( cmd.hasOption("output")) {
+			if (cmd.hasOption("output")) {
 				sketch.display(System.out);
 			} else {
-				PrintStream out = new PrintStream(new FileOutputStream( cmd.getOptionValue("output")+"/sketch"));
+				PrintStream out = new PrintStream(new FileOutputStream(cmd.getOptionValue("output") + "/sketch"));
 				sketch.display(out);
 				out.close();
 			}
 
 		}//if
 
-		if( cmd.hasOption("verbose") || cmd.hasOption("print-sketch") ) {
-			if( !cmd.hasOption("output")) {
-				System.out.println("heavyhitters");
+		if (cmd.hasOption("verbose") || cmd.hasOption("print-sketch")) {
+			if (!cmd.hasOption("output")) {
+				System.out.println("num-heavyhitters");
 				for (int k = 1; k < sketch.getHeavyHitters().getHeapArray().length; k++) {
 					CMEstimate topK = (CMEstimate) sketch.getHeavyHitters().getHeapArray()[k];
 					if (topK != null) {
@@ -83,7 +83,7 @@ public class SketchedKMeans {
 				}//for
 				System.out.println("");
 			} else {
-				PrintStream out = new PrintStream(new FileOutputStream( cmd.getOptionValue("output")+"/heavyhitters"));
+				PrintStream out = new PrintStream(new FileOutputStream(cmd.getOptionValue("output") + "/heavyhitters"));
 				for (int k = 1; k < sketch.getHeavyHitters().getHeapArray().length; k++) {
 					CMEstimate topK = (CMEstimate) sketch.getHeavyHitters().getHeapArray()[k];
 					if (topK != null) {
@@ -99,28 +99,54 @@ public class SketchedKMeans {
 		}//if
 
 
-		if( cmd.hasOption("discover-inputspace")) reconstructInputSpace();
-
-		if( !cmd.hasOption("skip-learning") ){
-
-			learn(centroids);
-
-			// write output
-			if( cmd.hasOption("output")) {
-				PrintStream out = new PrintStream(new FileOutputStream( cmd.getOptionValue("output")+"/centers"));
-				for (int k = 0; k < centroids.length; k++) {
-					out.println( k+" "+centroids[k].f0 + " " + centroids[k].f1);
-				}//for
-				out.close();
-
-			} else {
-				for (int k = 0; k < centroids.length; k++) {
-					System.out.println(k+" "+ centroids[k].f0 + " " + centroids[k].f1);
-				}//for
-			}
+		if (cmd.hasOption("discover-inputspace")) {
+			reconstructInputSpace();
 		}
 
-	}
+		if (!cmd.hasOption("skip-learning")) {
+
+			// execute learning for enumeration
+			if (cmd.hasOption("enumeration")) {
+
+				learnByEnum(centroids);
+
+				// write output
+				if (cmd.hasOption("output")) {
+					PrintStream out = new PrintStream(new FileOutputStream(cmd.getOptionValue("output") + "/centers-enum"));
+					for (int k = 0; k < centroids.length; k++) {
+						out.println(k + " " + centroids[k].f0 + " " + centroids[k].f1);
+					}//for
+					out.close();
+
+				} else {
+					for (int k = 0; k < centroids.length; k++) {
+						System.out.println(k + " " + centroids[k].f0 + " " + centroids[k].f1);
+					}//for
+				}
+			}//if
+
+			if (cmd.hasOption("heavyhitters")) {
+
+				learnByHH(centroids);
+
+				// write output
+				if (cmd.hasOption("output")) {
+					PrintStream out = new PrintStream(new FileOutputStream(cmd.getOptionValue("output") + "/centers-hh"));
+					for (int k = 0; k < centroids.length; k++) {
+						out.println(k + " " + centroids[k].f0 + " " + centroids[k].f1);
+					}//for
+					out.close();
+
+				} else {
+					for (int k = 0; k < centroids.length; k++) {
+						System.out.println(k + " " + centroids[k].f0 + " " + centroids[k].f1);
+					}//for
+				}
+
+			}//if
+		}//if
+
+	} // main()
 
 	/**
 	 * read 2d points from input source
@@ -252,7 +278,7 @@ public class SketchedKMeans {
 	/**
 	 * learn the model
 	 */
-	public static void learn(Tuple2<Double,Double>[] centroids) throws Exception {
+	public static void learnByEnum(Tuple2<Double,Double>[] centroids) throws Exception {
 
 		if( cmd.hasOption("init-hh")){
 			initCentroidsHH(centroids);
@@ -267,21 +293,53 @@ public class SketchedKMeans {
 			if( cmd.hasOption("verbose")) LOG("init centroid randomly");
 		}
 
-		for( int i=0; i < numIterations; i++ ){
-			if( cmd.hasOption("enumeration") ){
-				if( cmd.hasOption("verbose")) System.out.println("Start iteration "+i);
-				updateClusterCentroidsWithEnumeration(centroids);
-			} else {
-				updateClusterCentroidsWithHeavyHitters(centroids);
-			}
 
-			if( cmd.hasOption("verbose")) {
+		// -----------------------
+		// LEARN BY ENUMERATION
+		// -----------------------
+		for (int i = 0; i < numIterations; i++) {
+			if (cmd.hasOption("verbose")) System.out.println("Start iteration " + i);
+			updateClusterCentroidsWithEnumeration(centroids);
+			if (cmd.hasOption("verbose")) {
 				for (int k = 0; k < centroids.length; k++) {
 					LOG("" + centroids[k]);
 				}
 			}//if
 		}//for
+	}
 
+
+	/**
+	 * learn the model
+	 */
+	public static void learnByHH(Tuple2<Double,Double>[] centroids) throws Exception {
+
+		if( cmd.hasOption("init-hh")){
+			initCentroidsHH(centroids);
+			if( cmd.hasOption("verbose")) LOG("init centroid by hh");
+		}
+		else if(cmd.hasOption("init-file")){
+			initCentroidsbyFile(centroids, cmd.getOptionValue("init-file"));
+			if( cmd.hasOption("verbose")) LOG("init centroid by file");
+		}
+		else {
+			initCentroidsRandomly(centroids);
+			if( cmd.hasOption("verbose")) LOG("init centroid randomly");
+		}
+
+
+		// -----------------------
+		// LEARN BY HEAVY HITTERS
+		// -----------------------
+		for (int i = 0; i < numIterations; i++) {
+			if (cmd.hasOption("verbose")) System.out.println("Start iteration " + i);
+			updateClusterCentroidsWithHeavyHitters(centroids);
+			if (cmd.hasOption("verbose")) {
+				for (int k = 0; k < centroids.length; k++) {
+					LOG("" + centroids[k]);
+				}
+			}//if
+		}//for
 	}
 
 	/**
@@ -560,12 +618,12 @@ public class SketchedKMeans {
 
 		lvOptions.addOption(
 				OptionBuilder
-						.withLongOpt("heavyhitters")
-						.withDescription("HeavyHitters")
+						.withLongOpt("num-heavyhitters")
+						.withDescription("num-heavyhitters")
 						.isRequired()
 								//.withValueSeparator('=')
 						.hasArg()
-						.create("H")
+						.create("N")
 		);
 
 		lvOptions.addOption(
@@ -575,6 +633,15 @@ public class SketchedKMeans {
 								//.withValueSeparator('=')
 						.create("e")
 		);
+
+		lvOptions.addOption(
+				OptionBuilder
+						.withLongOpt("heavyhitters")
+						.withDescription("use hh for reconstruction")
+								//.withValueSeparator('=')
+						.create("H")
+		);
+
 
 		lvOptions.addOption(
 				OptionBuilder
