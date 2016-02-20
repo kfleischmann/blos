@@ -11,7 +11,6 @@ SKIP_LEARNING="--skip-learning"
 ITERATIONS=100
 ENUM_HH=""
 
-
 # some arguments don't have a corresponding value to go with it such
 # as in the --default example).
 # note: if this is set to > 0 the /etc/hosts part is not recognized ( may be a bug )
@@ -96,19 +95,6 @@ mkdir -p ${DATA_DIR}/sketch
 # SKETCH_P=2
 # number of heavy hitters
 # START=$(date +%s)
-# SEED=3
-
-# generate data
-# done in a previous step
-#blos examples run eu.blos.java.ml.clustering.KMeansDatasetGenerator \
-#	-points ${NUM_SAMPLES} \
-#	-k ${NUM_CENTROIDS} \
-#	-stddev ${STDDEV} \
-#	-range ${RANGE} \
-#	-output ${DATA_DIR}/dataset \
-#	-resolution ${RESOLUTION} \
-#	-seed ${SEED}
-
 
 # -------------------------------
 # perform flink kmeans
@@ -117,7 +103,7 @@ mkdir -p ${DATA_DIR}/sketch
 echo "FLINK: start running Flink KMeans"
 blos examples run eu.blos.java.ml.clustering.FlinkKMeans \
 		${DATA_DIR}/dataset/points \
-		${DATA_DIR}/dataset/init_centers \
+		${DATA_DIR}/dataset/good_centers \
 		${DATA_DIR}/flink/out/points/ \
 		${ITERATIONS} \
 		${DATA_DIR}/flink/out/centers/
@@ -143,7 +129,7 @@ do
 
 		echo "scatterplot for $SKETCH_SIZE into $SKETCH_FILE"
 
-		NUM_CENTERS=$(cat ${DATA_DIR}/dataset/centers|wc -l)
+		NUM_CENTERS=$(cat ${DATA_DIR}/dataset/real_centers|wc -l)
 
 		if [ -z "$SKIP_LEARNING" ]; then
 			echo "execute sketched-kmeans with $NUM_CENTERS centers"
@@ -158,7 +144,7 @@ do
 		OUT=$(blos examples run eu.blos.java.ml.clustering.SketchedKMeans ${SKIP_LEARNING} ${ENUM_HH} \
 				-i ${DATA_DIR}/dataset/points \
 				-o ${DATA_DIR}/sketch/${SKETCH_FILE} \
-				--init-file ${DATA_DIR}/dataset/init_centers \
+				--init-file ${DATA_DIR}/dataset/good_centers \
 				-k $NUM_CENTERS \
 				-n $ITERATIONS \
 				-p ${SKETCH_P}  \
