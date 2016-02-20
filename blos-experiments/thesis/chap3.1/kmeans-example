@@ -6,7 +6,7 @@
 # input space per dimension: [-1...+1]
 # resolution #.###
 
-DATA_DIR=~/tmp/blos/experiments/kmeans/1k
+DATA_DIR=~/tmp/blos/experiments/kmeans/3k
 
 # cleanup
 rm -r ${DATA_DIR}
@@ -14,7 +14,7 @@ mkdir -p ${DATA_DIR}/dataset
 mkdir -p ${DATA_DIR}/result
 mkdir -p ${DATA_DIR}/flink
 
-NUM_SAMPLES=1000
+NUM_SAMPLES=3000
 NUM_CENTROIDS=3
 RESOLUTION=3
 ITERATIONS=10

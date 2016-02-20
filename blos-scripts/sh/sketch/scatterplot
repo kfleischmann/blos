@@ -197,14 +197,12 @@ do
 			${DATA_DIR}/sketch/${SKETCH_FILE}/sketch-result-hh-${SKETCH_FILE}  \
 			${DATA_DIR}/sketch/${SKETCH_FILE}/sketch-result-hh-plot-${SKETCH_FILE}.${FORMAT}:${DPI} \
 			${DATA_DIR}/sketch/${SKETCH_FILE}/centers-hh
-
 	done
-
 done
-
+2
 # merge images into a scatterplot
-montage ${DATA_DIR}/sketch/*/*.png \
-	-title "${TITLE}" \
-	-tile $(( ${#LIST_SKETCH_SIZE_EPSILON[@]}*3 ))x${#LIST_SKETCH_SIZE_DELTA[@]} \
-	-geometry +0+0 \
-	 ${DATA_DIR}/sketch/sketch-scatterplot.eps
+# montage ${DATA_DIR}/sketch/*/*.png \
+#	-title "${TITLE}" \
+#	-tile $(( ${#LIST_SKETCH_SIZE_EPSILON[@]}*3 ))x${#LIST_SKETCH_SIZE_DELTA[@]} \
+#	-geometry +0+0 \
+#	 ${DATA_DIR}/sketch/sketch-scatterplot.eps

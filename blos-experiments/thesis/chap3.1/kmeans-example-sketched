@@ -9,7 +9,7 @@
 # input space per dimension: [-1...+1]
 # resolution #.###
 
-DATA_DIR=~/tmp/blos/experiments/kmeans-sketched/1k
+DATA_DIR=~/tmp/blos/experiments/kmeans-sketched/3k
 
 # cleanup
 rm -r ${DATA_DIR}
@@ -18,7 +18,7 @@ rm -r ${DATA_DIR}
 mkdir -p ${DATA_DIR}/dataset
 mkdir -p ${DATA_DIR}/sketch
 
-NUM_SAMPLES=1000
+NUM_SAMPLES=3000
 NUM_CENTROIDS=3
 STDDEV=0.09
 RESOLUTION=3
@@ -38,8 +38,7 @@ blos examples run eu.blos.java.ml.clustering.KMeansDatasetGenerator \
         -stddev ${STDDEV} \
         -range ${RANGE} \
         -output ${DATA_DIR}/dataset \
-        -resolution ${RESOLUTION} \
-        -seed $SEED
+        -resolution ${RESOLUTION}
 
 # compute some good initializations
 blos experiments kmeans-manipulate-centers \
