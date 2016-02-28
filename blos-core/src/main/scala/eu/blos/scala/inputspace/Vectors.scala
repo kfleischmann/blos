@@ -10,8 +10,23 @@ object Vectors {
     def == (x: DoubleVector ) = {
       v.sameElements( x.elements )
     }
-    def <<(x:DoubleVector) : Boolean = {
-      false
+    def < (x:DoubleVector) : Boolean = {
+      var b = true
+      for( k <- 0 until dimension ) {
+        if ( !(elements(k) <= x.elements(k)) ){
+          b = false
+        }
+      }
+      b
+    }
+    def > (x:DoubleVector) : Boolean = {
+      var b = true
+      for( k <- 0 until dimension ) {
+        if ( !(elements(k) >= x.elements(k)) ){
+          b = false
+        }
+      }
+      b
     }
 
     def dimension = v.length
