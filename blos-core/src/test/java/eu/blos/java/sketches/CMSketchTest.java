@@ -1,9 +1,9 @@
-package eu.blos.java.algorithms.sketches;
+package eu.blos.java.sketches;
 
 
-import eu.blos.scala.algorithms.sketches.CMEstimate;
-import eu.blos.scala.algorithms.sketches.CMSketch;
-import eu.blos.scala.algorithms.sketches.HeavyHitters;
+import eu.blos.scala.sketches.CMEstimate;
+import eu.blos.scala.sketches.CMSketch;
+import eu.blos.scala.sketches.HeavyHitters;
 import org.junit.Test;
 import java.util.Random;
 

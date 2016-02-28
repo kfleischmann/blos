@@ -1,7 +1,7 @@
 package eu.blos.java.ml.distributed.random_forest;
 
-import eu.blos.java.algorithms.sketches.BloomFilter;
-import eu.blos.java.algorithms.sketches.Sketch;
+import eu.blos.java.sketches.BloomFilter;
+import eu.blos.java.sketches.Sketch;
 import eu.blos.java.api.common.LearningFunction;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;

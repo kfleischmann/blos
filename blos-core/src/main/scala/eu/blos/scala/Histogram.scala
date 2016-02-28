@@ -1,4 +1,4 @@
-package eu.blos.scala.algorithms
+package eu.blos.scala
 
 import scala.collection.JavaConversions._
 import scala.collection.mutable.ArrayBuffer

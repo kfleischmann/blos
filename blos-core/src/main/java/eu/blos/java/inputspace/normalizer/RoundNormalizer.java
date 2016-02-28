@@ -1,6 +1,6 @@
-package eu.blos.java.algorithms.sketches.fieldnormalizer;
+package eu.blos.java.inputspace.normalizer;
 
-import eu.blos.java.algorithms.sketches.InputSpaceNormalizer;
+import eu.blos.java.inputspace.InputSpaceNormalizer;
 
 public class RoundNormalizer implements InputSpaceNormalizer<Double> {
 

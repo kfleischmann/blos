@@ -1,6 +1,6 @@
 package eu.blos.java.ml.distributed.random_forest;
 
-import eu.blos.scala.algorithms.Histogram;
+import eu.blos.scala.Histogram;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;

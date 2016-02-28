@@ -1,7 +1,7 @@
-package eu.blos.scala.algorithms.sketches
+package eu.blos.scala.sketches
 
 import pl.edu.icm.jlargearrays.LongLargeArray
-import eu.blos.java.algorithms.sketches.{HeavyHittersPriorityQueue, Sketch, HashFunction, DigestHashFunction}
+import eu.blos.java.sketches.{HeavyHittersPriorityQueue, Sketch, HashFunction, DigestHashFunction}
 import org.apache.commons.lang3.StringUtils
 import java.io.PrintStream
 

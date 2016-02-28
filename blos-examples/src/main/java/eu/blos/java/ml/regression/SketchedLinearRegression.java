@@ -1,9 +1,9 @@
 package eu.blos.java.ml.regression;
 
 
-import eu.blos.java.algorithms.sketches.InputSpaceNormalizer;
-import eu.blos.java.algorithms.sketches.fieldnormalizer.RoundNormalizer;
-import eu.blos.scala.algorithms.sketches.CMSketch;
+import eu.blos.java.inputspace.InputSpaceNormalizer;
+import eu.blos.java.inputspace.normalizer.RoundNormalizer;
+import eu.blos.scala.sketches.CMSketch;
 import org.apache.commons.cli.*;
 import org.apache.flink.api.java.tuple.Tuple1;
 import org.apache.flink.api.java.tuple.Tuple2;
@@ -30,7 +30,7 @@ public class SketchedLinearRegression {
 		cmd = parseArguments(args);
 
 		if (cmd.hasOption('h') || (cmd.getArgs().length == 0 && cmd.getOptions().length == 0) ) {
-			lvFormater.printHelp( "Sketched Regression", lvOptions );
+			lvFormater.printHelp( "Sketched SketchedRegression", lvOptions );
 			return;
 		}
 

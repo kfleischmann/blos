@@ -1,4 +1,4 @@
-package eu.blos.scala.algorithms.sketches
+package eu.blos.scala.sketches
 
 /**
  * Naive implementation of the Bloom Filter to manage the membership to very large set of elements
@@ -11,7 +11,7 @@ package eu.blos.scala.algorithms.sketches
  */
 import java.security._
 import java.math.BigInteger
-import eu.blos.java.algorithms.sketches.HashFunction
+import eu.blos.java.sketches.HashFunction
 
 
 /**

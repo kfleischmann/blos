@@ -1,6 +1,6 @@
 package eu.blos.java.ml.distributed.linear_regression;
 
-import eu.blos.java.algorithms.sketches.InputSpaceNormalizer;
+import eu.blos.java.inputspace.InputSpaceNormalizer;
 import eu.blos.java.flink.helper.DataSetReader;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;

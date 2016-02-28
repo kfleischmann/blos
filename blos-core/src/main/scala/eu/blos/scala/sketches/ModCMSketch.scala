@@ -1,7 +1,7 @@
-package eu.blos.scala.algorithms.sketches
+package eu.blos.scala.sketches
 
 import pl.edu.icm.jlargearrays.FloatLargeArray
-import eu.blos.java.algorithms.sketches.{Sketch, HashFunction, DigestHashFunction}
+import eu.blos.java.sketches.{Sketch, HashFunction, DigestHashFunction}
 
 case class ModCMSketch(  var delta: Double,
                       var epsilon: Double

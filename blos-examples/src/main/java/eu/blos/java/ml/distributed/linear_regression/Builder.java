@@ -1,13 +1,13 @@
 package eu.blos.java.ml.distributed.linear_regression;
 
 
-import eu.blos.java.algorithms.sketches.InputSpaceNormalizer;
-import eu.blos.java.algorithms.sketches.Sketch;
-import eu.blos.java.algorithms.sketches.fieldnormalizer.ZeroOneNormalizer;
+import eu.blos.java.inputspace.InputSpaceNormalizer;
+import eu.blos.java.sketches.Sketch;
+import eu.blos.java.inputspace.normalizer.ZeroOneNormalizer;
 import eu.blos.java.flink.helper.StatisticsBuilder;
 import eu.blos.java.flink.helper.SampleFormat;
 import eu.blos.java.flink.sketch.api.SketchBuilder;
-import eu.blos.scala.algorithms.sketches.CMSketch;
+import eu.blos.scala.sketches.CMSketch;
 
 import org.apache.commons.cli.*;
 import org.apache.commons.logging.Log;
@@ -15,7 +15,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.flink.api.java.ExecutionEnvironment;
 
 public class Builder {
-	public static final String NAME = "Linear Regression Builder";
+	public static final String NAME = "Linear SketchedRegression Builder";
 	private static final Log LOG = LogFactory.getLog(Builder.class);
 
 	public static String getPreprocessedPath(String path){

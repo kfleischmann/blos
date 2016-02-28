@@ -1,7 +1,7 @@
 package eu.blos.java.flink.sketch.api;
 
 
-import eu.blos.java.algorithms.sketches.HashFunction;
+import eu.blos.java.sketches.HashFunction;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.flink.api.common.functions.FlatMapFunction;

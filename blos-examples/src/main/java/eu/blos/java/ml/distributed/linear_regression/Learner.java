@@ -1,12 +1,12 @@
 package eu.blos.java.ml.distributed.linear_regression;
 
-import eu.blos.java.algorithms.sketches.InputSpaceNormalizer;
-import eu.blos.java.algorithms.sketches.Sketch;
-import eu.blos.java.algorithms.sketches.fieldnormalizer.ZeroOneNormalizer;
+import eu.blos.java.inputspace.InputSpaceNormalizer;
+import eu.blos.java.sketches.Sketch;
+import eu.blos.java.inputspace.normalizer.ZeroOneNormalizer;
 import eu.blos.java.api.common.LearningFunction;
 import eu.blos.java.flink.helper.DataSetStatistics;
 import eu.blos.java.flink.sketch.api.SketchBuilder;
-import eu.blos.scala.algorithms.sketches.CMSketch;
+import eu.blos.scala.sketches.CMSketch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.flink.api.common.functions.MapFunction;

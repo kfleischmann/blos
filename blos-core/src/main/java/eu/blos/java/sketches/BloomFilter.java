@@ -13,9 +13,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package eu.blos.java.algorithms.sketches;
+package eu.blos.java.sketches;
 
-import java.nio.charset.Charset;
 import java.util.BitSet;
 import java.util.Collection;
 

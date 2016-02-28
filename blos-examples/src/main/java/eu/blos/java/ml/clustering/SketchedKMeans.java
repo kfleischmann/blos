@@ -1,8 +1,8 @@
 package eu.blos.java.ml.clustering;
 
-import eu.blos.java.algorithms.sketches.fieldnormalizer.RoundNormalizer;
-import eu.blos.scala.algorithms.sketches.CMEstimate;
-import eu.blos.scala.algorithms.sketches.CMSketch;
+import eu.blos.java.inputspace.normalizer.RoundNormalizer;
+import eu.blos.scala.sketches.CMEstimate;
+import eu.blos.scala.sketches.CMSketch;
 import org.apache.commons.cli.*;
 import org.apache.flink.api.java.tuple.Tuple1;
 import org.apache.flink.api.java.tuple.Tuple2;
@@ -66,8 +66,8 @@ public class SketchedKMeans {
 				sketch.display(out);
 				out.close();
 			}
-
 		}//if
+
 
 		if (cmd.hasOption("verbose") || cmd.hasOption("print-sketch")) {
 			if (!cmd.hasOption("output")) {

@@ -1,4 +1,4 @@
-package eu.blos.java.algorithms.sketches;
+package eu.blos.java.sketches;
 
 
 import java.io.Serializable;

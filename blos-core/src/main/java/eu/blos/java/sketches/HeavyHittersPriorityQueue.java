@@ -1,4 +1,4 @@
-package eu.blos.java.algorithms.sketches;
+package eu.blos.java.sketches;
 
 /**
  * Licensed to the Apache Software Foundation (ASF) under one or more

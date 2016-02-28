@@ -1,6 +1,6 @@
 package eu.blos.java.ml.distributed.random_forest;
 
-import eu.blos.java.algorithms.sketches.*;
+import eu.blos.java.sketches.*;
 import eu.blos.java.flink.sketch.api.SketchBuilder;
 import eu.blos.java.flink.sketch.api.SketcherUDF;
 import org.apache.commons.logging.Log;

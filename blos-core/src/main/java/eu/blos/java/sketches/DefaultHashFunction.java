@@ -1,8 +1,7 @@
-package eu.blos.java.algorithms.sketches;
+package eu.blos.java.sketches;
 
 import java.math.BigInteger;
 import java.util.Arrays;
-import java.util.Random;
 
 public class DefaultHashFunction implements HashFunction {
 
