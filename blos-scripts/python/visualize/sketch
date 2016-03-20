@@ -33,7 +33,5 @@ plt.title('pcolormesh')
 plt.axis([x.min(), x.max(), y.min(), y.max()])
 plt.colorbar()
 
-
-
 plt.show()
 

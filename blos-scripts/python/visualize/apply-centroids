@@ -29,4 +29,4 @@ with open(in_datapoints, 'rb') as file:
 				c=e[0]
 				dmin=d
 
-		print(str(c)+" "+str(x)+" "+str(y))
+		print(str(c+1)+" "+str(x)+" "+str(y))

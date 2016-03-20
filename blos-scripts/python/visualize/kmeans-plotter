@@ -115,7 +115,7 @@ def run(**kwargs):
 					ys1.append(y)
 
 				# plot data
-				ax1.scatter(xs1, ys1, s=100, c=cs1, edgecolors='k', alpha=1.0, marker='s')
+				ax1.scatter(xs1, ys1, s=150, c=cs1, edgecolors='k', alpha=1.0, marker='s')
 
 
 	if kwargs["grid"]:
@@ -140,7 +140,7 @@ def run(**kwargs):
 		ax1.set_xticklabels([])
 		ax1.set_yticklabels([])
 
-	plt.savefig(outputFile, dpi=dpi )
+	plt.savefig(outputFile, dpi=dpi, bbox_inches='tight' )
 
 	print "\nPlotted file: %s" % outputFile
 

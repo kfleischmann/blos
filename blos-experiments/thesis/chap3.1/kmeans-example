@@ -6,7 +6,7 @@
 # input space per dimension: [-1...+1]
 # resolution #.###
 
-DATA_DIR=~/tmp/blos/experiments/kmeans/3k
+DATA_DIR=~/tmp/blos/experiments/kmeans/50k
 
 # cleanup
 rm -r ${DATA_DIR}
@@ -14,7 +14,7 @@ mkdir -p ${DATA_DIR}/dataset
 mkdir -p ${DATA_DIR}/result
 mkdir -p ${DATA_DIR}/flink
 
-NUM_SAMPLES=3000
+NUM_SAMPLES=50000
 NUM_CENTROIDS=3
 RESOLUTION=3
 ITERATIONS=10
@@ -22,6 +22,7 @@ RANGE=1.0
 STDDEV=0.09
 DPI=100
 SEED=3
+FORMAT=png
 
 # prepare dataset
 
@@ -34,16 +35,16 @@ blos examples run eu.blos.java.ml.clustering.KMeansDatasetGenerator \
 	-output ${DATA_DIR}/dataset
 
 
-blos visualize kmeans-plotter -i ${DATA_DIR}/dataset/points -o ${DATA_DIR}/dataset/kmeans-dataset-grid5.eps --dpi=${DPI} -s dataset --grid --gres=-1:1:0.5 --hideaxis
+blos visualize kmeans-plotter -i ${DATA_DIR}/dataset/points -o ${DATA_DIR}/dataset/kmeans-dataset-grid5.$FORMAT --dpi=${DPI} -s dataset --grid --gres=-1:1:0.5 --hideaxis
 
-blos visualize kmeans-plotter -i ${DATA_DIR}/dataset/points -o ${DATA_DIR}/dataset/kmeans-dataset-grid2.eps --dpi=${DPI} -s dataset --grid --gres=-1:1:0.2 --hideaxis
+blos visualize kmeans-plotter -i ${DATA_DIR}/dataset/points -o ${DATA_DIR}/dataset/kmeans-dataset-grid2.$FORMAT --dpi=${DPI} -s dataset --grid --gres=-1:1:0.2 --hideaxis
 
-blos visualize kmeans-plotter -i ${DATA_DIR}/dataset/points -o ${DATA_DIR}/dataset/kmeans-dataset-grid1.eps --dpi=${DPI} -s dataset --grid --gres=-1:1:0.1 --hideaxis
+blos visualize kmeans-plotter -i ${DATA_DIR}/dataset/points -o ${DATA_DIR}/dataset/kmeans-dataset-grid1.$FORMAT --dpi=${DPI} -s dataset --grid --gres=-1:1:0.1 --hideaxis
 
 # produce good init
 blos experiments kmeans-manipulate-centers \
 	${DATA_DIR}/dataset/real_centers \
-	0.4 \
+	0.8 \
 	$SEED >> ${DATA_DIR}/dataset/good_centers
 
 # random init
@@ -51,7 +52,7 @@ blos experiments kmeans-manipulate-centers \
 
 blos visualize plotpoints points \
 	${DATA_DIR}/dataset/points  \
-	${DATA_DIR}/dataset/kmeans-dataset.eps:${DPI}
+	${DATA_DIR}/dataset/kmeans-dataset.$FORMAT:${DPI}
 
 #blos visualize plotpoints points \
 #        ${DATA_DIR}/dataset/points  \
@@ -60,17 +61,17 @@ blos visualize plotpoints points \
 
 blos visualize plotpoints points \
         ${DATA_DIR}/dataset/points  \
-        ${DATA_DIR}/dataset/kmeans-dataset-init-random.eps:${DPI} \
+        ${DATA_DIR}/dataset/kmeans-dataset-init-random.$FORMAT:${DPI} \
         ${DATA_DIR}/dataset/random_centers
 
 blos visualize plotpoints points \
         ${DATA_DIR}/dataset/points  \
-        ${DATA_DIR}/dataset/kmeans-dataset-init-good.eps:${DPI} \
+        ${DATA_DIR}/dataset/kmeans-dataset-init-good.$FORMAT:${DPI} \
         ${DATA_DIR}/dataset/good_centers
 
 blos visualize plotpoints points \
         ${DATA_DIR}/dataset/points  \
-        ${DATA_DIR}/dataset/kmeans-dataset-init-real.eps:${DPI} \
+        ${DATA_DIR}/dataset/kmeans-dataset-init-real.$FORMAT:${DPI} \
         ${DATA_DIR}/dataset/real_centers
 
 
@@ -94,7 +95,7 @@ for i in $ITERATIONS; do
 	# plot result with datapoints
 	blos visualize plotpoints result \
 	        ${DATA_DIR}/flink/random/n${i}/points  \
-	        ${DATA_DIR}/flink/random/n${i}/kmeans-result-n${i}-init-random.eps:${DPI} \
+	        ${DATA_DIR}/flink/random/n${i}/kmeans-result-n${i}-init-random.$FORMAT:${DPI} \
 	        ${DATA_DIR}/flink/random/n${i}/centers
 done
 
@@ -116,7 +117,7 @@ for i in $ITERATIONS; do
 
         blos visualize plotpoints result \
                 ${DATA_DIR}/flink/good/n${i}/points  \
-                ${DATA_DIR}/flink/good/n${i}/kmeans-result-n${i}-init-good.eps:${DPI} \
+                ${DATA_DIR}/flink/good/n${i}/kmeans-result-n${i}-init-good.$FORMAT:${DPI} \
                 ${DATA_DIR}/flink/good/n${i}/centers
 done
 

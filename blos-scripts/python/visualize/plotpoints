@@ -31,6 +31,16 @@ maxX = None
 minY = None
 maxY = None
 
+colors = map( lambda x: str(x), range(50))
+
+colors[0] = 'black'
+colors[1] = '#1f77b4'
+colors[2] = '#ff7f0e'
+colors[3] = '#2ca12c'
+colors[4] = '#986cc0'
+colors[5] = '#d62728'
+colors[6] = '#2ca02c'
+
 print inFile
 
 if sys.argv[1] == 'points':
@@ -75,12 +85,12 @@ if sys.argv[1] == 'points':
 				x = float(csvData[1])
 				y = float(csvData[2])
 
-				cs1.append(c)
+				cs1.append(colors[c])
 				xs1.append(x)
 				ys1.append(y)
 
 			# plot data
-			ax1.scatter(xs1, ys1, s=100, c=cs1, edgecolors='k', alpha=1.0, marker='s')
+			ax1.scatter(xs1, ys1, s=250, c=cs1, alpha=1.0)
 
 
 elif sys.argv[1] == 'result':
@@ -96,7 +106,7 @@ elif sys.argv[1] == 'result':
 			x = float(csvData[1])
 			y = float(csvData[2])
 
-			cs.append(c)
+			cs.append(colors[c])
 			xs.append(x)
 			ys.append(y)
 
@@ -118,15 +128,16 @@ elif sys.argv[1] == 'result':
 						x = float(csvData[1])
 						y = float(csvData[2])
 
-						cs1.append(c)
+						# colors[c]
+						cs1.append('black')
 						xs1.append(x)
 						ys1.append(y)
 
 				# plot data
-				ax1.scatter(xs1, ys1, s=100, c=cs1, edgecolors='k', alpha=1.0, marker='s')
+				ax1.scatter(xs1, ys1, s=150, c=cs1, edgecolors='k', alpha=1.0)
 
 	
-plt.savefig(outFile, dpi=dpi )
+plt.savefig(outFile, dpi=dpi, bbox_inches='tight' )
 
 print "\nPlotted file: %s" % outFile
 

@@ -79,7 +79,7 @@ def run(**kwargs):
 
 
 	if output:
-		fig.savefig(output+"."+format, format=format, dpi=dpi )
+		fig.savefig(output+"."+format, format=format, dpi=dpi, bbox_inches='tight' )
 
 	if display:
 		fig.show()
