@@ -68,7 +68,6 @@ public class SketchedKMeans {
 			}
 		}//if
 
-
 		if (cmd.hasOption("verbose") || cmd.hasOption("print-sketch")) {
 			if (!cmd.hasOption("output")) {
 				System.out.println("num-heavyhitters");

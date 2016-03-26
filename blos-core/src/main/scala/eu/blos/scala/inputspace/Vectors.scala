@@ -10,6 +10,16 @@ object Vectors {
     def == (x: DoubleVector ) = {
       v.sameElements( x.elements )
     }
+    def *(x:DoubleVector) = {
+      var i = 0
+      var sum = 0.0
+      while (i < v.length) {
+        sum = sum + v(i)*x(i)
+        i += 1
+      }
+      sum
+    }
+
     def < (x:DoubleVector) : Boolean = {
       var b = true
       for( k <- 0 until dimension ) {
@@ -75,6 +85,4 @@ object Vectors {
     } //for
     res
   }
-
-
 }

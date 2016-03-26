@@ -12,6 +12,7 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
+
 public class SketchedLinearRegression {
 	//public static List<Tuple2<Double,Double>> dataset = new ArrayList<Tuple2<Double,Double>>();
 
@@ -116,7 +117,6 @@ public class SketchedLinearRegression {
 						sketch2.get(k*2+j).update(lookup);
 					}//for
 				}//for
-
 
 				lines++;
 				}

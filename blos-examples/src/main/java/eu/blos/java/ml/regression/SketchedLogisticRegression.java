@@ -63,8 +63,7 @@ public class SketchedLogisticRegression {
 
 				bw.write(k+","+d.f0+","+d.f1 );
 				bw.newLine();
-
-			}
+			}//if
 		}
 		bw.close();
 
