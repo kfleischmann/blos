@@ -38,9 +38,21 @@ object Vectors {
       }
       b
     }
-
+    override def toString = "("+v.mkString(",")+")"
     def dimension = v.length
     def elements = v
+
+    def slice(f:Int,t:Int) = {
+      new DoubleVector(v.slice(f,t))
+    }
+
+    def take(num:Int) = {
+      new DoubleVector(v.take(num))
+    }
+
+    def tail = {
+      new DoubleVector( v.toList.tail.toArray )
+    }
 
     private def rep(f: Double => Double): Self = {
       val nv = new Array[Double](v.length)

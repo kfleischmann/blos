@@ -2,8 +2,9 @@ package eu.blos.java.ml.regression
 
 import eu.blos.scala.sketches.CMSketch
 import eu.blos.scala.inputspace.Vectors.DoubleVector
-import java.io.{File, BufferedReader,FileReader}
-import eu.blos.scala.inputspace.InputSpaceNormalizer
+import java.io.{InputStreamReader, File, BufferedReader, FileReader}
+import eu.blos.scala.inputspace.{DynamicInputSpace, InputSpaceNormalizer}
+import eu.blos.scala.inputspace.normalizer.Rounder
 
 
 trait TransformFunc {
@@ -30,16 +31,16 @@ class LogisticRegressionModel(model:DoubleVector) extends RegressionModel(model)
   }
 }
 
-class DataSetIterator(filename:String) extends Iterable[DoubleVector] {
-  var is = new FileReader(new File(filename))
-  var br = new BufferedReader( is );
-
+class DataSetIterator(is:InputStreamReader, delimiter:String = " ") extends Iterable[DoubleVector] {
   def iterator = new Iterator[DoubleVector] {
+    var br = new BufferedReader( is );
     var line = br.readLine();
     def hasNext : Boolean = line != null
     def next : DoubleVector = {
       if(hasNext) {
-        DoubleVector(line.split(" ").map(x => x.toDouble))
+        val v = DoubleVector(line.split(delimiter).map(x => x.toDouble))
+        line = br.readLine();
+        v
       } else {
         null
       }
@@ -52,23 +53,63 @@ class DataSetIterator(filename:String) extends Iterable[DoubleVector] {
  * depending on the regression model func a linear or a logistic regression is applied
  */
 object SketchedRegression {
-  var sketch : CMSketch;
+  val epsilon = 0.0001
+  val delta = 0.01
+  val numHeavyHitters = 500
   var model : RegressionModel = new LinearRegressionModel( DoubleVector(1.0, 0.0) );
+  val inputspaceNormalizer = new Rounder(2);
+  val stepsize =  inputspaceNormalizer.stepSize(2)
+  val inputspace = new DynamicInputSpace(stepsize);
+  val sketch: CMSketch = new CMSketch(epsilon, delta, numHeavyHitters);
+
 
   def main(args: Array[String]): Unit = {
+    val filename = "/home/kay/Dropbox/kay-rep/Uni-Berlin/Masterarbeit/datasets/linear_regression/dataset1"
+    val is = new FileReader(new File(filename))
 
-    sketch = new CMSketch( epsilon, delta, numHeavyHitters );
+    sketch.alloc
 
-    sketch.alloc();
+    skeching(sketch,
+      new DataSetIterator(is, ","),
+      new TransformFunc() {
+        def apply(x: DoubleVector) = x
+      },
+      inputspaceNormalizer
+    )
 
-    total_size = sketch.alloc_size();
+    is.close()
 
-    buildSketch(sketch, new DataSetIterator(file), new TransformFunc(){ def apply(x:DoubleVector)=x})
+    learning
 
-  def buildSketch(cms: CMSketch, dataset : DataSetIterator, t: TransformFunc, normalizer : InputSpaceNormalizer ) {
+
+    println(stepsize.toString)
+  }
+
+  def skeching(cms: CMSketch, dataset : DataSetIterator, t: TransformFunc, normalizer : InputSpaceNormalizer[DoubleVector] ) {
+    val i = dataset.iterator
+    while( i.hasNext ){
+      // for each data point update sketch
+      // tail, because remove index
+      val vec = normalizer.normalize(i.next.tail)
+
+      cms.update(vec.toString )
+
+      inputspace.update(vec)
+    }
+
+    println( inputspace.getMin )
+    println( inputspace.getMax )
+  }
+
+  def learning {
+    val it = inputspace.iterator
+    while(it.hasNext){
+      val v = inputspaceNormalizer.normalize(it.next)
+
+      println(v + "freq:"+sketch.get(v.toString))
+    }
   }
 
   def regression_model(){
-
   }
 }
