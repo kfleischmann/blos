@@ -1,6 +1,6 @@
 package eu.blos.scala.ml.regression
 
-import eu.blos.scala.sketches.{SketchDiscoveryHH, SketchDiscoveryEnumeration, CMSketch}
+import eu.blos.scala.sketches.{DiscoveryStrategy, SketchDiscoveryHH, SketchDiscoveryEnumeration, CMSketch}
 import eu.blos.scala.inputspace.Vectors.DoubleVector
 import java.io.{InputStreamReader, File, BufferedReader, FileReader}
 import eu.blos.scala.inputspace.{Vectors, DataSetIterator, DynamicInputSpace, InputSpaceNormalizer}
@@ -15,7 +15,7 @@ trait Model[T] {
   def apply(x:DoubleVector) : T;
 }
 
-abstract class RegressionModel(model:DoubleVector)  extends Model[Double];
+abstract case class RegressionModel(model:DoubleVector)  extends Model[Double];
 
 
 class LinearRegressionModel(model:DoubleVector) extends RegressionModel(model) {
@@ -26,8 +26,7 @@ class LinearRegressionModel(model:DoubleVector) extends RegressionModel(model) {
 
 class LogisticRegressionModel(model:DoubleVector) extends RegressionModel(model) {
   def apply(x:DoubleVector) : Double = {
-    val scalar = -(x*model);
-    1.0 / ( 1.0 + scala.math.exp( scalar))
+    1.0 / ( 1.0 + scala.math.exp(  -(x*model) ))
   }
 }
 
@@ -38,14 +37,13 @@ class LogisticRegressionModel(model:DoubleVector) extends RegressionModel(model)
  */
 object SketchedRegression {
   var inputDatasetResolution=2
-  val numHeavyHitters = 100
-  val epsilon = 0.0001
+  val numHeavyHitters = 500
+  val epsilon = 0.00001
   val delta = 0.01
   val sketch: CMSketch = new CMSketch(epsilon, delta, numHeavyHitters);
   val inputspaceNormalizer = new Rounder(inputDatasetResolution);
   val stepsize =  inputspaceNormalizer.stepSize(inputDatasetResolution)
   val inputspace = new DynamicInputSpace(stepsize);
-
 
   def main(args: Array[String]): Unit = {
     val filename = "/home/kay/Dropbox/kay-rep/Uni-Berlin/Masterarbeit/datasets/linear_regression/dataset1"
@@ -76,32 +74,28 @@ object SketchedRegression {
   def learning {
     val alpha = 0.5
     var model = Vectors.EmptyDoubleVector(2)+1
-    for(x <- Range(1,10000) ){
-      model = model - gradient_decent_step(model)*alpha
+    for(x <- Range(1,100) ){
+      model = model - gradient_decent_step( new LogisticRegressionModel(model) )*alpha
       println(model)
     }
   }
 
-  def h_theta(Xi:DoubleVector, model: DoubleVector): Double = {
-    return (1.0 / (1.0 + Math.exp(-(Xi * model))))
-  }
+  def gradient_decent_step(regression : RegressionModel ) : DoubleVector = {
+    // discovery = new SketchDiscoveryEnumeration(sketch, inputspace, inputspaceNormalizer);
+    val discovery = new SketchDiscoveryHH(sketch);
 
-  def gradient_decent_step(model:DoubleVector) : DoubleVector = {
-    val discovery = new SketchDiscoveryEnumeration(sketch, inputspace, inputspaceNormalizer);
-    //val discovery = new SketchDiscoveryHH(sketch);
-    var sum = 0.0
     var total_freq : Long = 0L
-    var gradient = Vectors.EmptyDoubleVector(model.length)
+    var gradient = Vectors.EmptyDoubleVector(regression.model.length)*0
     while(discovery.hasNext){
       val item = discovery.next
-      // for each dimension
-      for( d <- Range(0,model.length)){
-        gradient.elements(d) += - ( item.vector.elements(0) - item.count * h_theta( DoubleVector(1.0).append(item.vector.tail), model)) * item.vector.elements(d)
-      }
 
+      // for each dimension
+      for( d <- Range(0,regression.model.length)){
+        gradient.elements(d) += - ( item.vector.elements(0) - item.count.toDouble * regression.apply( DoubleVector(1.0).append(item.vector.tail))) * item.vector.elements(d)
+      }
       total_freq += item.count
     }
-    gradient /= total_freq
+    gradient /= total_freq.toDouble
     gradient
   }
 
