@@ -1,6 +1,6 @@
 package eu.blos.java.ml.regression
 
-import eu.blos.scala.sketches.CMSketch
+import eu.blos.scala.sketches.{SketchDiscoveryHH, SketchDiscoveryEnumeration, CMSketch}
 import eu.blos.scala.inputspace.Vectors.DoubleVector
 import java.io.{InputStreamReader, File, BufferedReader, FileReader}
 import eu.blos.scala.inputspace.{DynamicInputSpace, InputSpaceNormalizer}
@@ -56,7 +56,7 @@ class DataSetIterator(is:InputStreamReader, delimiter:String = " ") extends Iter
 object SketchedRegression {
   val epsilon = 0.0001
   val delta = 0.01
-  val numHeavyHitters = 500
+  val numHeavyHitters = 10
   var model : RegressionModel = new LinearRegressionModel( DoubleVector(1.0, 0.0) );
   val inputspaceNormalizer = new Rounder(2);
   val stepsize =  inputspaceNormalizer.stepSize(2)
@@ -72,30 +72,31 @@ object SketchedRegression {
 
     skeching(sketch,
       new DataSetIterator(is, ","),
-      new TransformFunc() {
-        def apply(x: DoubleVector) = x
-      },
+      // skip first column (index)
+      new TransformFunc() { def apply(x: DoubleVector) = x.tail},
       inputspaceNormalizer
     )
     is.close()
+
     learning
-    println(stepsize.toString)
   }
 
-  def skeching(cms: CMSketch, dataset : DataSetIterator, t: TransformFunc, normalizer : InputSpaceNormalizer[DoubleVector] ) {
+  def skeching(sketch : CMSketch, dataset : DataSetIterator, t: TransformFunc, normalizer : InputSpaceNormalizer[DoubleVector] ) {
     val i = dataset.iterator
     while( i.hasNext ){
-      val vec = normalizer.normalize(i.next.tail)
-      cms.update(vec.toString )
+      val vec = normalizer.normalize( t.apply(i.next))
+      sketch.update(vec.toString )
       inputspace.update(vec)
     }
   }
 
   def learning {
-    val it = inputspace.iterator
-    while(it.hasNext){
-      val v = inputspaceNormalizer.normalize(it.next)
-      println(v + "freq:"+sketch.get(v.toString))
+    //val discovery = new SketchDiscoveryEnumeration(sketch, inputspace, inputspaceNormalizer);
+    val discovery = new SketchDiscoveryHH(sketch);
+
+    while(discovery.hasNext){
+      val item = discovery.next
+      println( item.vector.toString+" => "+item.count )
     }
   }
 
