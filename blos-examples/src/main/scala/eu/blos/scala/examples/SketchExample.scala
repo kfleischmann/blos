@@ -6,15 +6,17 @@ import eu.blos.scala.inputspace.normalizer.Rounder
 import eu.blos.scala.inputspace.{InputSpaceNormalizer, DataSetIterator, DynamicInputSpace}
 import java.io.{File, FileReader}
 
-trait TransformFunc {
-  def apply(x:DoubleVector) : DoubleVector;
-}
 
 /**
  * sketch-based regression models
  * depending on the regression model func a linear or a logistic regression is applied
  */
 object SketchedRegression {
+
+  trait TransformFunc {
+    def apply(x:DoubleVector) : DoubleVector;
+  }
+
   var inputDatasetResolution=2
   val numHeavyHitters = 10
   val epsilon = 0.0001

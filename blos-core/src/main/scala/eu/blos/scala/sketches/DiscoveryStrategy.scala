@@ -23,7 +23,7 @@ class SketchDiscoveryEnumeration(sketch:CMSketch, inputspace : InputSpace[Double
 
 class SketchDiscoveryHH(cms:CMSketch) extends DiscoveryStrategy {
   val hh = cms.getHeavyHitters
-  val numHH = hh.getHeapArray.length
+  val numHH = hh.getSize
   var posHH = 1
   def hasNext = posHH < numHH
   def next : InputSpaceElement = {

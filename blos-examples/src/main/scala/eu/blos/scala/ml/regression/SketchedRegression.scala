@@ -1,34 +1,10 @@
 package eu.blos.scala.ml.regression
 
-import eu.blos.scala.sketches.{DiscoveryStrategy, SketchDiscoveryHH, SketchDiscoveryEnumeration, CMSketch}
-import eu.blos.scala.inputspace.Vectors.DoubleVector
-import java.io.{InputStreamReader, File, BufferedReader, FileReader}
+import eu.blos.scala.sketches._
+import java.io.{ File,  FileReader}
 import eu.blos.scala.inputspace.{Vectors, DataSetIterator, DynamicInputSpace, InputSpaceNormalizer}
 import eu.blos.scala.inputspace.normalizer.Rounder
-
-
-trait TransformFunc {
-  def apply(x:DoubleVector) : DoubleVector;
-}
-
-trait Model[T] {
-  def apply(x:DoubleVector) : T;
-}
-
-abstract case class RegressionModel(model:DoubleVector)  extends Model[Double];
-
-
-class LinearRegressionModel(model:DoubleVector) extends RegressionModel(model) {
-  def apply(x:DoubleVector) : Double = {
-    x*model
-  }
-}
-
-class LogisticRegressionModel(model:DoubleVector) extends RegressionModel(model) {
-  def apply(x:DoubleVector) : Double = {
-    1.0 / ( 1.0 + scala.math.exp(  -(x*model) ))
-  }
-}
+import eu.blos.scala.inputspace.Vectors.DoubleVector
 
 
 /**
@@ -36,13 +12,49 @@ class LogisticRegressionModel(model:DoubleVector) extends RegressionModel(model)
  * depending on the regression model func a linear or a logistic regression is applied
  */
 object SketchedRegression {
-  var inputDatasetResolution=2
+  trait TransformFunc {
+    def apply(x:DoubleVector) : DoubleVector;
+  }
+
+  trait Model[T] {
+    def predict(x:DoubleVector) : T;
+  }
+
+  abstract case class RegressionModel(model:DoubleVector) extends Model[Double] {
+    def gradient(item:InputSpaceElement, d:Int) : Double
+  }
+
+
+  class LinearRegressionModel(model:DoubleVector) extends RegressionModel(model) {
+    def predict(x:DoubleVector) : Double = {
+      x*model
+    }
+    def gradient(item:InputSpaceElement, d:Int) : Double = {
+      val y = item.vector.elements(0)
+      val x = DoubleVector(1.0).append(item.vector.tail)
+      (predict(x) - y)*x.elements(d)
+    }
+  }
+
+  class LogisticRegressionModel(model:DoubleVector) extends RegressionModel(model) {
+    def predict(x:DoubleVector) : Double = {
+      1.0 / ( 1.0 + scala.math.exp(  -(x*model) ))
+    }
+
+    def gradient(item:InputSpaceElement, d:Int) : Double = {
+      val y = item.vector.elements(0)
+      val x = DoubleVector(1.0).append(item.vector.tail)
+      (predict(x) - y)*x.elements(d)
+    }
+  }
+  var dimension=2
+  var inputDatasetResolution=1
   val numHeavyHitters = 500
-  val epsilon = 0.00001
+  val epsilon = 0.0001
   val delta = 0.01
   val sketch: CMSketch = new CMSketch(epsilon, delta, numHeavyHitters);
   val inputspaceNormalizer = new Rounder(inputDatasetResolution);
-  val stepsize =  inputspaceNormalizer.stepSize(inputDatasetResolution)
+  val stepsize =  inputspaceNormalizer.stepSize(dimension)
   val inputspace = new DynamicInputSpace(stepsize);
 
   def main(args: Array[String]): Unit = {
@@ -72,26 +84,25 @@ object SketchedRegression {
   }
 
   def learning {
-    val alpha = 0.5
+    val alpha = 0.1
     var model = Vectors.EmptyDoubleVector(2)+1
-    for(x <- Range(1,100) ){
-      model = model - gradient_decent_step( new LogisticRegressionModel(model) )*alpha
+    for(x <- Range(1,1000) ){
+      model = model - gradient_decent_step( new LinearRegressionModel(model) )*alpha
       println(model)
     }
   }
 
   def gradient_decent_step(regression : RegressionModel ) : DoubleVector = {
-    // discovery = new SketchDiscoveryEnumeration(sketch, inputspace, inputspaceNormalizer);
+    //val discovery = new SketchDiscoveryEnumeration(sketch, inputspace, inputspaceNormalizer);
     val discovery = new SketchDiscoveryHH(sketch);
 
     var total_freq : Long = 0L
-    var gradient = Vectors.EmptyDoubleVector(regression.model.length)*0
+    var gradient = Vectors.EmptyDoubleVector(regression.model.length)*0.0
     while(discovery.hasNext){
       val item = discovery.next
-
       // for each dimension
-      for( d <- Range(0,regression.model.length)){
-        gradient.elements(d) += - ( item.vector.elements(0) - item.count.toDouble * regression.apply( DoubleVector(1.0).append(item.vector.tail))) * item.vector.elements(d)
+      for( d <- Range(0,regression.model.length)) {
+        gradient.elements(d) += (regression.gradient(item, d))
       }
       total_freq += item.count
     }

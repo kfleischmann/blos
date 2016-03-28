@@ -9,9 +9,8 @@ case class HeavyHitters(var maxSize : Int ) extends HeavyHittersPriorityQueue[CM
   val lnOf2 = scala.math.log(2)
   def log2(x: Double): Double = scala.math.log(x) / lnOf2
   def searchSpaceBestReplacement = math.pow( 2, log2(maxSize)-1 ).toInt+1
-
   initialize( maxSize, searchSpaceBestReplacement )
-
+  def getSize = this.size()
   def lessThan(a :CMEstimate, b : CMEstimate ) = a.count>b.count;
   def heapify( key : String ){
     var index = -1;
@@ -74,6 +73,7 @@ class CMSketch( var delta: Double,
   }
   def getHeavyHitters = heavyHitters
   def getTopK = top_k
+  def getNumHeavyHitters = top_k.size
 
   def totalSumPerHash : Long = {
     var total_sum = 0L

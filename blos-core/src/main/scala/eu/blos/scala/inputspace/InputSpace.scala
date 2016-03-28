@@ -30,11 +30,11 @@ class InputSpaceIterator(min:DoubleVector, max:DoubleVector, stepwide:DoubleVect
       false
     } else {
       // if not enough space available?
-      if( v.elements(d) + stepwide(d) > max.elements(d) ){
+      if( v.elements(d) + stepwide.elements(d) > max.elements(d) ){
         v.elements(d) = min.elements(d)
         incStepWithFlip(v, d+1 )
       } else {
-        v.elements(d) += stepwide(d)
+        v.elements(d) += stepwide.elements(d)
         true
       }
     }

@@ -1,5 +1,14 @@
 #!/usr/bin/env Rscript
+args = commandArgs(trailingOnly=TRUE)
+is_header <- TRUE
+if (length(args)==1 ) {
+	is_header <- FALSE
+	print("disable header")
+	data <- read.table( file("stdin"), sep=",", header=is_header )
+	names(data) =  c("index","y","x")
+	plot(data$x, data$y, type='p', cex=0.5, col="red")
 
-data <- read.table( file("stdin"), sep=",", header=TRUE)
-plot(data$x, data$y, type='p', cex=0.5, col="red")
-
+} else {
+	data <- read.table( file("stdin"), sep=",", header=is_header)
+	plot(data$x, data$y, type='p', cex=0.5, col="red")
+}
