@@ -26,7 +26,7 @@ object SketchedRegression {
     def gradient(item:InputSpaceElement, d:Int) : Double = {
       val y = item.vector.elements(0)
       val x = DoubleVector(1.0).append(item.vector.tail)
-      (predict(x) - y)*x.elements(d)
+      (predict(x) - y)*x.elements(d) * item.count
     }
   }
 
@@ -38,7 +38,7 @@ object SketchedRegression {
     def gradient(item:InputSpaceElement, d:Int) : Double = {
       val y = item.vector.elements(0)
       val x = DoubleVector(1.0).append(item.vector.tail)
-      (predict(x) - y)*x.elements(d)
+      (predict(x) - y)*x.elements(d) * item.count
     }
   }
 
@@ -64,6 +64,7 @@ object SketchedRegression {
       total_freq += item.count
     }
     gradient /= total_freq.toDouble
+
     gradient
   }
 }

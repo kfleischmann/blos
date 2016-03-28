@@ -19,10 +19,10 @@ object SketchedLogisticRegression {
   var dimension=2
   var inputDatasetResolution=2
   val numHeavyHitters = 500
-  val epsilon = 0.0001
-  val delta = 0.1
+  val epsilon = 0.001
+  val delta = 0.5
   val alpha = 0.5
-  val sketch: CMSketch = new CMSketch(epsilon, delta, numHeavyHitters);
+  val sketch: CMSketch = new CMSketch(delta,epsilon, numHeavyHitters);
   val inputspaceNormalizer = new Rounder(inputDatasetResolution);
   val stepsize =  inputspaceNormalizer.stepSize(dimension)
   val inputspace = new DynamicInputSpace(stepsize);
@@ -47,11 +47,12 @@ object SketchedLogisticRegression {
 
   def learning {
     var model = Vectors.EmptyDoubleVector(2)+1
-    for(x <- Range(1,numIterations) ){
+    for(x <- Range(0,numIterations) ){
       //val discovery = new SketchDiscoveryEnumeration(sketch, inputspace, inputspaceNormalizer);
       val discovery = new SketchDiscoveryHH(sketch);
 
       model = model - gradient_decent_step( new LogisticRegressionModel(model), discovery )*alpha
+
       println(model)
     }
   }
