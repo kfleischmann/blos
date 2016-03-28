@@ -48,6 +48,7 @@ class DataSetIterator(is:InputStreamReader, delimiter:String = " ") extends Iter
   }
 }
 
+
 /**
  * sketch-based regresison models
  * depending on the regression model func a linear or a logistic regression is applied
@@ -76,36 +77,24 @@ object SketchedRegression {
       },
       inputspaceNormalizer
     )
-
     is.close()
-
     learning
-
-
     println(stepsize.toString)
   }
 
   def skeching(cms: CMSketch, dataset : DataSetIterator, t: TransformFunc, normalizer : InputSpaceNormalizer[DoubleVector] ) {
     val i = dataset.iterator
     while( i.hasNext ){
-      // for each data point update sketch
-      // tail, because remove index
       val vec = normalizer.normalize(i.next.tail)
-
       cms.update(vec.toString )
-
       inputspace.update(vec)
     }
-
-    println( inputspace.getMin )
-    println( inputspace.getMax )
   }
 
   def learning {
     val it = inputspace.iterator
     while(it.hasNext){
       val v = inputspaceNormalizer.normalize(it.next)
-
       println(v + "freq:"+sketch.get(v.toString))
     }
   }

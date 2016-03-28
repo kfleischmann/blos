@@ -42,13 +42,14 @@ object Vectors {
     def dimension = v.length
     def elements = v
 
+    /*
     def slice(f:Int,t:Int) = {
       new DoubleVector(v.slice(f,t))
     }
 
     def take(num:Int) = {
       new DoubleVector(v.take(num))
-    }
+    }*/
 
     def tail = {
       new DoubleVector( v.toList.tail.toArray )
