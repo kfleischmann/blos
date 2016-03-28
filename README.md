@@ -130,3 +130,59 @@ blos sketch scatterplot
 	-D 0.5,0.1,0.001,0.001,0.0001 
 	-E 0.1,0.01,0.005,0.004,0.003,0.002,0.001,0.0001
 ```
+
+Code Example
+===
+```
+/**
+ * Sketching example
+ */
+object SketchExample {
+  var inputDatasetResolution=2
+  val numHeavyHitters = 10
+  val epsilon = 0.0001
+  val delta = 0.01
+  val sketch: CMSketch = new CMSketch(epsilon, delta, numHeavyHitters);
+  val inputspaceNormalizer = new Rounder(inputDatasetResolution);
+  val stepsize =  inputspaceNormalizer.stepSize(inputDatasetResolution)
+  val inputspace = new DynamicInputSpace(stepsize);
+
+
+  def main(args: Array[String]): Unit = {
+    val filename = "/home/kay/Dropbox/kay-rep/Uni-Berlin/Masterarbeit/datasets/linear_regression/dataset1"
+    val is = new FileReader(new File(filename))
+
+    sketch.alloc
+
+    skeching(sketch,
+      new DataSetIterator(is, ","),
+      // skip first column (index)
+      new TransformFunc() { def apply(x: DoubleVector) = x.tail},
+      inputspaceNormalizer
+    )
+    is.close()
+
+    learning
+  }
+
+  def skeching(sketch : CMSketch, dataset : DataSetIterator, t: TransformFunc, normalizer : InputSpaceNormalizer[DoubleVector] ) {
+    val i = dataset.iterator
+    while( i.hasNext ){
+      val vec = normalizer.normalize( t.apply(i.next))
+      sketch.update(vec.toString )
+      inputspace.update(vec)
+    }
+  }
+
+  def learning {
+    // choose how to discover the sketch inputspace
+    //val discovery = new SketchDiscoveryEnumeration(sketch, inputspace, inputspaceNormalizer);
+    val discovery = new SketchDiscoveryHH(sketch);
+
+    while(discovery.hasNext){
+      val item = discovery.next
+      println( item.vector.toString+" => "+item.count )
+    }
+  }
+}
+```
