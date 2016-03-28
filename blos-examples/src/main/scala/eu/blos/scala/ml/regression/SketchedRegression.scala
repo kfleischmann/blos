@@ -1,9 +1,9 @@
-package eu.blos.java.ml.regression
+package eu.blos.scala.ml.regression
 
 import eu.blos.scala.sketches.{SketchDiscoveryHH, SketchDiscoveryEnumeration, CMSketch}
 import eu.blos.scala.inputspace.Vectors.DoubleVector
 import java.io.{InputStreamReader, File, BufferedReader, FileReader}
-import eu.blos.scala.inputspace.{DynamicInputSpace, InputSpaceNormalizer}
+import eu.blos.scala.inputspace.{DataSetIterator, DynamicInputSpace, InputSpaceNormalizer}
 import eu.blos.scala.inputspace.normalizer.Rounder
 
 
@@ -31,37 +31,20 @@ class LogisticRegressionModel(model:DoubleVector) extends RegressionModel(model)
   }
 }
 
-class DataSetIterator(is:InputStreamReader, delimiter:String = " ") extends Iterable[DoubleVector] {
-  def iterator = new Iterator[DoubleVector] {
-    var br = new BufferedReader( is );
-    var line = br.readLine();
-    def hasNext : Boolean = line != null
-    def next : DoubleVector = {
-      if(hasNext) {
-        val v = DoubleVector(line.split(delimiter).map(x => x.toDouble))
-        line = br.readLine();
-        v
-      } else {
-        null
-      }
-    }
-  }
-}
-
 
 /**
- * sketch-based regresison models
+ * sketch-based regression models
  * depending on the regression model func a linear or a logistic regression is applied
  */
 object SketchedRegression {
+  var inputDatasetResolution=2
+  val numHeavyHitters = 10
   val epsilon = 0.0001
   val delta = 0.01
-  val numHeavyHitters = 10
-  var model : RegressionModel = new LinearRegressionModel( DoubleVector(1.0, 0.0) );
-  val inputspaceNormalizer = new Rounder(2);
-  val stepsize =  inputspaceNormalizer.stepSize(2)
-  val inputspace = new DynamicInputSpace(stepsize);
   val sketch: CMSketch = new CMSketch(epsilon, delta, numHeavyHitters);
+  val inputspaceNormalizer = new Rounder(inputDatasetResolution);
+  val stepsize =  inputspaceNormalizer.stepSize(inputDatasetResolution)
+  val inputspace = new DynamicInputSpace(stepsize);
 
 
   def main(args: Array[String]): Unit = {
@@ -98,8 +81,5 @@ object SketchedRegression {
       val item = discovery.next
       println( item.vector.toString+" => "+item.count )
     }
-  }
-
-  def regression_model(){
   }
 }

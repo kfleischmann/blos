@@ -1,4 +1,4 @@
-package eu.blos.java.ml.regression;
+package eu.blos.scala.ml.regression;
 
 
 import eu.blos.java.inputspace.InputSpaceNormalizer;
