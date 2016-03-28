@@ -5,6 +5,7 @@ import eu.blos.scala.inputspace.Vectors.DoubleVector
 
 trait InputSpace[T] extends Iterable[T] {
   def iterator : Iterator[T]
+  def update( v : T)
   def getMax() : T;
   def getMin() : T;
   //def getRandom() : T;
@@ -42,6 +43,7 @@ class InputSpaceIterator(min:DoubleVector, max:DoubleVector, stepwide:DoubleVect
 }
 
 class StaticInputSpace(min:DoubleVector, max:DoubleVector, step:DoubleVector) extends InputSpace[DoubleVector] {
+  def update(v:DoubleVector) = {}
   def getMin = min
   def getMax = max
   def iterator = new InputSpaceIterator(min,max,step)
