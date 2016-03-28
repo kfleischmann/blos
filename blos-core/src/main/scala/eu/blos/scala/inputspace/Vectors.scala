@@ -19,7 +19,15 @@ object Vectors {
       }
       sum
     }
-
+    def -(x:DoubleVector) = {
+      val nv = new Array[Double](v.length)
+      var i = 0
+      while (i < nv.length) {
+        nv(i) = v(i) - x.elements(i)
+        i += 1
+      }
+      DoubleVector(nv)
+    }
     def < (x:DoubleVector) : Boolean = {
       var b = true
       for( k <- 0 until dimension ) {
@@ -42,17 +50,19 @@ object Vectors {
     def dimension = v.length
     def elements = v
 
-    /*
-    def slice(f:Int,t:Int) = {
+    def cut(f:Int,t:Int) : DoubleVector = {
       new DoubleVector(v.slice(f,t))
     }
 
-    def take(num:Int) = {
+    def takeN (num:Int) : DoubleVector = {
       new DoubleVector(v.take(num))
-    }*/
+    }
 
-    def tail = {
+    def tail : DoubleVector = {
       new DoubleVector( v.toList.tail.toArray )
+    }
+    def append(v:DoubleVector) : DoubleVector = {
+      new DoubleVector( elements ++ v.elements )
     }
 
     private def rep(f: Double => Double): Self = {
@@ -97,5 +107,9 @@ object Vectors {
       } //while
     } //for
     res
+  }
+
+  def EmptyDoubleVector(d:Int) = {
+    DoubleVector(new Array[Double](d))
   }
 }
