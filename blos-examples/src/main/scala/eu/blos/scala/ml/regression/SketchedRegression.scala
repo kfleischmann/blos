@@ -161,6 +161,8 @@ object SketchedRegression {
           outHH.write("\n")
         }
       }
+      outHH.close()
+      outEnum.close()
     }
   }
 }
