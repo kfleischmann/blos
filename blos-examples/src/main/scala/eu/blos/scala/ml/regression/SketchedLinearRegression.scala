@@ -15,7 +15,7 @@ case class Config(
  numIterations:Int=100,
  numHeavyHitters:Int=200,
  dimension:Int=2,
- inputDatasetResolution:Int=2,
+ inputspaceResolution:Int=2,
  discovery:String="hh");
 /**
  * sketch-based regression models
@@ -40,6 +40,26 @@ object SketchedLinearRegression {
           c.copy( delta = x.split(":")(1).toDouble).copy( epsilon = x.split(":")(0).toDouble)
       } text("sketch size")
 
+      opt[Int]('d', "dimension") required()  action {
+        (x, c) =>
+          c.copy( dimension = x )
+      } text("inputspace dimension")
+
+      opt[Int]('n', "iterations") required()  action {
+        (x, c) =>
+          c.copy( numIterations = x )
+      } text("number of iterations")
+
+      opt[Int]('n', "resolution") required()  action {
+        (x, c) =>
+          c.copy( inputspaceResolution = x )
+      } text("input space resolution")
+
+      opt[Int]('H', "num-heavyhitters") action {
+        (x, c) =>
+          c.copy( numHeavyHitters = x )
+      } text("number of heavy hitters")
+
     }
 
     // parser.parse returns Option[C]
@@ -58,17 +78,19 @@ object SketchedLinearRegression {
     println(config.delta)
 
     val sketch = new CMSketch(config.delta, config.epsilon, config.numHeavyHitters);
-    val inputspaceNormalizer = new Rounder(config.inputDatasetResolution);
+    val inputspaceNormalizer = new Rounder(config.inputspaceResolution);
     val stepsize =  inputspaceNormalizer.stepSize(config.dimension)
     val inputspace = new DynamicInputSpace(stepsize);
 
     // select discovery strategy and provide iterators
     var discovery : DiscoveryStrategy = null
     if(config.discovery == "hh") {
-      discovery = new DiscoveryStrategyEnumeration(sketch, inputspace, inputspaceNormalizer);
+      println("use discovery strategy hh")
+      discovery = new DiscoveryStrategyHH(sketch);
     }
     if(config.discovery == "enumeration") {
-      discovery = new DiscoveryStrategyHH(sketch);
+      println("use discovery strategy enumeration")
+      discovery = new DiscoveryStrategyEnumeration(sketch, inputspace, inputspaceNormalizer);
     }
 
     sketch.alloc
@@ -89,7 +111,6 @@ object SketchedLinearRegression {
   def learning(sketch:CMSketch, iterations:Int, alpha:Double, discoveryStrategy:DiscoveryStrategy) {
     var model = Vectors.EmptyDoubleVector(2)+1
     for(x <- Range(0,iterations) ){
-
       model = model - gradient_decent_step( new LinearRegressionModel(model), discoveryStrategy.iterator )*alpha
       println(model)
     }
