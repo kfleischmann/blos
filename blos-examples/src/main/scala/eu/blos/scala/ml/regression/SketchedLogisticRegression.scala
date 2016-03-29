@@ -8,30 +8,37 @@ import eu.blos.scala.inputspace.Vectors.DoubleVector
 
 
 /**
- * sketch-based regression models
- * depending on the regression model func a linear or a logistic regression is applied
+ * sketch-based logistic regression models
  */
 object SketchedLogisticRegression {
 
   import SketchedRegression._
 
-  var numIterations=1000
-  var dimension=2
-  var inputDatasetResolution=2
-  val numHeavyHitters = 500
-  val epsilon = 0.001
-  val delta = 0.5
-  val alpha = 0.5
-  val sketch: CMSketch = new CMSketch(delta,epsilon, numHeavyHitters);
-  val inputspaceNormalizer = new Rounder(inputDatasetResolution);
-  val stepsize =  inputspaceNormalizer.stepSize(dimension)
-  val inputspace = new DynamicInputSpace(stepsize);
+  def main(args: Array[String]): Unit = run( init(args) )
 
-  def main(args: Array[String]): Unit = {
-    val filename = "/home/kay/Dropbox/kay-rep/Uni-Berlin/Masterarbeit/dyatasets/logistic_regression/dataset6_8_1_1k"
-    val is = new FileReader(new File(filename))
+  def run(config:Config) {
+    println("Sketch-based Logistic Regression")
+
+    val is = new FileReader(new File(config.input))
+    val sketch = new CMSketch(config.delta, config.epsilon, config.numHeavyHitters);
+    val inputspaceNormalizer = new Rounder(config.inputspaceResolution);
+    val stepsize =  inputspaceNormalizer.stepSize(config.dimension)
+    val inputspace = new DynamicInputSpace(stepsize);
+
+    // select discovery strategy and provide iterators
+    var discovery : DiscoveryStrategy = null
+    if(config.discovery == "hh") {
+      println("discovery=hh")
+      discovery = new DiscoveryStrategyHH(sketch);
+    }
+    if(config.discovery == "enumeration") {
+      println("discovery=enumeration")
+      discovery = new DiscoveryStrategyEnumeration(sketch, inputspace, inputspaceNormalizer);
+    }
 
     sketch.alloc
+    println("w="+sketch.w)
+    println("d="+sketch.d)
 
     skeching(sketch,
       inputspace,
@@ -41,18 +48,13 @@ object SketchedLogisticRegression {
       inputspaceNormalizer
     )
     is.close()
-
-    learning
+    learning(sketch, config.numIterations, config.alpha, discovery )
   }
 
-  def learning {
+  def learning(sketch:CMSketch, iterations:Int, alpha:Double, discoveryStrategy:DiscoveryStrategy) {
     var model = Vectors.EmptyDoubleVector(2)+1
-    for(x <- Range(0,numIterations) ){
-      //val discovery = new SketchDiscoveryEnumerationIterator(sketch, inputspace, inputspaceNormalizer);
-      val discovery = new SketchDiscoveryHHIterator(sketch);
-
-      model = model - gradient_decent_step( new LogisticRegressionModel(model), discovery )*alpha
-
+    for(x <- Range(0,iterations) ){
+      model = model - gradient_decent_step( new LogisticRegressionModel(model), discoveryStrategy.iterator )*alpha
       println(model)
     }
   }

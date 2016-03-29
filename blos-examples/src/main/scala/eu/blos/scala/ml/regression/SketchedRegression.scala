@@ -5,6 +5,20 @@ import eu.blos.scala.inputspace.Vectors.DoubleVector
 import eu.blos.scala.inputspace.{InputSpace, Vectors, InputSpaceNormalizer, DataSetIterator}
 
 object SketchedRegression {
+
+  case class Config(
+         input:String="",
+         output:String="",
+         epsilon:Double=0.0,
+         delta:Double=0.0,
+         alpha:Double=0.5,
+         numIterations:Int=100,
+         numHeavyHitters:Int=200,
+         dimension:Int=2,
+         inputspaceResolution:Int=2,
+         discovery:String="hh");
+
+
   trait TransformFunc {
     def apply(x:DoubleVector) : DoubleVector;
   }
@@ -65,5 +79,51 @@ object SketchedRegression {
     gradient /= total_freq.toDouble
 
     gradient
+  }
+
+  def init(args: Array[String]): Config = {
+    val parser = new scopt.OptionParser[Config]("regression") {
+      head("Sketch-based Regression")
+
+      opt[String]('i', "input") required() action {
+        (x, c) => c.copy(input = x) }text("datset input")
+
+      opt[String]('o', "output")  valueName("<file>") action {
+        (x, c) => c.copy(output = x) }  text("output location")
+
+      opt[String]('s', "sketch") required() valueName("<epsilon>:<delta>") action {
+        (x, c) =>
+          c.copy( delta = x.split(":")(1).toDouble).copy( epsilon = x.split(":")(0).toDouble)
+      } text("sketch size")
+
+      opt[Int]('d', "dimension") required()  action {
+        (x, c) =>
+          c.copy( dimension = x )
+      } text("inputspace dimension")
+
+      opt[Int]('n', "iterations") required()  action {
+        (x, c) =>
+          c.copy( numIterations = x )
+      } text("number of iterations")
+
+      opt[Int]('n', "resolution") required()  action {
+        (x, c) =>
+          c.copy( inputspaceResolution = x )
+      } text("input space resolution")
+
+      opt[Int]('H', "num-heavyhitters") action {
+        (x, c) =>
+          c.copy( numHeavyHitters = x )
+      } text("number of heavy hitters")
+    }
+
+    // parser.parse returns Option[C]
+    parser.parse(args, Config()) map { config =>
+      config
+    } getOrElse {
+      // arguments are bad, usage message will have been displayed
+      System.exit(1)
+      null
+    }
   }
 }
