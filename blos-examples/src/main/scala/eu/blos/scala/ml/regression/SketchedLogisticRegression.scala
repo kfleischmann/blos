@@ -48,7 +48,10 @@ object SketchedLogisticRegression {
       inputspaceNormalizer
     )
     is.close()
+
     learning(sketch, config.numIterations, config.alpha, discovery )
+
+    write_sketch(config, sketch, inputspace, inputspaceNormalizer, stepsize )
   }
 
   def learning(sketch:CMSketch, iterations:Int, alpha:Double, discoveryStrategy:DiscoveryStrategy) {

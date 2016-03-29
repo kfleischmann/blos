@@ -1,8 +1,11 @@
 package eu.blos.scala.ml.regression
 
-import eu.blos.scala.sketches.{DiscoveryStrategy, CMSketch, InputSpaceElement}
-import eu.blos.scala.inputspace.Vectors.DoubleVector
+import eu.blos.scala.sketches._
 import eu.blos.scala.inputspace.{InputSpace, Vectors, InputSpaceNormalizer, DataSetIterator}
+import java.io.{PrintWriter, File}
+import scala.collection.mutable
+import eu.blos.scala.sketches.InputSpaceElement
+import eu.blos.scala.inputspace.Vectors.DoubleVector
 
 object SketchedRegression {
 
@@ -124,6 +127,40 @@ object SketchedRegression {
       // arguments are bad, usage message will have been displayed
       System.exit(1)
       null
+    }
+  }
+
+  def write_sketch(config : Config, sketch:CMSketch, inputspace : InputSpace[DoubleVector], inputspaceNormalizer : InputSpaceNormalizer[DoubleVector], stepsize : DoubleVector ) = {
+    if(config.output.length >0) {
+      new File(config.output).mkdir()
+
+      val outHH = new PrintWriter(config.output + "/hh")
+      val outEnum = new PrintWriter(config.output + "/enumeration")
+
+      val mapHH = new mutable.HashMap[String, Long]()
+
+      val hhIt = new DiscoveryStrategyHH(sketch).iterator
+      while (hhIt.hasNext) {
+        val item = hhIt.next
+        mapHH.put(item.vector.toString, item.count)
+      }
+
+      val enumIt = new DiscoveryStrategyEnumeration(sketch, inputspace, inputspaceNormalizer).iterator
+      while (enumIt.hasNext) {
+        val item = enumIt.next
+        val pos = DoubleVector(item.vector.elements.zip(stepsize.elements).map(x => scala.math.round(x._1 / x._2).toInt.toDouble))
+
+        outEnum.write(pos.elements.map(x => x.toInt).mkString(" ").concat(" ").concat(item.count.toString))
+        outEnum.write("\n")
+
+        if (mapHH.contains(item.vector.toString)) {
+          outHH.write(pos.elements.map(x => x.toInt).mkString(" ").concat(" ").concat(item.count.toString))
+          outHH.write("\n")
+        } else {
+          outHH.write(pos.elements.map(x => x.toInt).mkString(" ").concat(" ").concat("0"))
+          outHH.write("\n")
+        }
+      }
     }
   }
 }

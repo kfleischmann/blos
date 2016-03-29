@@ -1,10 +1,11 @@
 package eu.blos.scala.ml.regression
 
 import eu.blos.scala.sketches._
-import java.io.{ File,  FileReader}
-import eu.blos.scala.inputspace.{Vectors, DataSetIterator, DynamicInputSpace}
+import java.io.{PrintWriter, File, FileReader}
+import eu.blos.scala.inputspace._
 import eu.blos.scala.inputspace.normalizer.Rounder
 import eu.blos.scala.inputspace.Vectors.DoubleVector
+import scala.collection.mutable
 
 /**
  * sketch-based linear regression models
@@ -24,14 +25,14 @@ object SketchedLinearRegression {
     val inputspace = new DynamicInputSpace(stepsize);
 
     // select discovery strategy and provide iterators
-    var discovery : DiscoveryStrategy = null
+    var discoveryStrategy : DiscoveryStrategy = null
     if(config.discovery == "hh") {
       println("discovery=hh")
-      discovery = new DiscoveryStrategyHH(sketch);
+      discoveryStrategy = new DiscoveryStrategyHH(sketch);
     }
     if(config.discovery == "enumeration") {
       println("discovery=enumeration")
-      discovery = new DiscoveryStrategyEnumeration(sketch, inputspace, inputspaceNormalizer);
+      discoveryStrategy = new DiscoveryStrategyEnumeration(sketch, inputspace, inputspaceNormalizer);
     }
 
     sketch.alloc
@@ -46,7 +47,10 @@ object SketchedLinearRegression {
       inputspaceNormalizer
     )
     is.close()
-    learning(sketch, config.numIterations, config.alpha, discovery )
+
+    learning(sketch, config.numIterations, config.alpha, discoveryStrategy )
+
+    write_sketch(config, sketch, inputspace, inputspaceNormalizer, stepsize )
   }
 
   def learning(sketch:CMSketch, iterations:Int, alpha:Double, discoveryStrategy:DiscoveryStrategy) {
