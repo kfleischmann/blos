@@ -1,6 +1,5 @@
 package eu.blos.scala.ml.regression
 
-import eu.blos.scala.inputspace.Vectors._
 import eu.blos.scala.sketches.{DiscoveryStrategy, CMSketch, InputSpaceElement}
 import eu.blos.scala.inputspace.Vectors.DoubleVector
 import eu.blos.scala.inputspace.{InputSpace, Vectors, InputSpaceNormalizer, DataSetIterator}
@@ -26,7 +25,7 @@ object SketchedRegression {
     def gradient(item:InputSpaceElement, d:Int) : Double = {
       val y = item.vector.elements(0)
       val x = DoubleVector(1.0).append(item.vector.tail)
-      (predict(x) - y)*x.elements(d) * item.count
+      (y - predict(x))*(-x.elements(d)) * item.count
     }
   }
 
@@ -38,7 +37,7 @@ object SketchedRegression {
     def gradient(item:InputSpaceElement, d:Int) : Double = {
       val y = item.vector.elements(0)
       val x = DoubleVector(1.0).append(item.vector.tail)
-      (predict(x) - y)*x.elements(d) * item.count
+      (y - predict(x))*x.elements(d) * item.count
     }
   }
 
@@ -51,7 +50,7 @@ object SketchedRegression {
     }
   }
 
-  def gradient_decent_step(regression : RegressionModel, discovery:DiscoveryStrategy ) : DoubleVector = {
+  def gradient_decent_step(regression : RegressionModel, discovery:Iterator[InputSpaceElement] ) : DoubleVector = {
     var total_freq : Long = 0L
     var gradient = Vectors.EmptyDoubleVector(regression.model.length)*0.0
     while(discovery.hasNext){

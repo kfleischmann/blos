@@ -2,11 +2,21 @@ package eu.blos.scala.ml.regression
 
 import eu.blos.scala.sketches._
 import java.io.{ File,  FileReader}
-import eu.blos.scala.inputspace.{Vectors, DataSetIterator, DynamicInputSpace, InputSpaceNormalizer}
+import eu.blos.scala.inputspace.{Vectors, DataSetIterator, DynamicInputSpace}
 import eu.blos.scala.inputspace.normalizer.Rounder
 import eu.blos.scala.inputspace.Vectors.DoubleVector
 
-
+case class Config(
+ input:String="",
+ output:String="",
+ epsilon:Double=0.0,
+ delta:Double=0.0,
+ alpha:Double=0.5,
+ numIterations:Int=100,
+ numHeavyHitters:Int=200,
+ dimension:Int=2,
+ inputDatasetResolution:Int=2,
+ discovery:String="hh");
 /**
  * sketch-based regression models
  */
@@ -14,21 +24,52 @@ object SketchedLinearRegression {
 
   import SketchedRegression._
 
-  var dimension=2
-  var inputDatasetResolution=2
-  val numHeavyHitters = 300
-  val epsilon = 0.0001
-  val delta = 0.1
-  val alpha = 0.5
-  val numIterations=100
-  val sketch: CMSketch = new CMSketch(delta, epsilon, numHeavyHitters);
-  val inputspaceNormalizer = new Rounder(inputDatasetResolution);
-  val stepsize =  inputspaceNormalizer.stepSize(dimension)
-  val inputspace = new DynamicInputSpace(stepsize);
-
   def main(args: Array[String]): Unit = {
-    val filename = "/home/kay/Dropbox/kay-rep/Uni-Berlin/Masterarbeit/datasets/linear_regression/dataset1"
-    val is = new FileReader(new File(filename))
+
+    val parser = new scopt.OptionParser[Config]("regression") {
+      head("Sketch-based Regression")
+
+      opt[String]('i', "input") required() action {
+        (x, c) => c.copy(input = x) }text("datset input")
+
+      opt[String]('o', "output")  valueName("<file>") action {
+        (x, c) => c.copy(output = x) }  text("output location")
+
+      opt[String]('s', "sketch") required() valueName("<epsilon>:<delta>") action {
+        (x, c) =>
+          c.copy( delta = x.split(":")(1).toDouble).copy( epsilon = x.split(":")(0).toDouble)
+      } text("sketch size")
+
+    }
+
+    // parser.parse returns Option[C]
+    parser.parse(args, Config()) map { config =>
+      run(config)
+    } getOrElse {
+      // arguments are bad, usage message will have been displayed
+      System.exit(1)
+    }
+  }
+
+  def run(config:Config) {
+
+    val is = new FileReader(new File(config.input))
+    println(config.epsilon)
+    println(config.delta)
+
+    val sketch = new CMSketch(config.delta, config.epsilon, config.numHeavyHitters);
+    val inputspaceNormalizer = new Rounder(config.inputDatasetResolution);
+    val stepsize =  inputspaceNormalizer.stepSize(config.dimension)
+    val inputspace = new DynamicInputSpace(stepsize);
+
+    // select discovery strategy and provide iterators
+    var discovery : DiscoveryStrategy = null
+    if(config.discovery == "hh") {
+      discovery = new DiscoveryStrategyEnumeration(sketch, inputspace, inputspaceNormalizer);
+    }
+    if(config.discovery == "enumeration") {
+      discovery = new DiscoveryStrategyHH(sketch);
+    }
 
     sketch.alloc
     println("w="+sketch.w)
@@ -42,15 +83,14 @@ object SketchedLinearRegression {
       inputspaceNormalizer
     )
     is.close()
-    learning
+    learning(sketch, config.numIterations, config.alpha, discovery )
   }
 
-  def learning {
+  def learning(sketch:CMSketch, iterations:Int, alpha:Double, discoveryStrategy:DiscoveryStrategy) {
     var model = Vectors.EmptyDoubleVector(2)+1
-    for(x <- Range(0,numIterations) ){
-      val discovery = new SketchDiscoveryEnumeration(sketch, inputspace, inputspaceNormalizer);
-      //val discovery = new SketchDiscoveryHH(sketch);
-      model = model - gradient_decent_step( new LinearRegressionModel(model), discovery )*alpha
+    for(x <- Range(0,iterations) ){
+
+      model = model - gradient_decent_step( new LinearRegressionModel(model), discoveryStrategy.iterator )*alpha
       println(model)
     }
   }

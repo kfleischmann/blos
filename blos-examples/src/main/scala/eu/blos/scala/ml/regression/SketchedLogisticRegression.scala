@@ -28,7 +28,7 @@ object SketchedLogisticRegression {
   val inputspace = new DynamicInputSpace(stepsize);
 
   def main(args: Array[String]): Unit = {
-    val filename = "/home/kay/Dropbox/kay-rep/Uni-Berlin/Masterarbeit/datasets/logistic_regression/dataset6_8_1_1k"
+    val filename = "/home/kay/Dropbox/kay-rep/Uni-Berlin/Masterarbeit/dyatasets/logistic_regression/dataset6_8_1_1k"
     val is = new FileReader(new File(filename))
 
     sketch.alloc
@@ -48,8 +48,8 @@ object SketchedLogisticRegression {
   def learning {
     var model = Vectors.EmptyDoubleVector(2)+1
     for(x <- Range(0,numIterations) ){
-      //val discovery = new SketchDiscoveryEnumeration(sketch, inputspace, inputspaceNormalizer);
-      val discovery = new SketchDiscoveryHH(sketch);
+      //val discovery = new SketchDiscoveryEnumerationIterator(sketch, inputspace, inputspaceNormalizer);
+      val discovery = new SketchDiscoveryHHIterator(sketch);
 
       model = model - gradient_decent_step( new LogisticRegressionModel(model), discovery )*alpha
 

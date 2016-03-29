@@ -5,10 +5,23 @@ import eu.blos.scala.inputspace.Vectors.DoubleVector
 
 case class InputSpaceElement(count:Long, vector:DoubleVector);
 
-trait DiscoveryStrategy extends Iterator[InputSpaceElement] {
+trait DiscoveryStrategy extends Iterable[InputSpaceElement] {
 }
 
-class SketchDiscoveryEnumeration(sketch:CMSketch, inputspace : InputSpace[DoubleVector], inputspaceNormalizer : InputSpaceNormalizer[DoubleVector] ) extends DiscoveryStrategy {
+class DiscoveryStrategyHH(cms:CMSketch) extends DiscoveryStrategy {
+  def iterator = {
+    new SketchDiscoveryHHIterator(cms)
+  }
+}
+
+class DiscoveryStrategyEnumeration(sketch:CMSketch, inputspace : InputSpace[DoubleVector], inputspaceNormalizer : InputSpaceNormalizer[DoubleVector]) extends DiscoveryStrategy {
+  def iterator = {
+    new SketchDiscoveryEnumerationIterator(sketch, inputspace,inputspaceNormalizer )
+  }
+}
+
+
+class SketchDiscoveryEnumerationIterator(sketch:CMSketch, inputspace : InputSpace[DoubleVector], inputspaceNormalizer : InputSpaceNormalizer[DoubleVector] ) extends Iterator[InputSpaceElement] {
   val iterator = inputspace.iterator
   def hasNext = iterator.hasNext
   def next : InputSpaceElement = {
@@ -21,7 +34,7 @@ class SketchDiscoveryEnumeration(sketch:CMSketch, inputspace : InputSpace[Double
   }
 }
 
-class SketchDiscoveryHH(cms:CMSketch) extends DiscoveryStrategy {
+class SketchDiscoveryHHIterator(cms:CMSketch) extends Iterator[InputSpaceElement] {
   val hh = cms.getHeavyHitters
   val numHH = hh.getSize
   var posHH = 1

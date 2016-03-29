@@ -1,7 +1,7 @@
 package eu.blos.scala.examples
 
 import eu.blos.scala.inputspace.Vectors.DoubleVector
-import eu.blos.scala.sketches.{SketchDiscoveryHH, CMSketch}
+import eu.blos.scala.sketches.{SketchDiscoveryHHIterator, CMSketch}
 import eu.blos.scala.inputspace.normalizer.Rounder
 import eu.blos.scala.inputspace.{InputSpaceNormalizer, DataSetIterator, DynamicInputSpace}
 import java.io.{File, FileReader}
@@ -55,7 +55,7 @@ object SketchedRegression {
 
   def learning {
     //val discovery = new SketchDiscoveryEnumeration(sketch, inputspace, inputspaceNormalizer);
-    val discovery = new SketchDiscoveryHH(sketch);
+    val discovery = new SketchDiscoveryHHIterator(sketch);
 
     while(discovery.hasNext){
       val item = discovery.next
