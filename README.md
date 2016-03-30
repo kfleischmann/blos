@@ -105,7 +105,7 @@ Usage: regression [options]
   -H <value> | --num-heavyhitters <value>
         number of heavy hitters
 ```
-
+
 SketchedLogisticRegression
 ```
 blos examples run eu.blos.java.ml.regression.SketchedLinearRegression
@@ -204,7 +204,7 @@ object SketchExample {
 
 
   def main(args: Array[String]): Unit = {
-    val filename = "/home/kay/Dropbox/kay-rep/Uni-Berlin/Masterarbeit/datasets/linear_regression/dataset1"
+    val filename = "/path/to/dataset"
     val is = new FileReader(new File(filename))
 
     sketch.alloc
