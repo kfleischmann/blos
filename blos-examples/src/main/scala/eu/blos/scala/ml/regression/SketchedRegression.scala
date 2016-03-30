@@ -99,6 +99,11 @@ object SketchedRegression {
           c.copy( delta = x.split(":")(1).toDouble).copy( epsilon = x.split(":")(0).toDouble)
       } text("sketch size")
 
+      opt[String]('y', "discovery")   action {
+        (x, c) =>
+          c.copy( discovery = x )
+      } text("discovery strategy. hh or enumeration")
+
       opt[Int]('d', "dimension") required()  action {
         (x, c) =>
           c.copy( dimension = x )
