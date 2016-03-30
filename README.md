@@ -16,7 +16,7 @@ FLINK_PATH=/path/to/flink
 ```
 
 
-This library is built on  flink.apache.org. 
+Sime examples are built on flink.apache.org. 
 
 Used libraries
 
