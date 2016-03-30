@@ -16,7 +16,7 @@ FLINK_PATH=/path/to/flink
 ```
 
 
-This library is built on  flink.apache.org. 
+Sime examples are built on flink.apache.org. 
 
 Used libraries
 
@@ -77,9 +77,76 @@ blos examples run eu.blos.java.ml.clustering.KMeansDatasetGenerator \
 Examples
 =============
 SketchedLinearRegression
+```
+blos examples run eu.blos.scala.ml.regression.SketchedLinearRegression
+Sketch-based Regression
+Usage: regression [options]
 
+  -i <value> | --input <value>
+        datset input
+  -o <file> | --output <file>
+        output location
+  -s <epsilon>:<delta> | --sketch <epsilon>:<delta>
+        sketch size
+  -y <value> | --discovery <value>
+        discovery strategy. hh or enumeration
+  -S <value> | --skip-learning <value>
+        discovery strategy. hh or enumeration
+  -v <value> | --verbose <value>
+        enable verbose mode
+  -W <value> | --write-sketch <value>
+        write sketch into output path
+  -d <value> | --dimension <value>
+        inputspace dimension
+  -n <value> | --iterations <value>
+        number of iterations
+  -n <value> | --resolution <value>
+        input space resolution
+  -H <value> | --num-heavyhitters <value>
+        number of heavy hitters
+```
+
+```
+blos generators poly --sigma 0.2 --function="0.5:0,1:1" --range="-1:1" --count 10000 --header false >> /tmp/testdataset
+blos examples run eu.blos.scala.ml.regression.SketchedLinearRegression \
+--input "/tmp/testdataset" \
+--sketch 0.0002:0.1 \
+--dimension 2 \
+--resolution 2 \
+--iterations 500 \
+--num-heavyhitters 200 \
+--output /tmp/testpolyreg/ \
+--discovery hh
+```
 SketchedLogisticRegression
+```
+blos examples run eu.blos.scala.ml.regression.SketchedLinearRegression
+Sketch-based Regression
+Usage: regression [options]
 
+  -i <value> | --input <value>
+        datset input
+  -o <file> | --output <file>
+        output location
+  -s <epsilon>:<delta> | --sketch <epsilon>:<delta>
+        sketch size
+  -y <value> | --discovery <value>
+        discovery strategy. hh or enumeration
+  -S <value> | --skip-learning <value>
+        discovery strategy. hh or enumeration
+  -v <value> | --verbose <value>
+        enable verbose mode
+  -W <value> | --write-sketch <value>
+        write sketch into output path
+  -d <value> | --dimension <value>
+        inputspace dimension
+  -n <value> | --iterations <value>
+        number of iterations
+  -n <value> | --resolution <value>
+        input space resolution
+  -H <value> | --num-heavyhitters <value>
+        number of heavy hitters
+```
 SketchedKMeans
 ```
 $blos examples run eu.blos.java.ml.clustering.SketchedKMeans
@@ -131,7 +198,7 @@ blos sketch scatterplot
 	-E 0.1,0.01,0.005,0.004,0.003,0.002,0.001,0.0001
 ```
 
-Code Example
+Simple Code Example How to sketch a dataset
 ===
 ```
 /**
@@ -149,7 +216,7 @@ object SketchExample {
 
 
   def main(args: Array[String]): Unit = {
-    val filename = "/home/kay/Dropbox/kay-rep/Uni-Berlin/Masterarbeit/datasets/linear_regression/dataset1"
+    val filename = "/path/to/dataset"
     val is = new FileReader(new File(filename))
 
     sketch.alloc
