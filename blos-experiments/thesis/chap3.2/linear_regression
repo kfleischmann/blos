@@ -1,0 +1,54 @@
+#!/bin/bash
+# Linear Regression
+#
+# resolution #.###
+
+DATA_DIR=~/tmp/blos/experiments/linear-regression/50k
+
+# cleanup
+rm -r ${DATA_DIR}
+mkdir -p ${DATA_DIR}/dataset
+mkdir -p ${DATA_DIR}/standard
+mkdir -p ${DATA_DIR}/sketch
+
+NUM_SAMPLES=50000
+RESOLUTION=3
+ITERATIONS=10
+RANGE=1
+STDDEV=0.2
+DPI=100
+SEED=3
+FORMAT=png
+INPUTSPACE_RESOLUTION=2
+# a+bx=y
+A=0.5
+B=1.0
+FUNC1="$A:0,$B:1"
+SKETCH_SIZE_DELTA=0.5,0.1,0.01,0.001,0.001,0.0001
+SKETCH_SIZE_EPSILON=0.01,0.001,0.0003,0.0002,0.0001
+
+
+
+echo "produce dataset for $FUNC1"
+
+# prepare dataset
+blos generators poly --sigma $STDDEV --function="$FUNC1" --range="-$RANGE:$RANGE" --count $NUM_SAMPLES --header false  >> ${DATA_DIR}/dataset/points
+
+# non skeched dataset
+MODEL_STANDARD=$(cat ${DATA_DIR}/dataset/points | blos regression linear)
+echo $MODEL_STAMDARD >>  ${DATA_DIR}/standard/
+
+echo "Learn model, standard: $MODEL_STANDARD"
+
+
+# sketch scatterplot
+blos sketch scatterplot-regression \
+	-d ${DATA_DIR} \
+	-D "${SKETCH_SIZE_DELTA}" \
+	-E "${SKETCH_SIZE_EPSILON}" \
+	--inputspace-resolution ${INPUTSPACE_RESOLUTION} \
+	--heavy-hitters ${SKETCH_HH} \
+	--iterations ${ITERATIONS} \
+	--image-resolution 100 \
+	--format png \
+	--seed $SEED

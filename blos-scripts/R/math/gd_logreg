@@ -31,7 +31,6 @@ grad <- function(x, y, theta) {
   return(t(gradient))
 }
 
-
 # define gradient descent update algorithm
 grad.descent <- function(x, y, maxit){
     theta <- matrix(c(0, 0), nrow=1) # Initialize the parameters

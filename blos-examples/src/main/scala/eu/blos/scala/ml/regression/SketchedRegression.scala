@@ -7,9 +7,7 @@ import scala.collection.mutable
 import eu.blos.scala.sketches.InputSpaceElement
 import eu.blos.scala.inputspace.Vectors.DoubleVector
 
-object SketchedRegression {
-
-  case class Config(
+case class Config(
          input:String="",
          output:String="",
          epsilon:Double=0.0,
@@ -19,9 +17,16 @@ object SketchedRegression {
          numHeavyHitters:Int=200,
          dimension:Int=2,
          inputspaceResolution:Int=2,
-         discovery:String="hh");
+         discovery:String="hh",
+         skiplearning : Boolean = false,
+         writeSketch : Boolean = false,
+         verbose : Boolean = false
+         );
 
 
+object SketchedRegression {
+
+   val config : Config = null
   trait TransformFunc {
     def apply(x:DoubleVector) : DoubleVector;
   }
@@ -33,7 +38,6 @@ object SketchedRegression {
   abstract case class RegressionModel(model:DoubleVector) extends Model[Double] {
     def gradient(item:InputSpaceElement, d:Int) : Double
   }
-
 
   class LinearRegressionModel(model:DoubleVector) extends RegressionModel(model) {
     def predict(x:DoubleVector) : Double = {
@@ -104,6 +108,21 @@ object SketchedRegression {
           c.copy( discovery = x )
       } text("discovery strategy. hh or enumeration")
 
+      opt[Boolean]('S', "skip-learning")  action {
+        (x, c) =>
+          c.copy( skiplearning = x )
+      } text("discovery strategy. hh or enumeration")
+
+      opt[Boolean]('v', "verbose")  action {
+        (x, c) =>
+          c.copy( verbose = x )
+      } text("enable verbose mode")
+
+      opt[Boolean]('W', "write-sketch")  action {
+        (x, c) =>
+          c.copy( writeSketch = x )
+      } text("write sketch into output path")
+
       opt[Int]('d', "dimension") required()  action {
         (x, c) =>
           c.copy( dimension = x )
@@ -137,38 +156,40 @@ object SketchedRegression {
 
   def write_sketch(config : Config, sketch:CMSketch, inputspace : InputSpace[DoubleVector], inputspaceNormalizer : InputSpaceNormalizer[DoubleVector], stepsize : DoubleVector ) = {
     if(config.output.length >0) {
+
       new File(config.output).mkdir()
 
-      val outHH = new PrintWriter(config.output + "/hh")
-      val outEnum = new PrintWriter(config.output + "/enumeration")
-
+      val outHHInputSpace = new PrintWriter(config.output + "/hh-input-space")
+      val outEnumInputSpace = new PrintWriter(config.output + "/enumerated-input-space")
+      val outHH = new PrintWriter(config.output + "/heavyhitters")
       val mapHH = new mutable.HashMap[String, Long]()
 
       val hhIt = new DiscoveryStrategyHH(sketch).iterator
       while (hhIt.hasNext) {
         val item = hhIt.next
         mapHH.put(item.vector.toString, item.count)
+        outHH.write(item.vector.toString+"=>"+item.count)
+        outHH.write("\n")
       }
 
       val enumIt = new DiscoveryStrategyEnumeration(sketch, inputspace, inputspaceNormalizer).iterator
       while (enumIt.hasNext) {
         val item = enumIt.next
-       // val pos = DoubleVector(item.vector.elements.zip(stepsize.elements).map(x => scala.math.round(x._1 / x._2).toInt.toDouble))
         val pos = item.vector
 
-        outEnum.write(pos.elements.mkString(" ").concat(" ").concat(item.count.toString))
-        outEnum.write("\n")
+        outEnumInputSpace.write(pos.elements.mkString(" ").concat(" ").concat(item.count.toString))
+        outEnumInputSpace.write("\n")
 
         if (mapHH.contains(item.vector.toString)) {
-          outHH.write(pos.elements.mkString(" ").concat(" ").concat(item.count.toString))
-          outHH.write("\n")
+          outHHInputSpace.write(pos.elements.mkString(" ").concat(" ").concat(item.count.toString))
+          outHHInputSpace.write("\n")
         } else {
-          outHH.write(pos.elements.mkString(" ").concat(" ").concat("0"))
-          outHH.write("\n")
+          outHHInputSpace.write(pos.elements.mkString(" ").concat(" ").concat("0"))
+          outHHInputSpace.write("\n")
         }
       }
-      outHH.close()
-      outEnum.close()
+      outHHInputSpace.close()
+      outEnumInputSpace.close()
     }
   }
 }

@@ -1,4 +1,4 @@
-package eu.blos.scala.ml.regression;
+package eu.blos.java.ml.regression;
 
 import eu.blos.java.inputspace.InputSpaceNormalizer;
 import eu.blos.java.inputspace.normalizer.RoundNormalizer;
@@ -12,9 +12,8 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SketchedLogisticRegression {
-
-
+@Deprecated
+public class DeprecatedSketchedLogisticRegression {
 	public static CMSketch sketch = new CMSketch();
 	public static long datasetSize = 0;
 	public static int numIterations = 0;

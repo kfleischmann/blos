@@ -1,0 +1,162 @@
+#!/bin/bash
+
+# DEFAULT VALUES
+SKETCH_HH=100
+SKETCH_SIZE_DELTA="0.5 0.1 0.05 0.01"
+SKETCH_SIZE_EPSILON="0.1 0.01 0.001 0.0001"
+INPUTSPACE_RESOLUTION=2
+DPI=100
+FORMAT=png
+TITLE=
+SKIP_LEARNING="--skip-learning true"
+ITERATIONS=100
+DISCOVERY=""
+
+# some arguments don't have a corresponding value to go with it such
+# as in the --default example).
+# note: if this is set to > 0 the /etc/hosts part is not recognized ( may be a bug )
+while [[ $# > 1 ]]
+do
+key="$1"
+
+case $key in
+    -d|--dataset-dir)
+    DATA_DIR="$2"
+    shift # past argument
+    ;;
+    -D|--sketch-delta)
+    SKETCH_SIZE_DELTA="$2"
+    shift # past argument
+    ;;
+    -E|--sketch-epsilon)
+    SKETCH_SIZE_EPSILON="$2"
+    shift # past argument
+    ;;
+    -h|--heavy-hitters)
+    SKETCH_HH="$2"
+    shift # past argument
+    ;;
+    -r|--inputspace-resolution)
+    INPUTSPACE_RESOLUTION="$2"
+    shift # past argument
+    ;;
+    -R|--image-resolution)
+    DPI="$2"
+    shift # past argument
+    ;;
+    -f|--format)
+    FORMAT="$2"
+    shift # past argument
+    ;;
+    -t|--title)
+    TITLE="$2"
+    shift # past argument
+    ;;
+    -I|--iterations)
+	ITERATIONS="$2"
+    shift # past argument
+    ;;
+    --default)
+    DEFAULT=YES
+    ;;
+    *)
+            # unknown option
+    ;;
+esac
+shift # past argument or value
+done
+
+echo $SKETCH_SIZE_DELTA
+echo $SKETCH_SIZE_EPSILON
+
+
+# cleanup
+# we do not cleanup. we assume the dataset was generated
+# rm -r ${DATA_DIR}
+
+# prepare folders
+mkdir -p ${DATA_DIR}/dataset
+mkdir -p ${DATA_DIR}/sketch
+
+# generate sample dataset
+# NUM_SAMPLES=50000
+# NUM_CENTROIDS=3
+# resolution of the generated dataset
+# RESOLUTION=2
+# sketch size parameters
+# resolution of the projected input-space
+# SKETCH_P=2
+# number of heavy hitters
+# START=$(date +%s)
+
+# -------------------------------
+# perform linear regression the standard way
+# -------------------------------
+
+echo "Linear-regression: the standard way"
+#blos regression linear ${DATA_DIR}/dataset/points ${DATA_DIR}/standard/points
+
+
+IFS=', ' read -r -a LIST_SKETCH_SIZE_DELTA <<< "$SKETCH_SIZE_DELTA"
+IFS=', ' read -r -a LIST_SKETCH_SIZE_EPSILON <<< "$SKETCH_SIZE_EPSILON"
+for d in "${LIST_SKETCH_SIZE_DELTA[@]}"
+do
+	for e in "${LIST_SKETCH_SIZE_EPSILON[@]}"
+	do
+		SKETCH_SIZE="${d}:${e}"
+		SKETCH_FILE=${d}_${e}
+
+		rm -r ${DATA_DIR}/sketch/${SKETCH_FILE}
+		mkdir ${DATA_DIR}/sketch/${SKETCH_FILE}
+
+		echo "scatterplot for $SKETCH_SIZE into $SKETCH_FILE"
+
+		echo "build sketch..."
+
+		 exec 5>&1
+
+		OUT=$(blos examples run eu.blos.scala.ml.regression.SketchedLinearRegression ${SKIP_LEARNING} \
+				-i ${DATA_DIR}/dataset/points \
+				-o ${DATA_DIR}/sketch/${SKETCH_FILE} \
+				-n ${ITERATIONS} \
+				-s ${SKETCH_SIZE} \
+				--resolution 2 \
+				--dimension 2 \
+				--num-heavyhitters ${SKETCH_HH} \
+				--write-sketch true \
+				--verbose true \
+				|tee >(cat - | grep "" >&5))
+
+
+		## read output parameters
+		#PARAM_D=$(echo 		"$OUT"|grep 	"d="| awk -F "=" '{print $2}')
+		#PARAM_W=$(echo 		"$OUT"|grep 	"w="| awk -F "=" '{print $2}')
+
+		#blos visualize sketch-inputspace2 \
+		#		-i ${DATA_DIR}/sketch/${SKETCH_FILE}/enumerated-input-space \
+		#		--output="${DATA_DIR}/sketch/${SKETCH_FILE}/enumerated-input-space-${SKETCH_FILE}" \
+		#		-f ${FORMAT} \
+		#		-C \
+		#		-d ${DPI}
+
+		#blos visualize sketch-inputspace2 \
+		#		-i ${DATA_DIR}/sketch/${SKETCH_FILE}/hh-input-space \
+		#		--output="${DATA_DIR}/sketch/${SKETCH_FILE}/hh-input-space-${SKETCH_FILE}" \
+		#		-f ${FORMAT} \
+		#		-C \
+		#		-d ${DPI}
+
+
+		# plot datapoints with its computed centers using enumeration
+		#blos visualize plotpoints result \
+		#	${DATA_DIR}/sketch/${SKETCH_FILE}/sketch-result-enum-${SKETCH_FILE}  \
+		#	${DATA_DIR}/sketch/${SKETCH_FILE}/sketch-result-enum-plot-${SKETCH_FILE}.${FORMAT}:${DPI} \
+		#	${DATA_DIR}/sketch/${SKETCH_FILE}/centers-enum
+
+		# plot datapoints with its computed centers using heavyhitters
+		#blos visualize plotpoints result \
+		#	${DATA_DIR}/sketch/${SKETCH_FILE}/sketch-result-hh-${SKETCH_FILE}  \
+		#	${DATA_DIR}/sketch/${SKETCH_FILE}/sketch-result-hh-plot-${SKETCH_FILE}.${FORMAT}:${DPI} \
+		#	${DATA_DIR}/sketch/${SKETCH_FILE}/centers-hh
+	done
+done

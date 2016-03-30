@@ -11,10 +11,13 @@ import eu.blos.scala.inputspace.Vectors.DoubleVector
  * sketch-based logistic regression models
  */
 object SketchedLogisticRegression {
-
+  var config : Config = null
   import SketchedRegression._
 
-  def main(args: Array[String]): Unit = run( init(args) )
+  def main(args: Array[String]): Unit = {
+    config = init(args)
+    run(config)
+  }
 
   def run(config:Config) {
     println("Sketch-based Logistic Regression")
@@ -49,7 +52,8 @@ object SketchedLogisticRegression {
     )
     is.close()
 
-    learning(sketch, config.numIterations, config.alpha, discovery )
+    if(!config.skiplearning)
+      learning(sketch, config.numIterations, config.alpha, discovery )
 
     write_sketch(config, sketch, inputspace, inputspaceNormalizer, stepsize )
   }

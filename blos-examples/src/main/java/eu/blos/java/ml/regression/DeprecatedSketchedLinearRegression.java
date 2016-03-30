@@ -1,4 +1,4 @@
-package eu.blos.scala.ml.regression;
+package eu.blos.java.ml.regression;
 
 
 import eu.blos.java.inputspace.InputSpaceNormalizer;
@@ -13,7 +13,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-public class SketchedLinearRegression {
+@Deprecated
+public class DeprecatedSketchedLinearRegression {
 	//public static List<Tuple2<Double,Double>> dataset = new ArrayList<Tuple2<Double,Double>>();
 
 	public static List<Tuple1<Double>> labels = new ArrayList<Tuple1<Double>>();

@@ -5,16 +5,19 @@ import java.io.{PrintWriter, File, FileReader}
 import eu.blos.scala.inputspace._
 import eu.blos.scala.inputspace.normalizer.Rounder
 import eu.blos.scala.inputspace.Vectors.DoubleVector
-import scala.collection.mutable
 
 /**
  * sketch-based linear regression models
  */
 object SketchedLinearRegression {
 
+  var config : Config = null
   import SketchedRegression._
 
-  def main(args: Array[String]): Unit = run( init(args) )
+  def main(args: Array[String]): Unit = {
+    config = init(args)
+    run(config)
+  }
 
   def run(config:Config) {
     println("Sketch-based Linear Regression")
@@ -23,17 +26,6 @@ object SketchedLinearRegression {
     val inputspaceNormalizer = new Rounder(config.inputspaceResolution);
     val stepsize =  inputspaceNormalizer.stepSize(config.dimension)
     val inputspace = new DynamicInputSpace(stepsize);
-
-    // select discovery strategy and provide iterators
-    var discoveryStrategy : DiscoveryStrategy = null
-    if(config.discovery == "hh") {
-      println("discovery=hh")
-      discoveryStrategy = new DiscoveryStrategyHH(sketch);
-    }
-    if(config.discovery == "enumeration") {
-      println("discovery=enumeration")
-      discoveryStrategy = new DiscoveryStrategyEnumeration(sketch, inputspace, inputspaceNormalizer);
-    }
 
     sketch.alloc
     println("w="+sketch.w)
@@ -48,16 +40,25 @@ object SketchedLinearRegression {
     )
     is.close()
 
-    learning(sketch, config.numIterations, config.alpha, discoveryStrategy )
+    if(!config.skiplearning) {
+      learning(sketch, config.numIterations, config.alpha, new DiscoveryStrategyEnumeration(sketch, inputspace, inputspaceNormalizer), config.output + "/model-results-enumeration")
+      learning(sketch, config.numIterations, config.alpha, new DiscoveryStrategyHH(sketch), config.output + "/model-results-hh")
+    }
 
-    write_sketch(config, sketch, inputspace, inputspaceNormalizer, stepsize )
+    if(config.writeSketch)
+      write_sketch(config, sketch, inputspace, inputspaceNormalizer, stepsize )
   }
 
-  def learning(sketch:CMSketch, iterations:Int, alpha:Double, discoveryStrategy:DiscoveryStrategy) {
+  def learning(sketch:CMSketch, iterations:Int, alpha:Double, discoveryStrategy:DiscoveryStrategy, modelOutput : String ) {
+    val output = new PrintWriter(modelOutput)
     var model = Vectors.EmptyDoubleVector(2)+1
     for(x <- Range(0,iterations) ){
       model = model - gradient_decent_step( new LinearRegressionModel(model), discoveryStrategy.iterator )*alpha
+      output.write(model.elements.mkString(" "))
+      output.write("\n")
       println(model)
     }
+    println( modelOutput+ ":"+model)
+    output.close()
   }
 }

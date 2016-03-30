@@ -155,12 +155,10 @@ do
 				--verbose \
 				|tee >(cat - | grep "" >&5))
 
-
 		# read output parameters
 		PARAM_SIZE=$(echo 	"$OUT"|grep 	"size(mb)="| awk -F "=" '{print $2}')
 		PARAM_D=$(echo 		"$OUT"|grep 	"d="| awk -F "=" '{print $2}')
 		PARAM_W=$(echo 		"$OUT"|grep 	"w="| awk -F "=" '{print $2}')
-
 
 		DESC="delta:$d,epsilon:$e,size:$PARAM_SIZE,w:$PARAM_W,d:$PARAM_D"
 		echo "sketch details $DESC"
@@ -176,7 +174,7 @@ do
 				-i ${DATA_DIR}/sketch/${SKETCH_FILE}/hh-input-space \
 				--output="${DATA_DIR}/sketch/${SKETCH_FILE}/hh-input-space-${SKETCH_FILE}" \
 				-f ${FORMAT} \
-				-C \
+				-C \g
 				-d ${DPI}
 
 		# compute nearest centers for each data point
@@ -205,4 +203,4 @@ done
 #	-title "${TITLE}" \
 #	-tile $(( ${#LIST_SKETCH_SIZE_EPSILON[@]}*3 ))x${#LIST_SKETCH_SIZE_DELTA[@]} \
 #	-geometry +0+0 \
-#	 ${DATA_DIR}/sketch/sketch-scatterplot.eps
+#	 ${DATA_DIR}/sketch/sketch-scatterplot.epsg

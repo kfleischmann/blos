@@ -49,12 +49,12 @@ blos experiments kmeans-manipulate-centers \
 
 # sketch scatterplot
 blos sketch scatterplot \
-    	-d ${DATA_DIR} \
-    	-p ${SKETCH_P} \
-    	-D ${SKETCH_SIZE_DELTA} \
-    	-E ${SKETCH_SIZE_EPSILON} \
-        --heavy-hitters ${SKETCH_HH} \
-        --iterations ${ITERATIONS} \
+	-d ${DATA_DIR} \
+	-p ${SKETCH_P} \
+	-D ${SKETCH_SIZE_DELTA} \
+	-E ${SKETCH_SIZE_EPSILON} \
+	--heavy-hitters ${SKETCH_HH} \
+	--iterations ${ITERATIONS} \
 	--learn-enumeration yes \
 	--learn-hh yes \
 	--generate-results yes \
