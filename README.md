@@ -77,9 +77,64 @@ blos examples run eu.blos.java.ml.clustering.KMeansDatasetGenerator \
 Examples
 =============
 SketchedLinearRegression
+```
+blos examples run eu.blos.java.ml.regression.SketchedLinearRegression
+Sketch-based Regression
+Usage: regression [options]
+
+  -i <value> | --input <value>
+        datset input
+  -o <file> | --output <file>
+        output location
+  -s <epsilon>:<delta> | --sketch <epsilon>:<delta>
+        sketch size
+  -y <value> | --discovery <value>
+        discovery strategy. hh or enumeration
+  -S <value> | --skip-learning <value>
+        discovery strategy. hh or enumeration
+  -v <value> | --verbose <value>
+        enable verbose mode
+  -W <value> | --write-sketch <value>
+        write sketch into output path
+  -d <value> | --dimension <value>
+        inputspace dimension
+  -n <value> | --iterations <value>
+        number of iterations
+  -n <value> | --resolution <value>
+        input space resolution
+  -H <value> | --num-heavyhitters <value>
+        number of heavy hitters
+```
 
 SketchedLogisticRegression
+```
+blos examples run eu.blos.java.ml.regression.SketchedLinearRegression
+Sketch-based Regression
+Usage: regression [options]
 
+  -i <value> | --input <value>
+        datset input
+  -o <file> | --output <file>
+        output location
+  -s <epsilon>:<delta> | --sketch <epsilon>:<delta>
+        sketch size
+  -y <value> | --discovery <value>
+        discovery strategy. hh or enumeration
+  -S <value> | --skip-learning <value>
+        discovery strategy. hh or enumeration
+  -v <value> | --verbose <value>
+        enable verbose mode
+  -W <value> | --write-sketch <value>
+        write sketch into output path
+  -d <value> | --dimension <value>
+        inputspace dimension
+  -n <value> | --iterations <value>
+        number of iterations
+  -n <value> | --resolution <value>
+        input space resolution
+  -H <value> | --num-heavyhitters <value>
+        number of heavy hitters
+```
 SketchedKMeans
 ```
 $blos examples run eu.blos.java.ml.clustering.SketchedKMeans
