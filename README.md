@@ -105,7 +105,19 @@ Usage: regression [options]
   -H <value> | --num-heavyhitters <value>
         number of heavy hitters
 ```
-
+
+```
+blos generators poly --sigma 0.2 --function="0.5:0,1:1" --range="-1:1" --count 10000 --header false >> /tmp/testdataset
+blos examples run eu.blos.java.ml.regression.SketchedLinearRegression \
+--input "/tmp/testdataset" \
+--sketch 0.0002:0.1 \
+--dimension 2 \
+--resolution 2 \
+--iterations 500 \
+--num-heavyhitters 200 \
+--output /tmp/testpolyreg/ \
+--discovery hh
+```
 SketchedLogisticRegression
 ```
 blos examples run eu.blos.java.ml.regression.SketchedLinearRegression
