@@ -186,7 +186,7 @@ blos sketch scatterplot
 	-E 0.1,0.01,0.005,0.004,0.003,0.002,0.001,0.0001
 ```
 
-Code Example
+Simepl Code Example How to sketch a dataset
 ===
 ```
 /**
