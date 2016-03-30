@@ -148,16 +148,17 @@ object SketchedRegression {
       val enumIt = new DiscoveryStrategyEnumeration(sketch, inputspace, inputspaceNormalizer).iterator
       while (enumIt.hasNext) {
         val item = enumIt.next
-        val pos = DoubleVector(item.vector.elements.zip(stepsize.elements).map(x => scala.math.round(x._1 / x._2).toInt.toDouble))
+       // val pos = DoubleVector(item.vector.elements.zip(stepsize.elements).map(x => scala.math.round(x._1 / x._2).toInt.toDouble))
+        val pos = item.vector
 
-        outEnum.write(pos.elements.map(x => x.toInt).mkString(" ").concat(" ").concat(item.count.toString))
+        outEnum.write(pos.elements.mkString(" ").concat(" ").concat(item.count.toString))
         outEnum.write("\n")
 
         if (mapHH.contains(item.vector.toString)) {
-          outHH.write(pos.elements.map(x => x.toInt).mkString(" ").concat(" ").concat(item.count.toString))
+          outHH.write(pos.elements.mkString(" ").concat(" ").concat(item.count.toString))
           outHH.write("\n")
         } else {
-          outHH.write(pos.elements.map(x => x.toInt).mkString(" ").concat(" ").concat("0"))
+          outHH.write(pos.elements.mkString(" ").concat(" ").concat("0"))
           outHH.write("\n")
         }
       }

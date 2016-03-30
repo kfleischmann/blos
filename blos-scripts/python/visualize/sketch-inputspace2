@@ -41,10 +41,6 @@ import itertools
 
 
 def run(**kwargs):
-
-	counts = []
-	dim_x = 0
-	dim_y = 0
 	input=kwargs['input']
 	output=kwargs['output']
 	format=kwargs['format']
@@ -55,24 +51,55 @@ def run(**kwargs):
 	with open(input) as f:
 		lines = f.readlines()
 
-	l = map( lambda x: map( lambda a: int(a), x.strip().split(" ")), lines )
+	l = map(lambda x: map( lambda a: float(a), x.strip().split(" ")), lines)
 
+	row_values = sorted(set(map(lambda x: x[0], l)), reverse=True)
+	col_values = sorted(set(map(lambda x: x[1], l)))
 
-	#print l
-
-	#print dim0
-	#print dim1
+	rows = len(row_values)
+	cols = len(col_values)
 
 	l.sort(key= lambda x: x[0], reverse=True)
 
-	#img = np.zeros(len(l), len(l))
-
+	img = np.zeros((rows, cols))
+	row = 0
+	# sort sketch counts from left top top right bottom
 	for k,g in itertools.groupby(l, lambda x: x[0]):
-		ll = list(g)
-		if(len(filter( lambda a:a != 3, map(lambda x: len(x), ll)))>0):
-			print list(ll)
-		#print filter( lambda a:a != 3, map(lambda x: len(x), g))
-		#print map( lambda x: x[0], sorted( list(g), key= lambda x: x[1] ))
+		col = 0
+		for val in (map( lambda x: x[2], sorted( list(g), key= lambda x: x[1] ))):
+			img[row][col] = val
+			col += 1
+		row += 1
+
+
+	# build sketch
+	fig = plt.figure()
+	ax = fig.add_subplot(111)
+	cax = ax.matshow(img)
+
+	# 	0		(0 		1		2)
+	# (index, 	(cols, col_values, num_items ))
+	xlabels = map( lambda x: str(x[1][1][int(x[0]*(x[1][0]/x[1][2]))]), zip( range(len(list(ax.get_yticks()))), map( lambda x: (cols,col_values,len(ax.get_yticks())), list(ax.get_yticks()))))
+	ylabels = map( lambda x: str(x[1][1][int(x[0]*(x[1][0]/x[1][2]))]), zip( range(len(list(ax.get_xticks()))), map( lambda x: (rows,row_values,len(ax.get_xticks())), list(ax.get_xticks()))))
+
+	xlabels.insert(0,"")
+	ylabels.insert(0,"")
+
+	ax.set_xticklabels(xlabels, fontsize = 7)
+	ax.set_yticklabels(ylabels, fontsize = 7)
+
+	if kwargs['text']:
+		fig.suptitle(kwargs['text'], fontsize=14 )
+
+	if bool(kwargs['colorbar']):
+		fig.colorbar(cax)
+
+
+	if output:
+		fig.savefig(output+"."+format, format=format, dpi=dpi, bbox_inches='tight' )
+
+	if display:
+		fig.show()
 
 if __name__=='__main__':
 	# handle command line arguments

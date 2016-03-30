@@ -28,7 +28,7 @@ object SketchedLogisticRegression {
     // select discovery strategy and provide iterators
     var discovery : DiscoveryStrategy = null
     if(config.discovery == "hh") {
-      println("discovery=hh")
+      println("discovery=hh")range
       discovery = new DiscoveryStrategyHH(sketch);
     }
     if(config.discovery == "enumeration") {
