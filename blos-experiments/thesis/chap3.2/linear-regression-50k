@@ -8,7 +8,6 @@ DATA_DIR=~/tmp/blos/experiments/linear-regression/50k
 # cleanup
 rm -r ${DATA_DIR}
 mkdir -p ${DATA_DIR}/dataset
-mkdir -p ${DATA_DIR}/standard
 mkdir -p ${DATA_DIR}/sketch
 
 NUM_SAMPLES=50000
@@ -35,11 +34,13 @@ echo "produce dataset for $FUNC1"
 blos generators poly --sigma $STDDEV --function="$FUNC1" --range="-$RANGE:$RANGE" --count $NUM_SAMPLES --header false  >> ${DATA_DIR}/dataset/points
 
 # non skeched dataset
-MODEL_STANDARD=$(cat ${DATA_DIR}/dataset/points | blos regression linear)
-echo $MODEL_STAMDARD >>  ${DATA_DIR}/standard/
+LEARNED_MODEL=$(cat ${DATA_DIR}/dataset/points | blos regression linear)
+echo {LEARNED_MODEL} >>  ${DATA_DIR}/dataset/learned-model
 
-echo "Learn model, standard: $MODEL_STANDARD"
+echo "$A $B" >>  ${DATA_DIR}/dataset/real-model
 
+echo "Learn model: LEARNED_MODEL"
+echo "Real model: REAL_MODEL"
 
 # sketch scatterplot
 blos sketch scatterplot-regression \

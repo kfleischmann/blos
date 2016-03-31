@@ -54,7 +54,7 @@ case $key in
     shift # past argument
     ;;
     -m|--dimension)
-	DIMENSION="$2"a
+	DIMENSION="$2"
     shift # past argument
     ;;
     -I|--iterations)
@@ -130,6 +130,8 @@ do
 				--num-heavyhitters ${SKETCH_HH} \
 				--write-sketch true \
 				--verbose true \
+				--min -1,-1 \
+				--max 1,1 \
 				|tee >(cat - | grep "" >&5))
 
 
@@ -141,13 +143,15 @@ do
 				-i ${DATA_DIR}/sketch/${SKETCH_FILE}/enumerated-input-space \
 				--output="${DATA_DIR}/sketch/${SKETCH_FILE}/enumerated-input-space-${SKETCH_FILE}" \
 				-f ${FORMAT} \
-				-d ${DPI}
+				-d ${DPI} \
+				-C
 
 		blos visualize sketch-inputspace2 \
 				-i ${DATA_DIR}/sketch/${SKETCH_FILE}/hh-input-space \
 				--output="${DATA_DIR}/sketch/${SKETCH_FILE}/hh-input-space-${SKETCH_FILE}" \
 				-f ${FORMAT} \
-				-d ${DPI}
+				-d ${DPI} \
+				-C
 
 
 		# plot datapoints with its computed centers using enumeration
