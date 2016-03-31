@@ -48,6 +48,8 @@ def run(**kwargs):
 	dpi=int(kwargs['dpi'])
 	display=bool(kwargs['display'])
 
+	# e.g. -1:1.0
+
 	with open(input) as f:
 		lines = f.readlines()
 
@@ -121,6 +123,10 @@ if __name__=='__main__':
 	argparser.add_argument("-D", "--display", action="store_true", required=False, help="display image" )
 	argparser.add_argument("-C", "--colorbar", action="store_true", required=False, help="display colorbar" )
 	argparser.add_argument("-t", "--text", action="store", required=False, help="show text" )
+	argparser.add_argument("-R", "--range", action="store", required=False, help="range of the view" )
+
+	argparser.add_argument("-X", "--xrange", action="store", required=False, help="xrange of the view" )
+	argparser.add_argument("-Y", "--yrange", action="store", required=False, help="yrange of the view" )
 
 	# validate arguments
 	args = argparser.parse_args()

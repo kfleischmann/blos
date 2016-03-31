@@ -5,10 +5,11 @@ SKETCH_HH=100
 SKETCH_SIZE_DELTA="0.5 0.1 0.05 0.01"
 SKETCH_SIZE_EPSILON="0.1 0.01 0.001 0.0001"
 INPUTSPACE_RESOLUTION=2
+DIMENSION=2
 DPI=100
 FORMAT=png
 TITLE=
-SKIP_LEARNING="--skip-learning true"
+SKIP_LEARNING="--skip-learning false"
 ITERATIONS=100
 DISCOVERY=""
 
@@ -50,6 +51,10 @@ case $key in
     ;;
     -t|--title)
     TITLE="$2"
+    shift # past argument
+    ;;
+    -m|--dimension)
+	DIMENSION="$2"a
     shift # past argument
     ;;
     -I|--iterations)
@@ -120,8 +125,8 @@ do
 				-o ${DATA_DIR}/sketch/${SKETCH_FILE} \
 				-n ${ITERATIONS} \
 				-s ${SKETCH_SIZE} \
-				--resolution 2 \
-				--dimension 2 \
+				--resolution ${INPUTSPACE_RESOLUTION} \
+				--dimension ${DIMENSION} \
 				--num-heavyhitters ${SKETCH_HH} \
 				--write-sketch true \
 				--verbose true \
@@ -129,22 +134,20 @@ do
 
 
 		## read output parameters
-		#PARAM_D=$(echo 		"$OUT"|grep 	"d="| awk -F "=" '{print $2}')
-		#PARAM_W=$(echo 		"$OUT"|grep 	"w="| awk -F "=" '{print $2}')
+		PARAM_D=$(echo 		"$OUT"|grep 	"d="| awk -F "=" '{print $2}')
+		PARAM_W=$(echo 		"$OUT"|grep 	"w="| awk -F "=" '{print $2}')
 
-		#blos visualize sketch-inputspace2 \
-		#		-i ${DATA_DIR}/sketch/${SKETCH_FILE}/enumerated-input-space \
-		#		--output="${DATA_DIR}/sketch/${SKETCH_FILE}/enumerated-input-space-${SKETCH_FILE}" \
-		#		-f ${FORMAT} \
-		#		-C \
-		#		-d ${DPI}
+		blos visualize sketch-inputspace2 \
+				-i ${DATA_DIR}/sketch/${SKETCH_FILE}/enumerated-input-space \
+				--output="${DATA_DIR}/sketch/${SKETCH_FILE}/enumerated-input-space-${SKETCH_FILE}" \
+				-f ${FORMAT} \
+				-d ${DPI}
 
-		#blos visualize sketch-inputspace2 \
-		#		-i ${DATA_DIR}/sketch/${SKETCH_FILE}/hh-input-space \
-		#		--output="${DATA_DIR}/sketch/${SKETCH_FILE}/hh-input-space-${SKETCH_FILE}" \
-		#		-f ${FORMAT} \
-		#		-C \
-		#		-d ${DPI}
+		blos visualize sketch-inputspace2 \
+				-i ${DATA_DIR}/sketch/${SKETCH_FILE}/hh-input-space \
+				--output="${DATA_DIR}/sketch/${SKETCH_FILE}/hh-input-space-${SKETCH_FILE}" \
+				-f ${FORMAT} \
+				-d ${DPI}
 
 
 		# plot datapoints with its computed centers using enumeration

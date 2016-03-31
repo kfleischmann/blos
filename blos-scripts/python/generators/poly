@@ -48,37 +48,24 @@ def run(**kwargs):
 	field_sep=","
 	value_sep=" "
 
-	rangeX = (-1, 1)
-	rangeY = (-1, 1)
-
-	if kwargs['range']:
-		range_start=float(kwargs['range'].split(":")[0])
-		range_end=float(kwargs['range'].split(":")[1])
-		rangeX = (range_start, range_end)
-		rangeY = (range_start, range_end)
-
-	if kwargs['xrange']:
-		rangeX = (float(kwargs['xrange'].split(":")[0]), float(kwargs['xrange'].split(":")[1]))
-	if kwargs['yrange']:
-		rangeX = (float(kwargs['yrange'].split(":")[0]), float(kwargs['yrange'].split(":")[1]))
+	range_start=float(kwargs['range'].split(":")[0])
+	range_end=float(kwargs['range'].split(":")[1])
 
 	def reg_func(x):
 		sum=0
 		for i, fk in enumerate(f):
-			sum+=float( fk.split(":")[0] ) * pow( x, float(fk.split(":")[1]))
+			sum+=float( fk.split(":")[0] ) * pow( x, float(fk.split(":")[1]) )
 		return sum
 	if kwargs['header'].lower() == 'true':
 		print 'index'+field_sep+'y'+field_sep+'x'
 
 	x = 0
 	counter = 0
-	while counter < samples:
+	for s in range(0, samples):
 		x = np.random.uniform(range_start,range_end)
 		y = reg_func(x) + np.random.normal(-1,1)*variance
-		if x >= rangeX[0] and x<= rangeX[1]:
-			if y >= rangeY[0] and y<= rangeY[1]:
-				print str(counter)+field_sep+str(y)+field_sep+str(x)
-				counter += 1
+		print str(counter)+field_sep+str(y)+field_sep+str(x)
+		counter += 1
 
 if __name__=='__main__':
 	# handle command line arguments
@@ -95,11 +82,8 @@ if __name__=='__main__':
 	argparser.add_argument("-s", "--sigma", action="store", required=True, help="variance")
 	argparser.add_argument("-c", "--count", action="store", required=True, help="number of samples")
 	argparser.add_argument("-f", "--function", action="store", required=True, help="factor1:exp1,..")
-	argparser.add_argument("-r", "--range", action="store", required=False, help="x1:x2 for x and y coordinates")
+	argparser.add_argument("-r", "--range", action="store", required=True, help="x1:x2 for x and y coordinates")
 	argparser.add_argument("-H", "--header", action="store", required=False, help="TRUE or FALSE", default="true")
-
-	argparser.add_argument("-X", "--xrange", action="store", help="x1:x2 for x coordinates")
-	argparser.add_argument("-Y", "--yrange", action="store", help="x1:x2 for y coordinates")
 
 	# validate arguments
 	args = argparser.parse_args()

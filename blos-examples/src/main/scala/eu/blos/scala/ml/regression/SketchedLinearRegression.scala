@@ -25,11 +25,17 @@ object SketchedLinearRegression {
     val sketch = new CMSketch(config.delta, config.epsilon, config.numHeavyHitters);
     val inputspaceNormalizer = new Rounder(config.inputspaceResolution);
     val stepsize =  inputspaceNormalizer.stepSize(config.dimension)
-    val inputspace = new DynamicInputSpace(stepsize);
+    var inputspace : InputSpace[DoubleVector] =  new DynamicInputSpace(stepsize)
+
+    if (config.min.length > 0 && config.max.length > 0) {
+      println("use static input space min:" + new DoubleVector(config.min.split(",").map(x => x.toDouble)) + ", max:"+ new DoubleVector(config.max.split(",").map(x => x.toDouble)))
+      inputspace = new StaticInputSpace(new DoubleVector(config.min.split(",").map(x => x.toDouble)), new DoubleVector(config.max.split(",").map(x => x.toDouble)), stepsize)
+    }
 
     sketch.alloc
     println("w="+sketch.w)
     println("d="+sketch.d)
+
 
     skeching(sketch,
       inputspace,
@@ -39,6 +45,7 @@ object SketchedLinearRegression {
       inputspaceNormalizer
     )
     is.close()
+
 
     if(!config.skiplearning) {
       learning(sketch, config.numIterations, config.alpha, new DiscoveryStrategyEnumeration(sketch, inputspace, inputspaceNormalizer), config.output + "/model-results-enumeration")
@@ -50,6 +57,7 @@ object SketchedLinearRegression {
   }
 
   def learning(sketch:CMSketch, iterations:Int, alpha:Double, discoveryStrategy:DiscoveryStrategy, modelOutput : String ) {
+
     val output = new PrintWriter(modelOutput)
     var model = Vectors.EmptyDoubleVector(2)+1
     for(x <- Range(0,iterations) ){
@@ -59,6 +67,7 @@ object SketchedLinearRegression {
       println(model)
     }
     println( modelOutput+ ":"+model)
+
     output.close()
   }
 }

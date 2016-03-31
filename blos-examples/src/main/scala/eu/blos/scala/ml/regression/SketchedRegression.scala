@@ -20,7 +20,9 @@ case class Config(
          discovery:String="hh",
          skiplearning : Boolean = false,
          writeSketch : Boolean = false,
-         verbose : Boolean = false
+         verbose : Boolean = false,
+         min : String ="",
+         max : String =""
          );
 
 
@@ -103,6 +105,16 @@ object SketchedRegression {
           c.copy( delta = x.split(":")(1).toDouble).copy( epsilon = x.split(":")(0).toDouble)
       } text("sketch size")
 
+      opt[String]('m', "min")   action {
+        (x, c) =>
+          c.copy( min = x )
+      } text("max vector. x1,y2,y3")
+
+      opt[String]('M', "max")   action {
+        (x, c) =>
+          c.copy( max = x )
+      } text("min vector. x2,x2,x3")
+
       opt[String]('y', "discovery")   action {
         (x, c) =>
           c.copy( discovery = x )
@@ -171,6 +183,8 @@ object SketchedRegression {
         outHH.write(item.vector.toString+"=>"+item.count)
         outHH.write("\n")
       }
+
+      outHH.close()
 
       val enumIt = new DiscoveryStrategyEnumeration(sketch, inputspace, inputspaceNormalizer).iterator
       while (enumIt.hasNext) {
