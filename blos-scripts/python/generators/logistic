@@ -63,7 +63,7 @@ def run(**kwargs):
 	counter = 0
 	for s in range(0, samples):
 		x = np.random.uniform(range_start,range_end)
-		y = reg_func(x) + np.random.normal(-1,1)*variance
+		y = reg_func(x) + np.random.normal(0, variance)
 		print str(counter)+field_sep+str(y)+field_sep+str(x)
 		counter += 1
 

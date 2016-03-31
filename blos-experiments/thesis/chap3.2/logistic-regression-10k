@@ -1,0 +1,57 @@
+#!/bin/bash
+# Logistic Regression
+#
+# resolution #.###
+
+DATA_DIR=~/tmp/blos/experiments/logistic-regression/10k
+
+# cleanup
+rm -r ${DATA_DIR}
+mkdir -p ${DATA_DIR}/dataset
+mkdir -p ${DATA_DIR}/sketch
+
+NUM_SAMPLES=10000
+RESOLUTION=2
+ITERATIONS=100
+RANGE=1
+STDDEV=0.2
+DPI=100
+SEED=3
+FORMAT=png
+INPUTSPACE_RESOLUTION=2
+# a+bx=y
+A=0.5
+B=1.0
+FUNC1="$A:0,$B:1"
+SKETCH_SIZE_DELTA=0.5,0.1,0.01,0.001,0.001,0.0001
+SKETCH_SIZE_EPSILON=0.01,0.001,0.0003,0.0002,0.0001
+SKETCH_HH=200
+
+
+echo "produce dataset for $FUNC1"
+
+# prepare dataset
+blos generators logistic --sigma $STDDEV --function="$FUNC1" --range="-$RANGE:$RANGE" --count $NUM_SAMPLES --header false  >> ${DATA_DIR}/dataset/points
+
+# non skeched dataset
+LEARNED_MODEL=$(cat ${DATA_DIR}/dataset/points | blos regression logistic)
+echo ${LEARNED_MODEL} >>  ${DATA_DIR}/dataset/learned-model
+
+echo "$A $B" >>  ${DATA_DIR}/dataset/real-model
+
+echo "Learn model: LEARNED_MODEL"
+echo "Real model: REAL_MODEL"
+
+# sketch scatterplot
+blos sketch scatterplot-regression \
+	-d ${DATA_DIR} \
+	-D "${SKETCH_SIZE_DELTA}" \
+	-E "${SKETCH_SIZE_EPSILON}" \
+	--inputspace-resolution ${INPUTSPACE_RESOLUTION} \
+	--heavy-hitters ${SKETCH_HH} \
+	--iterations ${ITERATIONS} \
+	--image-resolution 100 \
+	--dimension 2 \
+	--format png \
+	--class SketchedLogisticRegression \
+	--seed $SEED

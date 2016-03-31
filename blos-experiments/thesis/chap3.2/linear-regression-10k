@@ -3,14 +3,14 @@
 #
 # resolution #.###
 
-DATA_DIR=~/tmp/blos/experiments/linear-regression/50k
+DATA_DIR=~/tmp/blos/experiments/linear-regression/10k
 
 # cleanup
 rm -r ${DATA_DIR}
 mkdir -p ${DATA_DIR}/dataset
 mkdir -p ${DATA_DIR}/sketch
 
-NUM_SAMPLES=50000
+NUM_SAMPLES=10000
 RESOLUTION=2
 ITERATIONS=100
 RANGE=1
@@ -35,7 +35,7 @@ blos generators poly --sigma $STDDEV --function="$FUNC1" --range="-$RANGE:$RANGE
 
 # non skeched dataset
 LEARNED_MODEL=$(cat ${DATA_DIR}/dataset/points | blos regression linear)
-echo {LEARNED_MODEL} >>  ${DATA_DIR}/dataset/learned-model
+echo ${LEARNED_MODEL} >>  ${DATA_DIR}/dataset/learned-model
 
 echo "$A $B" >>  ${DATA_DIR}/dataset/real-model
 
@@ -53,4 +53,5 @@ blos sketch scatterplot-regression \
 	--image-resolution 100 \
 	--dimension 2 \
 	--format png \
+	--class SketchedLinearRegression \
 	--seed $SEED

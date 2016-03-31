@@ -1,0 +1,29 @@
+#!/usr/bin/env Rscript
+args <- commandArgs(trailingOnly = TRUE)
+args_contains <- function(str){
+  for( a in args ){
+    if( a == str ) return (TRUE)
+  }
+  FALSE
+}
+
+if(args_contains("--header")){
+	data <- read.table( file("stdin"), sep=",", header=TRUE)
+} else {
+	data <- read.table( file("stdin"), sep=",", header=FALSE)
+	names(data) =  c("index","y","x")
+}
+
+fm <- glm( data$y ~ data$x)
+inter <- coef(fm)[1]
+coef1 <-  coef(fm)[2]
+a <- inter
+b <- coef1
+
+write( paste(inter,coef1,sep=" ") , stdout())
+
+if( args_contains("-plot") ){
+ plot( data$x, data$y)
+ abline(fm, col = "red")
+ title(main="Show logistic function: 1/(1+exp(-ax+b))", sub=paste(c("a=",toString(a),"b=",toString(b)), collapse = ' '))
+}
