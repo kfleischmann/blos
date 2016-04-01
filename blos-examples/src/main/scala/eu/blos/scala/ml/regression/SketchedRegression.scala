@@ -102,8 +102,8 @@ object SketchedRegression {
 
       opt[String]('s', "sketch") required() valueName("<epsilon>:<delta>") action {
         (x, c) =>
-          c.copy( delta = x.split(":")(1).toDouble).copy( epsilon = x.split(":")(0).toDouble)
-      } text("sketch size")
+          c.copy( delta = x.split(":")(0).toDouble).copy( epsilon = x.split(":")(1).toDouble)
+      } text("sketch size, delta:epsilon")
 
       opt[String]('m', "min")   action {
         (x, c) =>

@@ -172,7 +172,7 @@ do
 		# dataset, real model, learned model the standard way + sketched-model
 		blos visualize ${REGRESSION_TYPE}-regression-plotter.py \
 				-i  ${DATA_DIR}/dataset/points \
-				-o ${DATA_DIR}/sketch/${SKETCH_FILE}/result-plot.${FORMAT} \
+				-o ${DATA_DIR}/sketch/${SKETCH_FILE}/result-plot-${SKETCH_FILE}.${FORMAT} \
 				-d ${DPI} \
 				--index 2,1 \
 				--functions="$MODELS" \
