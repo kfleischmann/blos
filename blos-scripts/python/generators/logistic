@@ -64,7 +64,12 @@ def run(**kwargs):
 	for s in range(0, samples):
 		x = np.random.uniform(range_start,range_end)
 		y = reg_func(x) + np.random.normal(0, variance)
-		print str(counter)+field_sep+str(y)+field_sep+str(x)
+		y01 = int(round(y,0))
+		if y01 > 1:
+			y01 = 1
+		if y01 < 0:
+			y01 = 0
+		print str(counter)+field_sep+str(y01)+field_sep+str(x)
 		counter += 1
 
 if __name__=='__main__':
@@ -88,13 +93,5 @@ if __name__=='__main__':
 	# validate arguments
 	args = argparser.parse_args()
 
-	try:
-		# execute main script and delegate command line options
-		run(**vars(args))
 
-	except Exception as e:
-		print "AN ERROR OCCOURED:", e
-
-		if( bool(vars(args)['verbose']) ):
-			import traceback, sys
-			traceback.print_exc(file=sys.stderr)
+	run(**vars(args))

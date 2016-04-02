@@ -14,7 +14,7 @@ if(args_contains("--header")){
 	names(data) =  c("index","y","x")
 }
 
-fm <- glm( data$y ~ data$, x, family="binomial")
+fm <- glm( y ~ x, data=data, family=binomial )
 inter <- coef(fm)[1]
 coef1 <-  coef(fm)[2]
 a <- inter
