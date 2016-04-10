@@ -1,0 +1,74 @@
+#!/usr/bin/python
+
+import time
+import csv
+import sys
+import re
+import math
+from datetime import datetime
+
+# source http://www.movable-type.co.uk/scripts/latlong.html
+def distance(lat1, lon1, lat2, lon2 ):
+	R=6371000
+	rlat1 = math.radians(lat1);
+	rlat2 = math.radians(lat2);
+	dlat = math.radians(lat2-lat1);
+	dlon = math.radians(lon2-lon1);
+
+	a = math.sin(dlat/2) * math.sin(dlat/2) + \
+		math.cos(rlat1) * math.cos(rlat2) * \
+		math.sin(dlon/2) * math.sin(dlon/2);
+
+	c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a));
+	d = R * c
+	return d
+
+def computeDistance(trajectory):
+	if len(trajectory) > 1:
+		d = sum(map( lambda l: distance( l[0][0], l[0][1], l[1][0], l[1][1] ), zip(trajectory[:-1], trajectory[1:])))
+		return d
+	else:
+		return 0.0
+
+#----------------------------------------------------------------------
+def csv_reader(file_obj):
+
+	print "\t".join( ["tripid","timestamp", "date", "hour", "weekday", "lon", "lat", "num_measurements", "distance", "duration", "avg_speed"] )
+
+
+	"""
+	Read a csv file
+	"""
+	reader = csv.reader(file_obj)
+	next(reader)
+	for i,row in enumerate(reader):
+
+		tripid 			= row[0]
+		calltype 		= row[1]
+		origin_type 	= row[2]
+		origin_stand 	= row[3]
+		taxiid 			= row[4]
+		timestamp		= row[5]
+		daytype 		= row[6]
+		missing_data	= row[7]
+		polyline 		= row[8]
+
+		positions =re.sub("\s+","",polyline.replace("[[","[").replace("]]","]").replace("[", "(").replace("]",")") ).replace("),(",") (").strip().split(" ")
+		trajectory = map( lambda x:[] if x.count(",") == 0 else map( lambda a: float(a), x.replace("(","").replace(")","").split(",") ), positions )
+		duration = (len(trajectory)*15.0)/60.0
+		distance = computeDistance(trajectory)
+
+		start 		= ",".join(map( lambda a: str(a), trajectory[0] ))  if len(trajectory) > 1 else ","
+		date 		= datetime.fromtimestamp(int(timestamp)).strftime('%Y-%m-%d %H:%M:%S')
+		date_hours 	= datetime.fromtimestamp(int(timestamp)).strftime('%H')
+		date_weekday= datetime.fromtimestamp(int(timestamp)).strftime('%w')
+
+
+		print "\t".join( [ str(tripid), str(timestamp), date, date_hours, date_weekday, str(start.split(",")[0]), str(start.split(",")[1]), str(len(trajectory)), str(int(distance)), str(int(duration)), str(int( (distance/1000) / (duration/60) )) ])
+
+#----------------------------------------------------------------------
+
+if __name__ == "__main__":
+	csv_path = sys.argv[1]
+	with open(csv_path, "rb") as f_obj:
+		csv_reader(f_obj)

@@ -1,4 +1,4 @@
-package eu.blos.scala.ml.regression
+package eu.blos.scala.examples.regression
 
 import eu.blos.scala.sketches._
 import eu.blos.scala.inputspace.{InputSpace, Vectors, InputSpaceNormalizer, DataSetIterator}

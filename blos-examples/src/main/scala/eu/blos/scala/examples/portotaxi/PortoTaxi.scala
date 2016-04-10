@@ -1,23 +1,20 @@
-package eu.blos.scala.examples
+package eu.blos.scala.examples.portotaxi
+
 
 import eu.blos.scala.inputspace.Vectors.DoubleVector
 import eu.blos.scala.sketches.{SketchDiscoveryHHIterator, CMSketch}
 import eu.blos.scala.inputspace.normalizer.Rounder
-import eu.blos.scala.inputspace.{InputSpaceNormalizer, DataSetIterator, DynamicInputSpace}
+import eu.blos.scala.inputspace.{CSVIterator, InputSpaceNormalizer, DataSetIterator, DynamicInputSpace}
 import java.io.{File, FileReader}
 
 
-/**
- * sketch-based regression models
- * depending on the regression model func a linear or a logistic regression is applied
- */
-object SketchedRegression {
+object PortoTaxi {
 
   trait TransformFunc {
     def apply(x:DoubleVector) : DoubleVector;
   }
 
-  var inputDatasetResolution=2
+  var inputDatasetResolution=4
   val numHeavyHitters = 10
   val epsilon = 0.0001
   val delta = 0.01
@@ -28,13 +25,13 @@ object SketchedRegression {
 
 
   def main(args: Array[String]): Unit = {
-    val filename = "/home/kay/Dropbox/kay-rep/Uni-Berlin/Masterarbeit/datasets/linear_regression/dataset1"
+    val filename = "/home/kay/Dropbox/kay-rep/Uni-Berlin/Masterarbeit/Sources/blos/datasets/portotaxi/taxi2.tsv"
     val is = new FileReader(new File(filename))
 
     sketch.alloc
 
     skeching(sketch,
-      new DataSetIterator(is, ","),
+      new CSVIterator(is, "\t"),
       // skip first column (index)
       new TransformFunc() { def apply(x: DoubleVector) = x.tail},
       inputspaceNormalizer
@@ -44,12 +41,19 @@ object SketchedRegression {
     learning
   }
 
-  def skeching(sketch : CMSketch, dataset : DataSetIterator, t: TransformFunc, normalizer : InputSpaceNormalizer[DoubleVector] ) {
+  def skeching(sketch : CMSketch, dataset : CSVIterator, t: TransformFunc, normalizer : InputSpaceNormalizer[DoubleVector] ) {
     val i = dataset.iterator
     while( i.hasNext ){
-      val vec = normalizer.normalize( t.apply(i.next))
-      sketch.update(vec.toString )
-      inputspace.update(vec)
+      val values = i.next
+      if( values(dataset.getHeader.get("hour").get).toInt == 14) {
+
+       
+
+
+        //val vec = normalizer.normalize( t.apply(i.next))
+        //sketch.update(vec.toString )
+        //inputspace.update(vec)
+      }//if
     }
   }
 
@@ -63,3 +67,4 @@ object SketchedRegression {
     }
   }
 }
+

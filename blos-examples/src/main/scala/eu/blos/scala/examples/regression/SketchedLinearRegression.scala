@@ -1,4 +1,4 @@
-package eu.blos.scala.ml.regression
+package eu.blos.scala.examples.regression
 
 import eu.blos.scala.sketches._
 import java.io.{PrintWriter, File, FileReader}
