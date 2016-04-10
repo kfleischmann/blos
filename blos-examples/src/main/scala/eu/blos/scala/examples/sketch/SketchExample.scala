@@ -1,10 +1,11 @@
 package eu.blos.scala.examples.sketch
 
 import eu.blos.scala.inputspace.Vectors.DoubleVector
-import eu.blos.scala.sketches.{SketchDiscoveryHHIterator, CMSketch}
+import eu.blos.scala.sketches.{DiscoveryStrategyEnumeration, DiscoveryStrategyHH, SketchDiscoveryHHIterator, CMSketch}
 import eu.blos.scala.inputspace.normalizer.Rounder
-import eu.blos.scala.inputspace.{InputSpaceNormalizer, DataSetIterator, DynamicInputSpace}
-import java.io.{File, FileReader}
+import eu.blos.scala.inputspace.{InputSpace, InputSpaceNormalizer, DataSetIterator, DynamicInputSpace}
+import java.io.{PrintWriter, File, FileReader}
+import scala.collection.mutable
 
 
 /**

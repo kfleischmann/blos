@@ -28,6 +28,15 @@ object Vectors {
       }
       DoubleVector(nv)
     }
+    def +(x:DoubleVector) = {
+      val nv = new Array[Double](v.length)
+      var i = 0
+      while (i < nv.length) {
+        nv(i) = v(i) + x.elements(i)
+        i += 1
+      }
+      DoubleVector(nv)
+    }
     def < (x:DoubleVector) : Boolean = {
       var b = true
       for( k <- 0 until dimension ) {
