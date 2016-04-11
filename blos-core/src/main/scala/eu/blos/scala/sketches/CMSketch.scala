@@ -58,8 +58,18 @@ class CMSketch( var delta: Double,
   // sketh data
   var count : LongLargeArray = null;
 
-  def alloc = {
+  def alloc {
     count = new LongLargeArray(w*d, true /*init memory with zeros*/ )
+  }
+
+  def reset {
+    for( row <- 0 until get_hashfunctions.size ){
+      for( col <- 0L until w ) {
+        array_set(row, col, 0L )
+      }
+    }
+    heavyHitters = new HeavyHitters(k);
+    top_k = collection.mutable.HashMap[String, CMEstimate ]();
   }
 
   def bucket_size_in_bytes=8
