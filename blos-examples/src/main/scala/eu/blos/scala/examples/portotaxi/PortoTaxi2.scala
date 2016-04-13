@@ -1,6 +1,5 @@
 package eu.blos.scala.examples.portotaxi
 
-
 import eu.blos.scala.sketches._
 import eu.blos.scala.inputspace.normalizer.Rounder
 import eu.blos.scala.inputspace._
@@ -9,7 +8,7 @@ import scala.collection.mutable
 import eu.blos.scala.inputspace.Vectors.DoubleVector
 
 
-object PortoTaxi {
+object PortoTaxi2 {
 
   def haversineDistance(pointA: (Double, Double), pointB: (Double, Double)): Double = {
     val R = 6371000 // in m
@@ -27,7 +26,7 @@ object PortoTaxi {
   val shortTripLength = 10
   var inputDatasetResolution=3
   val numHeavyHitters = 10
-  val epsilon = 0.0005
+  val epsilon = 0.0003
   val delta = 0.1
 
   var numDistinctElementsLongTrips :Long = 0L
@@ -55,24 +54,20 @@ object PortoTaxi {
   // hbf
   //val center = DoubleVector(41.1492123,-8.5877372);
   // airport
-  //val center = DoubleVector(41.237021, -8.669633);
+  val center = DoubleVector(41.237021, -8.669633);
 
 
-  val center = DoubleVector(41.141329,-8.6141104)
-
-
-  //var center = DoubleVector(1.4631244,-8.6195449)
 
   // watery
   //val center = DoubleVector(41.142471,-8.7047457)
 
-  // far away
+  //
   //val center = DoubleVector(41.158985, -8.630705)
 
   val inputspace = new StaticInputSpace( inputspaceNormalizer.normalize(center-window), inputspaceNormalizer.normalize(center+window), stepsize)
 
   val filename = datapath+"taxi2.tsv"
-  val radius = 100 // in meter
+  val radius = 500 // in meter
 
   var total_error_count = 0L
   var total_counts = 0L

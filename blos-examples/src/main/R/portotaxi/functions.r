@@ -55,8 +55,8 @@ process.data <- function(filename)
 	center <- c(41.1492123,-8.5877372)	# hbf
 
 	maxshort_tripsize <- 10
-	zoom <- 16
-	resolution <- 4
+	zoom <- 12
+	resolution <- 3
 	normalize <- function(x) { round(x, digits=resolution)}
 	libraries()
 	dt<-read.csv2(filename,sep="\t")
@@ -65,7 +65,7 @@ process.data <- function(filename)
 	dt_long <- subset(dt, duration >= maxshort_tripsize )
 	dt_short <- subset(dt, duration < maxshort_tripsize )
 
-	point_size <- 0.1
+	point_size <- 1
 
 	latLong <- sapply( as.numeric( as.vector( dt_long$lat )), normalize)
 	lonLong <- sapply( as.numeric( as.vector( dt_long$lon )), normalize)
@@ -76,12 +76,12 @@ process.data <- function(filename)
 
 	png(paste(filename,"_short.png", sep=""),type='cairo-png')
 	MyMapShort <- GetMap(center=center, zoom=zoom,GRAYSCALE=FALSE,destfile = paste(filename,"_short.png", sep=""));
-	tmp <- PlotOnStaticMap (MyMapShort, lat = latShort, lonShort, cex=point_size,pch=20, add=FALSE,  col=c("green") )
+	tmp <- PlotOnStaticMap (MyMapShort, lat = latShort, lonShort, cex=point_size,pch=20, add=FALSE,  col=c("green"), alpa=0.5 )
 	dev.off()
 
 	png(paste(filename,"_long.png", sep=""),type='cairo-png')
 	MyMapLong <- GetMap(center=center, zoom=zoom,GRAYSCALE=FALSE,destfile = paste(filename,"_long.png", sep=""));
-	tmp <- PlotOnStaticMap (MyMapLong, lat = latLong, lonLong, cex=point_size,pch=20, add=FALSE, col=c("red") )
+	tmp <- PlotOnStaticMap (MyMapLong, lat = latLong, lonLong, cex=point_size,pch=20, add=FALSE, col=c("red"), alpa=0.5 )
 	dev.off()
 }
 
