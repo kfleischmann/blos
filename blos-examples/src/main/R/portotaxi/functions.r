@@ -47,34 +47,41 @@ process.filename<-function(filename)
 # c(lat, lon)
 process.data <- function(filename)
 {
+
 	center3 <- c(lat=41.168012,lon=-8.688717)
 	center2 <- c(lat=41.155231,lon=-8.672868)
-	center <- "Porto"
+	center1 <- "Porto"
 
-	zoom <- 17
+	center <- c(41.1492123,-8.5877372)	# hbf
+
+	maxshort_tripsize <- 10
+	zoom <- 16
 	resolution <- 4
+	normalize <- function(x) { round(x, digits=resolution)}
 	libraries()
 	dt<-read.csv2(filename,sep="\t")
 	colfunc<-colorRampPalette(c("red","red"))
 
-	# max 60 mins
-	measure <- dt$duration
-	max <- quantile( as.numeric(measure), 0.90)
-	print(max)
-	colfunc_map <- colfunc(max)
-	colors <- sapply( as.numeric(measure), function(ele) {if (ele>=max) colfunc_map[max] else colfunc_map[ele] } );
-	#print(unlist(colors))
+	dt_long <- subset(dt, duration >= maxshort_tripsize )
+	dt_short <- subset(dt, duration < maxshort_tripsize )
 
-	MyMap <- GetMap(center=center3, zoom=zoom,GRAYSCALE=FALSE,destfile = paste(filename,".png", sep=""));
-	point_size <- 1.0
-	lat <- as.numeric( as.vector( dt$lat ))
-	lon <- as.numeric( as.vector( dt$lon ))
+	point_size <- 0.1
 
-	lat <-  round(lat, digits=resolution )
-	lon <-  round(lon, digits=resolution )
+	latLong <- sapply( as.numeric( as.vector( dt_long$lat )), normalize)
+	lonLong <- sapply( as.numeric( as.vector( dt_long$lon )), normalize)
 
-	png(paste(filename,".png", sep=""),type='cairo-png')
-	tmp <- PlotOnStaticMap (MyMap, lat = lat, lon, cex=point_size,pch=20, add=FALSE, col=unlist(colors) )
+	latShort <- sapply( as.numeric( as.vector( dt_short$lat )), normalize)
+	lonShort <- sapply( as.numeric( as.vector( dt_short$lon )), normalize)
+
+
+	png(paste(filename,"_short.png", sep=""),type='cairo-png')
+	MyMapShort <- GetMap(center=center, zoom=zoom,GRAYSCALE=FALSE,destfile = paste(filename,"_short.png", sep=""));
+	tmp <- PlotOnStaticMap (MyMapShort, lat = latShort, lonShort, cex=point_size,pch=20, add=FALSE,  col=c("green") )
+	dev.off()
+
+	png(paste(filename,"_long.png", sep=""),type='cairo-png')
+	MyMapLong <- GetMap(center=center, zoom=zoom,GRAYSCALE=FALSE,destfile = paste(filename,"_long.png", sep=""));
+	tmp <- PlotOnStaticMap (MyMapLong, lat = latLong, lonLong, cex=point_size,pch=20, add=FALSE, col=c("red") )
 	dev.off()
 }
 
