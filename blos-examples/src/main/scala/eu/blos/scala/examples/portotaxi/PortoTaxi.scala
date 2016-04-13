@@ -27,8 +27,8 @@ object PortoTaxi {
   val shortTripLength = 10
   var inputDatasetResolution=3
   val numHeavyHitters = 10
-  val epsilon = 0.0005
-  val delta = 0.1
+  val epsilon = 0.00001
+  val delta = 0.01
 
   var numDistinctElementsLongTrips :Long = 0L
   var numDistinctElementsShortTrips :Long = 0L
@@ -36,6 +36,7 @@ object PortoTaxi {
   val bloomLongTrips = new BloomFilter(1000000, 2, "SHA-1")
   val bloomShortTrips = new BloomFilter(1000000, 2, "SHA-1")
 
+  val sketch: CMSketch = new CMSketch(delta, epsilon, numHeavyHitters);
   val sketchLongTrips: CMSketch = new CMSketch(delta, epsilon, numHeavyHitters);
   val sketchShortTrips: CMSketch = new CMSketch(delta, epsilon, numHeavyHitters);
 
@@ -47,18 +48,18 @@ object PortoTaxi {
   //val inputspace = new StaticInputSpace( DoubleVector(41.1592, -8.6250), DoubleVector(41.1569, -8.6320), stepsize)
   //val inputspace = new StaticInputSpace( DoubleVector(41.15704, -8.63103), DoubleVector(41.15885, -8.62781), stepsize)
 
-  val window = DoubleVector(0.003, 0.003 )
+  val window = DoubleVector(0.005, 0.005 )
   //val center = DoubleVector(41.157864, -8.629112)
   //val center = DoubleVector(41.157864, -8.629112)
   //val center = DoubleVector(41.143858, -8.612260)
   //val center = DoubleVector( 41.157395, -8.627763 )
   // hbf
-  //val center = DoubleVector(41.1492123,-8.5877372);
+  val center = DoubleVector(41.1492123,-8.5877372);
   // airport
   //val center = DoubleVector(41.237021, -8.669633);
 
 
-  val center = DoubleVector(41.141329,-8.6141104)
+  //val center = DoubleVector(41.141329,-8.6141104)
 
 
   //var center = DoubleVector(1.4631244,-8.6195449)
@@ -77,12 +78,51 @@ object PortoTaxi {
   var total_error_count = 0L
   var total_counts = 0L
 
-  sketchShortTrips.alloc
-  sketchLongTrips.alloc
+  //sketchShortTrips.alloc
+  //sketchLongTrips.alloc
+  //println("w="+sketchShortTrips.w)
+  //println("d="+sketchShortTrips.d)
 
-  println("w="+sketchShortTrips.w)
-  println("d="+sketchShortTrips.d)
+  sketch.alloc
 
+  println("w="+sketch.w)
+  println("d="+sketch.d)
+
+  def main(args: Array[String]): Unit = {
+    skeching(sketch, new CSVIterator(new FileReader(new File(filename)), "\t"), inputspaceNormalizer );
+
+    for( h <- Range(0,24) ) {
+
+      val countLong = count_parzen_window2(sketch, inputspace, center, radius, h, TRIPTYPE_LONG )
+      val countShort = count_parzen_window2(sketch, inputspace, center, radius, h, TRIPTYPE_SHORT )
+      val total = countShort + countLong
+
+      println("("+countLong+","+countShort+")")
+
+      println("sketch: "+h+" prob. short:" + (countShort.toDouble / total.toDouble))
+      println("sketch: "+h+" prob. long:" + (countLong.toDouble / total.toDouble))
+
+      val real_counts = count_parzen_window_real (new CSVIterator(new FileReader(new File(filename)), "\t"), center, radius, inputspaceNormalizer, h, h )
+      println(real_counts)
+
+      println("real: "+h+" prob. short:" + (real_counts._2.toDouble / (real_counts._1+real_counts._2).toDouble))
+      println("real: "+h+" prob. long:" + (real_counts._1.toDouble / (real_counts._1+real_counts._2).toDouble))
+
+      val errors_long = Math.abs(countLong - real_counts._1)
+      val errors_short = Math.abs(countShort - real_counts._2)
+      total_error_count = total_error_count + errors_long + errors_short
+      total_counts = total_counts + total
+
+      println("errors short:" + errors_short)
+      println("errors long:" + errors_long)
+      println("errors total: "+total_error_count)
+      println("total counts: "+total_counts)
+      println("-----------------------------")
+
+    }
+  }
+
+  /*
   def main(args: Array[String]): Unit = {
 
     for( h <- Range(0,24) ) {
@@ -122,6 +162,7 @@ object PortoTaxi {
       println("-----------------------------")
     }
   }
+  */
 
   def count_parzen_window_real(dataset: CSVIterator, center : DoubleVector, radius : Double, normalizer : InputSpaceNormalizer[DoubleVector], hourFrom : Int, hourTo : Int) = {
     var freq_short = 0L
@@ -139,7 +180,6 @@ object PortoTaxi {
           val distance = haversineDistance((center.elements(0), center.elements(1)), (coordinates.elements(0), coordinates.elements(1))).toInt
           if (distance < radius) {
             //println(coordinates.toString+", distance: "+distance)
-
             if (duration <= shortTripLength) {
               freq_short += 1
             } else {
@@ -152,18 +192,31 @@ object PortoTaxi {
     (freq_long, freq_short)
   }
 
-  def count_parzen_window(sketch : CMSketch, inputspace : InputSpace[DoubleVector], center : DoubleVector, radius : Double) = {
+  def count_parzen_window(sketch : CMSketch, inputspace : InputSpace[DoubleVector], center : DoubleVector, radius : Double  ) = {
     var freq_count = 0L
     val enumWindow = new DiscoveryStrategyEnumeration(sketch, inputspace, inputspaceNormalizer).iterator
     while (enumWindow.hasNext) {
       val item = enumWindow.next
-      //println(item)
       val coordinates = item.vector
-
       val distance = haversineDistance( (center.elements(0), center.elements(1)), (coordinates.elements(0), coordinates.elements(1))).toInt
-      //println(distance)
       if( distance < radius ){
         freq_count += item.count
+      }
+    }
+    freq_count
+  }
+
+  def count_parzen_window2(sketch : CMSketch, inputspace : InputSpace[DoubleVector], center : DoubleVector, radius : Double, hour : Int, tripType : Int  ) = {
+    var freq_count = 0L
+    val enumWindow = inputspace.iterator
+    while (enumWindow.hasNext) {
+      val item = enumWindow.next
+      val vector = inputspaceNormalizer.normalize( DoubleVector( item.elements(0), item.elements(1), tripType.toDouble, hour.toDouble) )
+      val count = sketch.get(vector.toString)
+      val coordinates = item
+      val distance = haversineDistance( (center.elements(0), center.elements(1)), (coordinates.elements(0), coordinates.elements(1))).toInt
+      if( distance < radius ){
+        freq_count += count
       }
     }
     freq_count
@@ -186,13 +239,9 @@ object PortoTaxi {
         // check if gps data is valid
         if(lat.length>0 && lon.length>0) {
           val vec = (normalizer.normalize(DoubleVector(lat.toDouble, lon.toDouble)))
-
           if( (tripType & filter_tripType) > 0 ) {
-
             sketch.update(vec.toString)
-
             inputspace.update(vec)
-
             if(!bloom.contains(vec.toString)){
               distinctCounter = distinctCounter + 1
             } else {
@@ -203,6 +252,29 @@ object PortoTaxi {
       }//if
     }//while
     distinctCounter
+  }
+
+  def skeching(sketch : CMSketch, dataset : CSVIterator, normalizer : InputSpaceNormalizer[DoubleVector] ) = {
+    val i = dataset.iterator
+    while( i.hasNext ){
+      val values = i.next
+      val hour = values(dataset.getHeader.get("hour").get).toInt
+      val lat = values(dataset.getHeader.get("lat").get)
+      val lon = values(dataset.getHeader.get("lon").get)
+      val duration = values(dataset.getHeader.get("duration").get).toInt
+      val tripType =
+        duration match {
+          case x if x > shortTripLength => TRIPTYPE_LONG
+          case x if x <= shortTripLength => TRIPTYPE_SHORT
+        }
+
+      // check if gps data is valid
+      if(lat.length>0 && lon.length>0 ) {
+        val vec = (normalizer.normalize(DoubleVector(lat.toDouble, lon.toDouble, tripType.toDouble, hour.toDouble)))
+        sketch.update(vec.toString)
+        inputspace.update(vec)
+      }//if
+    }//while
   }
 
   def write_sketch( output:String, sketch:CMSketch, inputspace : InputSpace[DoubleVector], inputspaceNormalizer : InputSpaceNormalizer[DoubleVector], stepsize : DoubleVector ) = {
