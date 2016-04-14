@@ -55,6 +55,11 @@ object PortoTaxi {
   }
 
   def run(config:Config) {
+
+
+    println(config.center.toString)
+    println(config.window.toString)
+
     // prepare data structures
     val filename = config.input
     val sketch: CMSketch = new CMSketch(config.delta, config.epsilon, config.numHeavyHitters);
@@ -69,7 +74,7 @@ object PortoTaxi {
     println("d="+sketch.d)
 
     skeching(sketch, new CSVIterator(new FileReader(new File(filename)), "\t"), inputspaceNormalizer, dyn_inputspace );
-
+    println("finished sketching")
     for( h <- Range(0,24) ) {
 
       val countLong = count_parzen_window_sketch(sketch, stat_inputspace, config.center, config.radius, h, TRIPTYPE_LONG, inputspaceNormalizer )
@@ -159,7 +164,6 @@ object PortoTaxi {
       // check if gps data is valid
       if(lat.length>0 && lon.length>0 ) {
         val vec = (normalizer.normalize(DoubleVector(lat.toDouble, lon.toDouble, tripType.toDouble, hour.toDouble)))
-
         // update sketch
         sketch.update(vec.toString)
 
@@ -256,7 +260,7 @@ object PortoTaxi {
           c.copy( numHeavyHitters = x )
       } text("number of heavy hitters")
 
-      opt[Int]('r', "radius") action {
+      opt[Int]('r', "radius") required() action {
         (x, c) =>
           c.copy( radius = x )
       } text("radius of the parzen window in meters")
