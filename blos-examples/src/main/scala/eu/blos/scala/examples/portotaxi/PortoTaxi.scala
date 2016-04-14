@@ -80,6 +80,9 @@ object PortoTaxi {
 
     skeching(sketch, new CSVIterator(new FileReader(new File(filename)), "\t"), inputspaceNormalizer, dyn_inputspace );
 
+    println("min="+dyn_inputspace.getMin.toString )
+    println("max="+dyn_inputspace.getMax.toString )
+
     for( h <- Range( config.timeFrom, config.timeTo, config.timeStep) ) {
 
       val countLong = count_parzen_window_sketch(sketch, stat_inputspace, config.center, config.radius, h, h+config.timeStep, TRIPTYPE_LONG, inputspaceNormalizer )

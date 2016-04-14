@@ -1,6 +1,5 @@
 #!/usr/bin/python
 
-import time
 import csv
 import sys
 import re
@@ -32,9 +31,7 @@ def computeDistance(trajectory):
 
 #----------------------------------------------------------------------
 def csv_reader(file_obj):
-
 	print "\t".join( ["tripid","timestamp", "date", "hour", "weekday", "lon", "lat", "num_measurements", "distance", "duration", "avg_speed"] )
-
 
 	"""
 	Read a csv file
@@ -62,7 +59,6 @@ def csv_reader(file_obj):
 		date 		= datetime.fromtimestamp(int(timestamp)).strftime('%Y-%m-%d %H:%M:%S')
 		date_hours 	= datetime.fromtimestamp(int(timestamp)).strftime('%H')
 		date_weekday= datetime.fromtimestamp(int(timestamp)).strftime('%w')
-
 
 		print "\t".join( [ str(tripid), str(timestamp), date, date_hours, date_weekday, str(start.split(",")[0]), str(start.split(",")[1]), str(len(trajectory)), str(int(distance)), str(int(duration)), str(int( (distance/1000) / (duration/60) )) ])
 

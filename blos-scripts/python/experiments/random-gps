@@ -1,0 +1,15 @@
+#!/usr/bin/python
+# USAGE ./random-gps seed min-lat,min-lon max-lat,max-lon
+# OUTPUT: lat,lon
+
+import sys
+import random
+
+min = sys.argv[1]
+max = sys.argv[2]
+resolution = 6
+
+if len(sys.argv) == 4:
+	random.seed( int(sys.argv[3]) )
+
+print round(random.uniform(float(min.split(",")[0]), float(max.split(",")[0])), resolution ), ",", round(random.uniform(float(min.split(",")[1]), float(max.split(",")[1])), resolution)
