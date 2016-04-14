@@ -198,6 +198,20 @@ blos sketch scatterplot
 	-E 0.1,0.01,0.005,0.004,0.003,0.002,0.001,0.0001
 ```
 
+Sketched Taxi Dataset
+```
+blos examples run eu.blos.scala.examples.portotaxi.PortoTaxi \
+	--input /path/do/repository/datasets/portotaxi/taxi2.tsv \
+	--output /tmp/taxi_dataset_result.tsv \
+	--sketch 0.01:0.000015 \
+	--center 41.1492123:-8.5877372 \
+	--window 0.005:0.005 \
+	--resolution 3 \
+	--shorttriplength 10 \
+	--radius 100 \
+	--hours 0:24:8 \
+```
+
 Simple Code Example How to sketch a dataset
 ===
 ```
