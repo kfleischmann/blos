@@ -198,7 +198,8 @@ blos sketch scatterplot
 	-E 0.1,0.01,0.005,0.004,0.003,0.002,0.001,0.0001
 ```
 
-Sketched Taxi Dataset
+Run Example Sketched Taxi Dataset
+===
 ```
 blos examples run eu.blos.scala.examples.portotaxi.PortoTaxi \
 	--input /path/do/repository/datasets/portotaxi/taxi2.tsv \
