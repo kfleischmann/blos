@@ -49,7 +49,9 @@ object PortoTaxi {
   val TRIPTYPE_SHORT        = 2
   val TRIPTYPE_LONGSHORT    = 3
   var total_error_count     = 0L
-  var total_counts          = 0L
+  var total_real_counts     = 0L
+  var total_sketch_counts   = 0L
+
   var config : Config = null
 
   def main(args: Array[String]): Unit = {
@@ -87,10 +89,10 @@ object PortoTaxi {
 
       val countLong = count_parzen_window_sketch(sketch, stat_inputspace, config.center, config.radius, h, h+config.timeStep, TRIPTYPE_LONG, inputspaceNormalizer )
       val countShort = count_parzen_window_sketch(sketch, stat_inputspace, config.center, config.radius, h, h+config.timeStep, TRIPTYPE_SHORT, inputspaceNormalizer )
-      val total = countShort + countLong
+      val sketch_count = countShort + countLong
 
-      val sketch_probLong = (countLong.toDouble / total.toDouble)
-      val sketch_probShort =(countShort.toDouble / total.toDouble)
+      val sketch_probLong = (countLong.toDouble / sketch_count.toDouble)
+      val sketch_probShort =(countShort.toDouble / sketch_count.toDouble)
 
       println("sketch-result="+List(h,countLong,countShort,sketch_probLong,sketch_probShort).mkString(","))
 
@@ -99,7 +101,7 @@ object PortoTaxi {
 
       val real_probLong = (real_counts._2.toDouble / (real_counts._1+real_counts._2).toDouble)
       val real_probShort = (real_counts._2.toDouble / (real_counts._1+real_counts._2).toDouble)
-
+      var real_count  = real_counts._1 + real_counts._2
       println("real-result="+List(h,real_counts._1,real_counts._2,real_probLong,real_probShort).mkString(","))
 
       val errors_long = Math.abs(countLong - real_counts._1)
@@ -108,10 +110,12 @@ object PortoTaxi {
       result_writer.write(List(h,real_counts._1, real_counts._2, countLong,countShort).mkString("\t") )
       result_writer.write("\n")
 
-      total_error_count = total_error_count + errors_long + errors_short
-      total_counts = total_counts + total
+      total_real_counts   = total_real_counts + real_count
+      total_sketch_counts = total_sketch_counts + sketch_count
     }
-    println("total counts: "+total_counts)
+    println("total errors: "+ (total_sketch_counts - total_real_counts)  )
+    println("total real counts: "+total_real_counts)
+    println("total sketch counts: "+total_sketch_counts)
 
     result_writer.close()
   }

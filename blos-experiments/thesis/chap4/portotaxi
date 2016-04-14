@@ -1,0 +1,33 @@
+#!/bin/bash
+
+# this script produce the result of the real world dataset
+
+MIN_GPS="41.12,-8.66"
+MAX_GPS="41.18,-8.59"
+
+DATA_DIR=~/tmp/blos/experiments/portotaxi/
+
+# cleanup
+rm -r ${DATA_DIR}
+mkdir -p ${DATA_DIR}/dataset
+mkdir -p ${DATA_DIR}/sketch
+
+NUM=10
+
+echo "random gps pos $RADMOM_GPS2"
+
+for i in $(seq 1 $NUM); do
+	RANDOM_GPS=$(blos experiments random-gps $MIN_GPS $MAX_GPS)
+	RADMOM_GPS2=$(echo "$RANDOM_GPS" | tr ',' ':' )
+
+	blos examples run eu.blos.scala.examples.portotaxi.PortoTaxi \
+		--input /home/kay/Dropbox/kay-rep/Uni-Berlin/Masterarbeit/Sources/blos/datasets/portotaxi/taxi2.tsv \
+		--output ${DATA_DIR}/taxi_dataset_result_${RADMOM_GPS2}.tsv \
+		--sketch 0.01:0.000015 \
+		--center ${RADMOM_GPS2} \
+		--window 0.005:0.005 \
+		--resolution 3 \
+		--shorttriplength 10 \
+		--radius 200 \
+		--hours 0:24:1;
+done
