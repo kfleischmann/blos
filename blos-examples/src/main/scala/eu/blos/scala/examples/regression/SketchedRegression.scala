@@ -145,7 +145,7 @@ object SketchedRegression {
           c.copy( numIterations = x )
       } text("number of iterations")
 
-      opt[Int]('n', "resolution") required()  action {
+      opt[Int]('R', "resolution") required()  action {
         (x, c) =>
           c.copy( inputspaceResolution = x )
       } text("input space resolution")

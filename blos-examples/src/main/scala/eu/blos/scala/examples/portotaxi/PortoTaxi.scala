@@ -8,9 +8,31 @@ import java.io.{PrintWriter, File, FileReader}
 import scala.collection.mutable
 import eu.blos.scala.inputspace.Vectors.DoubleVector
 
+case class Config(
+  input:String="",
+  output:String="",
+  epsilon:Double=0.0,
+  delta:Double=0.0,
+  numHeavyHitters:Int=200,
+  inputspaceResolution:Int=3,
+  discovery:String="hh",
+  writeSketch : Boolean = false,
+  verbose : Boolean = false,
+  center : DoubleVector = DoubleVector(),
+  window : DoubleVector = DoubleVector(),
+  shortTripLength : Int = 0, // in minutes
+  radius : Double = 0.0 // in meters
+);
 
 object PortoTaxi {
-
+  /**
+   * Helper method
+   * compute distance between two gps coordinates
+   * (lat1,lon1) - (lat2, lon2)
+   * @param pointA
+   * @param pointB
+   * @return
+   */
   def haversineDistance(pointA: (Double, Double), pointB: (Double, Double)): Double = {
     val R = 6371000 // in m
     val deltaLat = math.toRadians(pointB._1 - pointA._1)
@@ -20,149 +42,61 @@ object PortoTaxi {
     R * greatCircleDistance
   }
 
-  val datapath = "/home/kay/Dropbox/kay-rep/Uni-Berlin/Masterarbeit/Sources/blos/datasets/portotaxi/"
   val TRIPTYPE_LONG         = 1
   val TRIPTYPE_SHORT        = 2
   val TRIPTYPE_LONGSHORT    = 3
-  val shortTripLength = 10
-  var inputDatasetResolution=3
-  val numHeavyHitters = 10
-  val epsilon = 0.00001
-  val delta = 0.01
-
-  var numDistinctElementsLongTrips :Long = 0L
-  var numDistinctElementsShortTrips :Long = 0L
-
-  val bloomLongTrips = new BloomFilter(1000000, 2, "SHA-1")
-  val bloomShortTrips = new BloomFilter(1000000, 2, "SHA-1")
-
-  val sketch: CMSketch = new CMSketch(delta, epsilon, numHeavyHitters);
-  val sketchLongTrips: CMSketch = new CMSketch(delta, epsilon, numHeavyHitters);
-  val sketchShortTrips: CMSketch = new CMSketch(delta, epsilon, numHeavyHitters);
-
-  val inputspaceNormalizer = new Rounder(inputDatasetResolution);
-  val stepsize =  inputspaceNormalizer.stepSize(inputDatasetResolution)
-
-  //val inputspace = new DynamicInputSpace(stepsize);
-  //val inputspace = new StaticInputSpace( DoubleVector(41.15704, -8.63103), DoubleVector(41.15885, -8.62781), stepsize)
-  //val inputspace = new StaticInputSpace( DoubleVector(41.1592, -8.6250), DoubleVector(41.1569, -8.6320), stepsize)
-  //val inputspace = new StaticInputSpace( DoubleVector(41.15704, -8.63103), DoubleVector(41.15885, -8.62781), stepsize)
-
-  val window = DoubleVector(0.005, 0.005 )
-  //val center = DoubleVector(41.157864, -8.629112)
-  //val center = DoubleVector(41.157864, -8.629112)
-  //val center = DoubleVector(41.143858, -8.612260)
-  //val center = DoubleVector( 41.157395, -8.627763 )
-  // hbf
-  val center = DoubleVector(41.1492123,-8.5877372);
-  // airport
-  //val center = DoubleVector(41.237021, -8.669633);
-
-
-  //val center = DoubleVector(41.141329,-8.6141104)
-
-
-  //var center = DoubleVector(1.4631244,-8.6195449)
-
-  // watery
-  //val center = DoubleVector(41.142471,-8.7047457)
-
-  // far away
-  //val center = DoubleVector(41.158985, -8.630705)
-
-  val inputspace = new StaticInputSpace( inputspaceNormalizer.normalize(center-window), inputspaceNormalizer.normalize(center+window), stepsize)
-
-  val filename = datapath+"taxi2.tsv"
-  val radius = 100 // in meter
-
-  var total_error_count = 0L
-  var total_counts = 0L
-
-  //sketchShortTrips.alloc
-  //sketchLongTrips.alloc
-  //println("w="+sketchShortTrips.w)
-  //println("d="+sketchShortTrips.d)
-
-  sketch.alloc
-
-  println("w="+sketch.w)
-  println("d="+sketch.d)
+  var total_error_count     = 0L
+  var total_counts          = 0L
+  var config : Config = null
 
   def main(args: Array[String]): Unit = {
-    skeching(sketch, new CSVIterator(new FileReader(new File(filename)), "\t"), inputspaceNormalizer );
+    config = init(args)
+    run(config)
+  }
+
+  def run(config:Config) {
+    // prepare data structures
+    val filename = config.input
+    val sketch: CMSketch = new CMSketch(config.delta, config.epsilon, config.numHeavyHitters);
+    val inputspaceNormalizer = new Rounder(config.inputspaceResolution);
+    val stepsize =  inputspaceNormalizer.stepSize(config.inputspaceResolution)
+    val dyn_inputspace = new DynamicInputSpace(stepsize);
+    val stat_inputspace = new StaticInputSpace( inputspaceNormalizer.normalize(config.center-config.window), inputspaceNormalizer.normalize(config.center+config.window), stepsize)
+
+    sketch.alloc
+
+    println("w="+sketch.w)
+    println("d="+sketch.d)
+
+    skeching(sketch, new CSVIterator(new FileReader(new File(filename)), "\t"), inputspaceNormalizer, dyn_inputspace );
 
     for( h <- Range(0,24) ) {
 
-      val countLong = count_parzen_window2(sketch, inputspace, center, radius, h, TRIPTYPE_LONG )
-      val countShort = count_parzen_window2(sketch, inputspace, center, radius, h, TRIPTYPE_SHORT )
+      val countLong = count_parzen_window_sketch(sketch, stat_inputspace, config.center, config.radius, h, TRIPTYPE_LONG, inputspaceNormalizer )
+      val countShort = count_parzen_window_sketch(sketch, stat_inputspace, config.center, config.radius, h, TRIPTYPE_SHORT, inputspaceNormalizer )
       val total = countShort + countLong
 
-      println("("+countLong+","+countShort+")")
+      val sketch_probLong = (countLong.toDouble / total.toDouble)
+      val sketch_probShort =(countShort.toDouble / total.toDouble)
 
-      println("sketch: "+h+" prob. short:" + (countShort.toDouble / total.toDouble))
-      println("sketch: "+h+" prob. long:" + (countLong.toDouble / total.toDouble))
+      println("sketch-result="+List(h,countLong,countShort,sketch_probLong,sketch_probShort).mkString(","))
 
-      val real_counts = count_parzen_window_real (new CSVIterator(new FileReader(new File(filename)), "\t"), center, radius, inputspaceNormalizer, h, h )
-      println(real_counts)
+      val real_counts = count_parzen_window_real (new CSVIterator(new FileReader(new File(filename)), "\t"), config.center, config.radius, inputspaceNormalizer, h, h )
+      // result (countLong,countShort)
 
-      println("real: "+h+" prob. short:" + (real_counts._2.toDouble / (real_counts._1+real_counts._2).toDouble))
-      println("real: "+h+" prob. long:" + (real_counts._1.toDouble / (real_counts._1+real_counts._2).toDouble))
+      val real_probLong = (real_counts._2.toDouble / (real_counts._1+real_counts._2).toDouble)
+      val real_probShort = (real_counts._2.toDouble / (real_counts._1+real_counts._2).toDouble)
+
+      println("real-result="+List(h,real_counts._1,real_counts._2,real_probLong,real_probShort).mkString(","))
 
       val errors_long = Math.abs(countLong - real_counts._1)
       val errors_short = Math.abs(countShort - real_counts._2)
+
       total_error_count = total_error_count + errors_long + errors_short
       total_counts = total_counts + total
-
-      println("errors short:" + errors_short)
-      println("errors long:" + errors_long)
-      println("errors total: "+total_error_count)
-      println("total counts: "+total_counts)
-      println("-----------------------------")
-
     }
+    println("total counts: "+total_counts)
   }
-
-  /*
-  def main(args: Array[String]): Unit = {
-
-    for( h <- Range(0,24) ) {
-      sketchShortTrips.reset
-      sketchLongTrips.reset
-
-      numDistinctElementsLongTrips = skeching_hours(sketchLongTrips, new CSVIterator(new FileReader(new File(filename)), "\t"), inputspaceNormalizer, h, h+1, TRIPTYPE_LONG,bloomLongTrips, numDistinctElementsLongTrips)
-      numDistinctElementsShortTrips = skeching_hours(sketchShortTrips, new CSVIterator(new FileReader(new File(filename)), "\t"), inputspaceNormalizer, h, h+1, TRIPTYPE_SHORT, bloomShortTrips, numDistinctElementsShortTrips)
-
-      write_sketch(datapath + "sketch/"+h+"/long/", sketchLongTrips, inputspace, inputspaceNormalizer, stepsize)
-      write_sketch(datapath + "sketch/"+h+"/short/", sketchShortTrips, inputspace, inputspaceNormalizer, stepsize)
-
-      val countLong = count_parzen_window(sketchLongTrips, inputspace, center, radius)
-      val countShort = count_parzen_window(sketchShortTrips, inputspace, center, radius)
-      val total = countShort + countLong
-
-      println("("+countLong+","+countShort+")")
-
-      println("sketch: "+h+" prob. short:" + (countShort.toDouble / total.toDouble))
-      println("sketch: "+h+" prob. long:" + (countLong.toDouble / total.toDouble))
-
-      val real_counts = count_parzen_window_real (new CSVIterator(new FileReader(new File(filename)), "\t"), center, radius, inputspaceNormalizer, h, h+1 )
-      println(real_counts)
-
-      println("real: "+h+" prob. short:" + (real_counts._2.toDouble / (real_counts._1+real_counts._2).toDouble))
-      println("real: "+h+" prob. long:" + (real_counts._1.toDouble / (real_counts._1+real_counts._2).toDouble))
-
-      val errors_long = Math.abs(countLong - real_counts._1)
-      val errors_short = Math.abs(countShort - real_counts._2)
-      total_error_count = total_error_count + errors_long + errors_short
-      total_counts = total_counts + total
-
-      println("errors short:" + errors_short)
-      println("errors long:" + errors_long)
-      println("errors total: "+total_error_count)
-      println("total counts: "+total_counts)
-      println("-----------------------------")
-    }
-  }
-  */
 
   def count_parzen_window_real(dataset: CSVIterator, center : DoubleVector, radius : Double, normalizer : InputSpaceNormalizer[DoubleVector], hourFrom : Int, hourTo : Int) = {
     var freq_short = 0L
@@ -179,8 +113,7 @@ object PortoTaxi {
           val coordinates = (normalizer.normalize(DoubleVector(lat.toDouble, lon.toDouble)))
           val distance = haversineDistance((center.elements(0), center.elements(1)), (coordinates.elements(0), coordinates.elements(1))).toInt
           if (distance < radius) {
-            //println(coordinates.toString+", distance: "+distance)
-            if (duration <= shortTripLength) {
+            if (duration <= config.shortTripLength) {
               freq_short += 1
             } else {
               freq_long += 1
@@ -192,26 +125,12 @@ object PortoTaxi {
     (freq_long, freq_short)
   }
 
-  def count_parzen_window(sketch : CMSketch, inputspace : InputSpace[DoubleVector], center : DoubleVector, radius : Double  ) = {
-    var freq_count = 0L
-    val enumWindow = new DiscoveryStrategyEnumeration(sketch, inputspace, inputspaceNormalizer).iterator
-    while (enumWindow.hasNext) {
-      val item = enumWindow.next
-      val coordinates = item.vector
-      val distance = haversineDistance( (center.elements(0), center.elements(1)), (coordinates.elements(0), coordinates.elements(1))).toInt
-      if( distance < radius ){
-        freq_count += item.count
-      }
-    }
-    freq_count
-  }
-
-  def count_parzen_window2(sketch : CMSketch, inputspace : InputSpace[DoubleVector], center : DoubleVector, radius : Double, hour : Int, tripType : Int  ) = {
+  def count_parzen_window_sketch(sketch : CMSketch, inputspace : InputSpace[DoubleVector], center : DoubleVector, radius : Double, hour : Int, tripType : Int, normalizer : InputSpaceNormalizer[DoubleVector]  ) = {
     var freq_count = 0L
     val enumWindow = inputspace.iterator
     while (enumWindow.hasNext) {
       val item = enumWindow.next
-      val vector = inputspaceNormalizer.normalize( DoubleVector( item.elements(0), item.elements(1), tripType.toDouble, hour.toDouble) )
+      val vector = normalizer.normalize( DoubleVector( item.elements(0), item.elements(1), tripType.toDouble, hour.toDouble) )
       val count = sketch.get(vector.toString)
       val coordinates = item
       val distance = haversineDistance( (center.elements(0), center.elements(1)), (coordinates.elements(0), coordinates.elements(1))).toInt
@@ -222,39 +141,7 @@ object PortoTaxi {
     freq_count
   }
 
-  def skeching_hours(sketch : CMSketch, dataset : CSVIterator, normalizer : InputSpaceNormalizer[DoubleVector], hourFrom : Int, hourTo : Int, filter_tripType : Int, bloom : BloomFilter, distinctCounterIn : Long) = {
-   var distinctCounter = distinctCounterIn
-    val i = dataset.iterator
-    while( i.hasNext ){
-      val values = i.next
-      if( values(dataset.getHeader.get("hour").get).toInt >= hourFrom && values(dataset.getHeader.get("hour").get).toInt <= hourTo ) {
-        val lat = values(dataset.getHeader.get("lat").get)
-        val lon = values(dataset.getHeader.get("lon").get)
-        val duration = values(dataset.getHeader.get("duration").get).toInt
-        val tripType =
-          duration match {
-            case x if x > shortTripLength => TRIPTYPE_LONG
-            case x if x <= shortTripLength => TRIPTYPE_SHORT
-          }
-        // check if gps data is valid
-        if(lat.length>0 && lon.length>0) {
-          val vec = (normalizer.normalize(DoubleVector(lat.toDouble, lon.toDouble)))
-          if( (tripType & filter_tripType) > 0 ) {
-            sketch.update(vec.toString)
-            inputspace.update(vec)
-            if(!bloom.contains(vec.toString)){
-              distinctCounter = distinctCounter + 1
-            } else {
-              bloom.add(vec.toString)
-            }
-          }//if
-        }//if
-      }//if
-    }//while
-    distinctCounter
-  }
-
-  def skeching(sketch : CMSketch, dataset : CSVIterator, normalizer : InputSpaceNormalizer[DoubleVector] ) = {
+  def skeching(sketch : CMSketch, dataset : CSVIterator, normalizer : InputSpaceNormalizer[DoubleVector], inputspace : InputSpace[DoubleVector] ) = {
     val i = dataset.iterator
     while( i.hasNext ){
       val values = i.next
@@ -262,16 +149,21 @@ object PortoTaxi {
       val lat = values(dataset.getHeader.get("lat").get)
       val lon = values(dataset.getHeader.get("lon").get)
       val duration = values(dataset.getHeader.get("duration").get).toInt
+
       val tripType =
         duration match {
-          case x if x > shortTripLength => TRIPTYPE_LONG
-          case x if x <= shortTripLength => TRIPTYPE_SHORT
+          case x if x > config.shortTripLength => TRIPTYPE_LONG
+          case x if x <= config.shortTripLength => TRIPTYPE_SHORT
         }
 
       // check if gps data is valid
       if(lat.length>0 && lon.length>0 ) {
         val vec = (normalizer.normalize(DoubleVector(lat.toDouble, lon.toDouble, tripType.toDouble, hour.toDouble)))
+
+        // update sketch
         sketch.update(vec.toString)
+
+         // update inputspace
         inputspace.update(vec)
       }//if
     }//while
@@ -315,5 +207,71 @@ object PortoTaxi {
       outEnumInputSpace.close()
     }
   }
+
+  def init(args: Array[String]): Config = {
+    val parser = new scopt.OptionParser[Config]("Taxi Trip Length Predicton") {
+      head("Sketch-based Taxi Trip Length Prediction")
+
+      opt[String]('i', "input") required() action {
+        (x, c) => c.copy(input = x) }text("datset input")
+
+      opt[String]('o', "output")  valueName("<file>") action {
+        (x, c) => c.copy(output = x) }  text("output location")
+
+      opt[String]('s', "sketch") required() valueName("<epsilon>:<delta>") action {
+        (x, c) =>
+          c.copy( delta = x.split(":")(0).toDouble).copy( epsilon = x.split(":")(1).toDouble)
+      } text("sketch size, delta:epsilon")
+
+      opt[String]('c', "center")   action {
+        (x, c) =>
+          c.copy( center = DoubleVector( x.split(":").map(_.toDouble) ))
+      } text("center lat:lon")
+
+      opt[String]('w', "window")   action {
+        (x, c) =>
+          c.copy( window = DoubleVector( x.split(":").map(_.toDouble) ))
+      } text("window lat:lon")
+      opt[Boolean]('v', "verbose")  action {
+        (x, c) =>
+          c.copy( verbose = x )
+      } text("enable verbose mode")
+
+      opt[Boolean]('W', "write-sketch")  action {
+        (x, c) =>
+          c.copy( writeSketch = x )
+      } text("write sketch into output path")
+      opt[Int]('R', "resolution") required()  action {
+        (x, c) =>
+          c.copy( inputspaceResolution = x )
+      } text("input space resolution")
+
+      opt[Int]('T', "shorttriplength") required()  action {
+        (x, c) =>
+          c.copy( shortTripLength = x )
+      } text("max length of a short trip in minutes")
+
+      opt[Int]('H', "num-heavyhitters") action {
+        (x, c) =>
+          c.copy( numHeavyHitters = x )
+      } text("number of heavy hitters")
+
+      opt[Int]('r', "radius") action {
+        (x, c) =>
+          c.copy( radius = x )
+      } text("radius of the parzen window in meters")
+
+    }
+
+    // parser.parse returns Option[C]
+    parser.parse(args, Config()) map { config =>
+      config
+    } getOrElse {
+      // arguments are bad, usage message will have been displayed
+      System.exit(1)
+      null
+    }
+  }
+
 }
 
