@@ -7,8 +7,11 @@
 
 # DEFAULT VALUES
 SKETCH_HH=100
-SKETCH_SIZE_DELTA="0.5 0.1 0.05 0.01"
-SKETCH_SIZE_EPSILON="0.01 0.001 0.0001 0.000015 0.00001"
+#SKETCH_SIZE_DELTA="0.5 0.1 0.05 0.01"
+#SKETCH_SIZE_EPSILON="0.01 0.001 0.0001 0.000015 0.00001"
+
+SKETCH_SIZE_DELTA="0.01"
+SKETCH_SIZE_EPSILON="0.000015 "
 DPI=100
 FORMAT=png
 WINDOW="0.005:0.005"
@@ -16,18 +19,17 @@ MIN_GPS="41.12,-8.66"
 MAX_GPS="41.18,-8.59"
 GPS_RESOLUTION=3
 SHORT_TRIP_LENGTH=10 # minutes
-RADIUS=100	# in meters
+RADIUS=200	# in meters
 DATA_DIR=~/tmp/blos/experiments/portotaxi/expt1/
 HOURS="0:24:1"
+NUM=1
 
 # cleanup
 rm -r ${DATA_DIR}
 mkdir -p ${DATA_DIR}/dataset
 mkdir -p ${DATA_DIR}/sketch
 
-NUM=1
 
-echo "random gps pos $RADMOM_GPS2"
 IFS=', ' read -r -a LIST_SKETCH_SIZE_DELTA <<< "$SKETCH_SIZE_DELTA"
 IFS=', ' read -r -a LIST_SKETCH_SIZE_EPSILON <<< "$SKETCH_SIZE_EPSILON"
 for d in "${LIST_SKETCH_SIZE_DELTA[@]}"
@@ -42,19 +44,28 @@ do
 
 
 		for i in $(seq 1 $NUM); do
-			RANDOM_GPS=$(blos experiments random-gps $MIN_GPS $MAX_GPS)
-			RADMOM_GPS2=$(echo "$RANDOM_GPS" | tr ',' ':' )
+			#RANDOM_GPS=$(blos experiments random-gps $MIN_GPS $MAX_GPS)
+			#RANDOM_GPS2=$(echo "RANDOM_GPS" | tr ',' ':' )
+			RANDOM_GPS2="41.163723:-8.647637"
+
+			OUTPUT_FILE=${DATA_DIR}/sketch/${SKETCH_FILE}/taxi_dataset_result_$(echo "$RANDOM_GPS2"|tr ':' '_')
 
 			blos examples run eu.blos.scala.examples.portotaxi.PortoTaxi \
 				--input /home/kay/Dropbox/kay-rep/Uni-Berlin/Masterarbeit/Sources/blos/datasets/portotaxi/taxi2.tsv \
-				--output ${DATA_DIR}/sketch/${SKETCH_FILE}/taxi_dataset_result_${RADMOM_GPS2}.tsv \
+				--output ${OUTPUT_FILE}.tsv \
 				--sketch ${SKETCH_SIZE} \
-				--center ${RADMOM_GPS2} \
+				--center ${RANDOM_GPS2} \
 				--window ${WINDOW} \
 				--resolution ${GPS_RESOLUTION} \
 				--shorttriplength ${SHORT_TRIP_LENGTH} \
 				--radius ${RADIUS} \
 				--hours ${HOURS}
+
+			# compare sketch-based counts and real coutns
+			blos experiments portotaxi-hours-plot \
+					${OUTPUT_FILE}.tsv:0:1:*:r:'-':'real long trips',${OUTPUT_FILE}.tsv:0:3:*:r:'--':'sketched long trips',${OUTPUT_FILE}.tsv:0:2:o:b:'-':'real short trips',${OUTPUT_FILE}.tsv:0:4:o:b:'--':'sketched short trips' \
+					${OUTPUT_FILE}.${FORMAT}:${DPI}
+
 
 		done
 	done

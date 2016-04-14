@@ -1,0 +1,57 @@
+#!/usr/bin/env python
+# Usage: ./portotaxi-hours-plot file1:x:y:*:r,file2:o
+
+import numpy as np
+import matplotlib.pyplot as plt
+import csv
+import sys
+
+
+def plot_files(files, output):
+	fig = plt.figure()
+	ax1 = fig.add_subplot(111)
+	ax1.grid(True)
+	outputFile = output.split(":")[0]
+	dpi=100
+	if len(output.split(":"))>0:
+		dpi=int(output.split(":")[1])
+
+	"""
+	Read a csv files
+	"""
+	for f in files:
+		params = f.split(":")
+		file = params[0]
+		col_x = int(params[1])
+		col_y = int(params[2])
+		marker = params[3]
+		color = params[4]
+		linestyle = params[5]
+		label = params[6]
+
+		with open(file, "rb") as f_obj:
+			reader = csv.reader(f_obj, delimiter='\t')
+			next(reader)
+			x = []
+			y = []
+
+			# extract values from csv file
+			for i,row in enumerate(reader):
+				x.append(row[col_x])
+				y.append(row[col_y])
+
+		ax1.plot(x, y, marker=marker, color=color, linestyle=linestyle, label=label)
+
+	legend = ax1.legend(loc='upper center', shadow=False)
+
+	# Set the fontsize
+	for label in legend.get_texts():
+		label.set_fontsize('small')
+
+	plt.savefig(outputFile, dpi=dpi, bbox_inches='tight')
+
+
+if __name__ == "__main__":
+	files = sys.argv[1].split(",")
+
+	plot_files(files,sys.argv[2] )
