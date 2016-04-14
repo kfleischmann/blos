@@ -21,7 +21,10 @@ case class Config(
   center : DoubleVector = DoubleVector(),
   window : DoubleVector = DoubleVector(),
   shortTripLength : Int = 0, // in minutes
-  radius : Double = 0.0 // in meters
+  radius : Double = 0.0, // in meters
+  timeFrom  : Int = 0,
+  timeTo    : Int = 24,
+  timeStep  : Int = 1
 );
 
 object PortoTaxi {
@@ -55,11 +58,6 @@ object PortoTaxi {
   }
 
   def run(config:Config) {
-
-
-    println(config.center.toString)
-    println(config.window.toString)
-
     // prepare data structures
     val filename = config.input
     val sketch: CMSketch = new CMSketch(config.delta, config.epsilon, config.numHeavyHitters);
@@ -70,15 +68,22 @@ object PortoTaxi {
 
     sketch.alloc
 
-    println("w="+sketch.w)
-    println("d="+sketch.d)
+    val result_writer = new PrintWriter( config.output )
+
+    result_writer.write(List("hour","real_count_longtrips","real_count_short_trips","sketch_count_longstrips", "sketch_count_shorttrips").mkString("\t") )
+    result_writer.write("\n")
+
+    //println("center="+config.center.toString)
+    //println("window="+config.window.toString)
+    //println("w="+sketch.w)
+    //println("d="+sketch.d)
 
     skeching(sketch, new CSVIterator(new FileReader(new File(filename)), "\t"), inputspaceNormalizer, dyn_inputspace );
-    println("finished sketching")
-    for( h <- Range(0,24) ) {
 
-      val countLong = count_parzen_window_sketch(sketch, stat_inputspace, config.center, config.radius, h, TRIPTYPE_LONG, inputspaceNormalizer )
-      val countShort = count_parzen_window_sketch(sketch, stat_inputspace, config.center, config.radius, h, TRIPTYPE_SHORT, inputspaceNormalizer )
+    for( h <- Range( config.timeFrom, config.timeTo, config.timeStep) ) {
+
+      val countLong = count_parzen_window_sketch(sketch, stat_inputspace, config.center, config.radius, h, h+config.timeStep, TRIPTYPE_LONG, inputspaceNormalizer )
+      val countShort = count_parzen_window_sketch(sketch, stat_inputspace, config.center, config.radius, h, h+config.timeStep, TRIPTYPE_SHORT, inputspaceNormalizer )
       val total = countShort + countLong
 
       val sketch_probLong = (countLong.toDouble / total.toDouble)
@@ -86,7 +91,7 @@ object PortoTaxi {
 
       println("sketch-result="+List(h,countLong,countShort,sketch_probLong,sketch_probShort).mkString(","))
 
-      val real_counts = count_parzen_window_real (new CSVIterator(new FileReader(new File(filename)), "\t"), config.center, config.radius, inputspaceNormalizer, h, h )
+      val real_counts = count_parzen_window_real (new CSVIterator(new FileReader(new File(filename)), "\t"), config.center, config.radius, inputspaceNormalizer, h, h+config.timeStep )
       // result (countLong,countShort)
 
       val real_probLong = (real_counts._2.toDouble / (real_counts._1+real_counts._2).toDouble)
@@ -97,10 +102,15 @@ object PortoTaxi {
       val errors_long = Math.abs(countLong - real_counts._1)
       val errors_short = Math.abs(countShort - real_counts._2)
 
+      result_writer.write(List(h,real_counts._1, real_counts._2, countLong,countShort).mkString("\t") )
+      result_writer.write("\n")
+
       total_error_count = total_error_count + errors_long + errors_short
       total_counts = total_counts + total
     }
     println("total counts: "+total_counts)
+
+    result_writer.close()
   }
 
   def count_parzen_window_real(dataset: CSVIterator, center : DoubleVector, radius : Double, normalizer : InputSpaceNormalizer[DoubleVector], hourFrom : Int, hourTo : Int) = {
@@ -109,7 +119,7 @@ object PortoTaxi {
     val i = dataset.iterator
     while( i.hasNext ) {
       val values = i.next
-      if( values(dataset.getHeader.get("hour").get).toInt >= hourFrom && values(dataset.getHeader.get("hour").get).toInt <= hourTo ) {
+      if( values(dataset.getHeader.get("hour").get).toInt >= hourFrom && values(dataset.getHeader.get("hour").get).toInt < hourTo ) {
         val lat = values(dataset.getHeader.get("lat").get)
         val lon = values(dataset.getHeader.get("lon").get)
         val duration = values(dataset.getHeader.get("duration").get).toInt
@@ -130,17 +140,21 @@ object PortoTaxi {
     (freq_long, freq_short)
   }
 
-  def count_parzen_window_sketch(sketch : CMSketch, inputspace : InputSpace[DoubleVector], center : DoubleVector, radius : Double, hour : Int, tripType : Int, normalizer : InputSpaceNormalizer[DoubleVector]  ) = {
+  def count_parzen_window_sketch(sketch : CMSketch, inputspace : InputSpace[DoubleVector], center : DoubleVector, radius : Double, hourFrom : Int, hourTo : Int, tripType : Int, normalizer : InputSpaceNormalizer[DoubleVector]  ) = {
     var freq_count = 0L
     val enumWindow = inputspace.iterator
     while (enumWindow.hasNext) {
       val item = enumWindow.next
-      val vector = normalizer.normalize( DoubleVector( item.elements(0), item.elements(1), tripType.toDouble, hour.toDouble) )
-      val count = sketch.get(vector.toString)
       val coordinates = item
+
+      // valid distance to center
       val distance = haversineDistance( (center.elements(0), center.elements(1)), (coordinates.elements(0), coordinates.elements(1))).toInt
       if( distance < radius ){
-        freq_count += count
+        for( h <- Range(hourFrom,hourTo)){
+          val vector = normalizer.normalize( DoubleVector( item.elements(0), item.elements(1), tripType.toDouble, h.toDouble) )
+          val count = sketch.get(vector.toString)
+          freq_count += count
+        }
       }
     }
     freq_count
@@ -260,10 +274,15 @@ object PortoTaxi {
           c.copy( numHeavyHitters = x )
       } text("number of heavy hitters")
 
-      opt[Int]('r', "radius") required() action {
+      opt[Double]('r', "radius") required() action {
         (x, c) =>
           c.copy( radius = x )
       } text("radius of the parzen window in meters")
+
+      opt[String]('h', "hours") action {
+        (x, c) =>
+          c.copy( timeFrom = x.split(":")(0).toInt ).copy(timeTo = x.split(":")(1).toInt).copy(timeStep = x.split(":")(2).toInt)
+      } text("from:to:step")
 
     }
 
@@ -276,6 +295,4 @@ object PortoTaxi {
       null
     }
   }
-
 }
-
