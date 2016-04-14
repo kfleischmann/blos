@@ -73,10 +73,10 @@ object PortoTaxi {
     result_writer.write(List("hour","real_count_longtrips","real_count_short_trips","sketch_count_longstrips", "sketch_count_shorttrips").mkString("\t") )
     result_writer.write("\n")
 
-    //println("center="+config.center.toString)
-    //println("window="+config.window.toString)
-    //println("w="+sketch.w)
-    //println("d="+sketch.d)
+    println("center="+config.center.toString)
+    println("window="+config.window.toString)
+    println("w="+sketch.w)
+    println("d="+sketch.d)
 
     skeching(sketch, new CSVIterator(new FileReader(new File(filename)), "\t"), inputspaceNormalizer, dyn_inputspace );
 
