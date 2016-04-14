@@ -11,7 +11,7 @@ SKETCH_HH=100
 #SKETCH_SIZE_EPSILON="0.01 0.001 0.0001 0.000015 0.00001"
 
 SKETCH_SIZE_DELTA="0.01"
-SKETCH_SIZE_EPSILON="0.000015 "
+SKETCH_SIZE_EPSILON="0.000015 0.0001 0.001"
 DPI=100
 FORMAT=png
 WINDOW="0.005:0.005"
@@ -29,7 +29,6 @@ rm -r ${DATA_DIR}
 mkdir -p ${DATA_DIR}/dataset
 mkdir -p ${DATA_DIR}/sketch
 
-
 IFS=', ' read -r -a LIST_SKETCH_SIZE_DELTA <<< "$SKETCH_SIZE_DELTA"
 IFS=', ' read -r -a LIST_SKETCH_SIZE_EPSILON <<< "$SKETCH_SIZE_EPSILON"
 for d in "${LIST_SKETCH_SIZE_DELTA[@]}"
@@ -44,8 +43,8 @@ do
 
 
 		for i in $(seq 1 $NUM); do
-			#RANDOM_GPS=$(blos experiments random-gps $MIN_GPS $MAX_GPS)
-			#RANDOM_GPS2=$(echo "RANDOM_GPS" | tr ',' ':' )
+			RANDOM_GPS=$(blos experiments random-gps $MIN_GPS $MAX_GPS)
+			RANDOM_GPS2=$(echo "$RANDOM_GPS" | tr ',' ':' )
 			RANDOM_GPS2="41.163723:-8.647637"
 
 			OUTPUT_FILE=${DATA_DIR}/sketch/${SKETCH_FILE}/taxi_dataset_result_$(echo "$RANDOM_GPS2"|tr ':' '_')
@@ -61,9 +60,9 @@ do
 				--radius ${RADIUS} \
 				--hours ${HOURS}
 
-			# compare sketch-based counts and real coutns
+			# compare sketch-based counts and real counts
 			blos experiments portotaxi-hours-plot \
-					${OUTPUT_FILE}.tsv:0:1:*:r:'-':'real long trips',${OUTPUT_FILE}.tsv:0:3:*:r:'--':'sketched long trips',${OUTPUT_FILE}.tsv:0:2:o:b:'-':'real short trips',${OUTPUT_FILE}.tsv:0:4:o:b:'--':'sketched short trips' \
+					${OUTPUT_FILE}.tsv:0:1:*:r:'-':'real_long_trips',${OUTPUT_FILE}.tsv:0:3:*:r:'--':'sketched_long_trips',${OUTPUT_FILE}.tsv:0:2:o:b:'-':'real_short_trips',${OUTPUT_FILE}.tsv:0:4:o:b:'--':'sketched_short_trips' \
 					${OUTPUT_FILE}.${FORMAT}:${DPI}
 
 

@@ -13,6 +13,9 @@ def plot_files(files, output):
 	ax1.grid(True)
 	outputFile = output.split(":")[0]
 	dpi=100
+
+	print files
+
 	if len(output.split(":"))>0:
 		dpi=int(output.split(":")[1])
 
@@ -40,7 +43,7 @@ def plot_files(files, output):
 				x.append(row[col_x])
 				y.append(row[col_y])
 
-		ax1.plot(x, y, marker=marker, color=color, linestyle=linestyle, label=label)
+		ax1.plot(x, y, marker=marker, color=color, linestyle=linestyle, label=label.replace("_"," "))
 
 	legend = ax1.legend(loc='upper center', shadow=False)
 
