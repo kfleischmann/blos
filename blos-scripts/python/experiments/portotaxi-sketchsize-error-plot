@@ -1,0 +1,61 @@
+#!/usr/bin/env python
+# Usage: ./portotaxi-sketchsize-error-plot {sketch_folder} {output_path}
+
+import numpy as np
+import matplotlib.pyplot as plt
+import csv
+import sys
+import os
+import ntpath
+import math
+
+includes = '.tsv'
+
+def sketch_size(delta,epsilon):
+	w = int(math.ceil( 2 /epsilon))
+	d = int(math.ceil(math.log(1 / delta)))
+	return (w,d)
+
+def plot_files(parent_sketch_folder, output):
+
+	results = []
+
+	for root, dirs, files in os.walk(parent_sketch_folder):
+		realpath = ntpath.basename(root)
+		if realpath != '.':
+			sketchsize = realpath.split("_")
+			delta = float(sketchsize[0])
+			epsilon = float(sketchsize[1])
+			sketch_dw = sketch_size(delta,epsilon)
+			size = sketch_dw[0]*sketch_dw[1]
+			print size
+			print sketch_dw
+
+			files = [os.path.join(root, f) for f in files]
+
+			for f in files:
+				if f.endswith(includes):
+					res = evaluate_hours_plot(f)
+
+					results.append( (size, sum(res[0])+sum(res[1])) )
+	print results
+
+def evaluate_hours_plot(plot_file):
+	print("evaluate" +plot_file)
+
+	with open(plot_file, "rb") as f_obj:
+		reader = csv.reader(f_obj, delimiter='\t')
+		next(reader)
+		error_long_trips = []
+		error_short_trips = []
+
+		# extract values from csv file
+		for i,row in enumerate(reader):
+			error_long_trips.append( int(row[3]) - int(row[1]) )
+			error_short_trips.append( int(row[4]) - int(row[2]) )
+
+	return (error_long_trips, error_short_trips)
+
+if __name__ == "__main__":
+	sketch_folder = sys.argv[1]
+	plot_files(sketch_folder,sys.argv[2] )
