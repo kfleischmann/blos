@@ -1,15 +1,17 @@
 #!/bin/bash
 
 # this script produce the result of the real world dataset
-DATA_DIR=~/tmp/blos/experiments/portotaxi/expt2/
+DATA_DIR=~/tmp/blos/experiments/portotaxi/expt3/
 
 # DEFAULT VALUES
 SKETCH_HH=100
 #SKETCH_SIZE_DELTA="0.5 0.1 0.05 0.01"
 #SKETCH_SIZE_EPSILON="0.01 0.001 0.0001 0.000015 0.00001"
 
-SKETCH_SIZE_DELTA="0.001 0.01 0.1"
-SKETCH_SIZE_EPSILON="0.00001 0.00003 0.00005 0.00007"
+SKETCH_SIZE_DELTA="0.01"
+ #0.01 0.1"
+SKETCH_SIZE_EPSILON="0.000002"
+ #0.00003 0.00005 0.00007"
 DPI=100
 FORMAT=png
 WINDOW="0.005:0.005"
@@ -19,7 +21,7 @@ GPS_RESOLUTION=3
 SHORT_TRIP_LENGTH=10 # minutes
 RADIUS=200	# in meters
 HOURS="0:24:1"
-NUM=10
+NUM=2
 
 # cleanup
 rm -r ${DATA_DIR}
@@ -38,7 +40,7 @@ do
 		rm -r ${DATA_DIR}/sketch/${SKETCH_FILE}
 		mkdir -p ${DATA_DIR}/sketch/${SKETCH_FILE}
 
-		for i in $(seq 1 $NUM); do
+		for i in $(seq 2 $NUM); do
 			SEED=$i
 			echo "SEED=$i"
 
