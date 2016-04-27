@@ -174,7 +174,7 @@ do
 				-i ${DATA_DIR}/sketch/${SKETCH_FILE}/hh-input-space \
 				--output="${DATA_DIR}/sketch/${SKETCH_FILE}/hh-input-space-${SKETCH_FILE}" \
 				-f ${FORMAT} \
-				-C \g
+				-C \
 				-d ${DPI}
 
 		# compute nearest centers for each data point

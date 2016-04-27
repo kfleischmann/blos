@@ -1,0 +1,64 @@
+#!/bin/bash
+
+# KMeans
+# Experiement1
+#
+#
+# datapoints 1mio
+# 3 centers
+# input space per dimension: [-1...+1]
+# resolution #.###
+
+DATA_DIR=~/tmp/blos/experiments/kmeans-sketched/50k-numcluster8
+
+# cleanup
+rm -r ${DATA_DIR}
+
+# prepare folders
+mkdir -p ${DATA_DIR}/dataset
+mkdir -p ${DATA_DIR}/sketch
+
+NUM_SAMPLES=50000
+NUM_CENTROIDS=8
+STDDEV="0.1;0.15;0.12;0.08;0.15;0.09;0.13;0.11"
+RESOLUTION=3
+RANGE=1.0
+ITERATIONS=100
+SKETCH_SIZE_DELTA=0.5,0.1
+SKETCH_SIZE_EPSILON=0.0001,0.001
+SKETCH_P=2
+SKETCH_HH=500
+SEED=4613905485650871123
+
+# prepare dataset
+
+blos examples run eu.blos.java.ml.clustering.KMeansDatasetGeneratorVar \
+        -points ${NUM_SAMPLES} \
+        -k ${NUM_CENTROIDS} \
+        -stddev ${STDDEV} \
+        -range ${RANGE} \
+        -output ${DATA_DIR}/dataset \
+        -resolution ${RESOLUTION} \
+        -seed ${SEED}
+
+# compute some good initializations
+blos experiments kmeans-manipulate-centers \
+        ${DATA_DIR}/dataset/real_centers \
+        0.4 \
+        $SEED >> ${DATA_DIR}/dataset/good_centers
+
+
+# sketch scatterplot
+blos sketch scatterplot \
+	-d ${DATA_DIR} \
+	-p ${SKETCH_P} \
+	-D ${SKETCH_SIZE_DELTA} \
+	-E ${SKETCH_SIZE_EPSILON} \
+	--heavy-hitters ${SKETCH_HH} \
+	--iterations ${ITERATIONS} \
+	--learn-enumeration yes \
+	--learn-hh yes \
+	--generate-results yes \
+	--image-resolution 100 \
+	--format png \
+	--seed $SEED

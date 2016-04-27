@@ -59,29 +59,39 @@ object PortoTaxi {
   var total_error_count     = 0L
   var total_real_counts     = 0L
   var total_sketch_counts   = 0L
-  var total_false_positive_counts  = 0L
-  var total_false_positive_items  = 0L
+  var total_false_positive_counts   = 0L
+  var total_false_positive_items    = 0L
   var N = 0
   var space_items = 0
   var config : Config = null
+  var sum_true_positive = 0
+  var sum_false_positive = 0
+
+  var sum_true_negative = 0
+  var sum_false_negative = 0
+
+  var total_queries = 0
+  var sum_longTrips = 0
 
   def main(args: Array[String]): Unit = {
     config = init(args)
     run(config)
   }
 
+  var sketch: CMSketch = null
+
   def run(config:Config) {
     // prepare data structures
     val filename = config.input
-    val sketch: CMSketch = new CMSketch(config.delta, config.epsilon, config.numHeavyHitters);
     val inputspaceNormalizer = new Rounder(config.inputspaceResolution);
     val stepsize = inputspaceNormalizer.stepSize(config.inputspaceResolution)
     val dyn_inputspace = new DynamicInputSpace(stepsize);
 
+
+    sketch = new CMSketch(config.delta, config.epsilon, config.numHeavyHitters);
+
     sketch.alloc
 
-    println("center="+config.center.toString)
-    println("window="+config.window.toString)
     println("w="+sketch.w)
     println("d="+sketch.d)
 
@@ -96,6 +106,7 @@ object PortoTaxi {
     val max = config.eval_max
     val min = config.eval_min
 
+
     val stat_inputspace = new StaticInputSpace( min, max, stepsize)
     val it = stat_inputspace.iterator
     var space_items = 0
@@ -106,8 +117,21 @@ object PortoTaxi {
       }
       evaluate (config, realDataset, sketch, inputspaceNormalizer, dyn_inputspace, stepsize, c, config.window )
       space_items = space_items + 1
+
+      if(config.verbose) {
+        if (space_items % 10 == 0) {
+          println("evaluated input-space items: " + space_items)
+          print_stats
+        }
+      }
     }
-    println("evaluation-item:"+space_items)
+
+    print_stats
+  }
+
+
+  def print_stats = {
+    println("evaluation enum input-space count:"+space_items)
 
     println("total errors: "+ (total_sketch_counts - total_real_counts)  )
     println("total real counts: "+total_real_counts)
@@ -115,15 +139,25 @@ object PortoTaxi {
     println("total false_positive counts: "+total_false_positive_counts)
     println("total false_positive items: "+total_false_positive_items)
 
-    val error_per_query = (2*N/sketch.w)*space_items*24*2
+    val error_per_query = (2*N/sketch.w)
+    val total_estimated_error = error_per_query*space_items*24*2
 
-    println("error_per_query: "+ error_per_query )
+    println("computed error per query: "+ error_per_query )
+    println("computed total error estimate: "+ total_estimated_error )
+    println("real error per query: "+ (total_sketch_counts - total_real_counts).toDouble / total_queries )
+
+    println("sum false positive long-trips:"+sum_false_positive)
+    println("sum queries:"+total_queries)
+    println("sum long trips:"+sum_longTrips)
+    println("precision:"+ (sum_true_positive.toDouble/(sum_true_positive+sum_false_positive).toDouble))
+    println("recall:"+ (sum_true_positive.toDouble/(sum_false_negative+sum_true_positive).toDouble))
   }
 
   def getRealDataset(config:Config,inputspaceNormalizer : InputSpaceNormalizer[DoubleVector]) : HashMap[String, Int] =  {
     val dataset = new CSVIterator(new FileReader( new File(config.input)), "\t")
     val realdataset =  new HashMap[String, Int]
     var counter=0
+    var total_size=0
     val dit = dataset.iterator
     while(dit.hasNext) {
       val values = dit.next
@@ -145,7 +179,12 @@ object PortoTaxi {
         else {
           N += 1
           realdataset.put(features.toString, 1)
-          counter = counter + 1
+
+          // size of counter
+          total_size = total_size + 4
+
+          // size of key
+          total_size = total_size + (features.toString.length )
         }
       }
     }
@@ -155,7 +194,6 @@ object PortoTaxi {
     realdataset.foreach( keyVal => {
         counts+=keyVal._2
         if( keyVal._2 > 1 ) {
-          //println(keyVal._1 + ": " + keyVal._2)
           count_n1 += 1
         } else {
           count_1 += 1
@@ -165,8 +203,7 @@ object PortoTaxi {
 
     println("count 1:"+count_1)
     println("count >1:"+count_n1)
-    println("hashmap was built with distinct keys: "+counter +", "+((counter.toDouble*4.0)/1024.0/1024.0)+" mb" )
-
+    println("hashmap was built with distinct keys: "+N +", "+((total_size.toDouble)/1024.0/1024.0)+" mb" )
     realdataset
   }
 
@@ -181,17 +218,47 @@ object PortoTaxi {
 
     for( h <- Range( config.timeFrom, config.timeTo, config.timeStep) ) {
 
-      val countLong = count_parzen_window(dataset, sketch, stat_inputspace, center, config.radius, h, h+config.timeStep, TRIPTYPE_LONG, inputspaceNormalizer )
-      val countShort = count_parzen_window(dataset, sketch, stat_inputspace, center, config.radius, h, h+config.timeStep, TRIPTYPE_SHORT, inputspaceNormalizer )
+      val countLong = count_parzen_window(dataset, sketch, stat_inputspace, center, config.radius, h, h + config.timeStep, TRIPTYPE_LONG, inputspaceNormalizer)
+      val countShort = count_parzen_window(dataset, sketch, stat_inputspace, center, config.radius, h, h + config.timeStep, TRIPTYPE_SHORT, inputspaceNormalizer)
 
       val sketch_count = countShort.sketchCount + countLong.sketchCount
       val sketch_probLong = (countLong.sketchCount.toDouble / sketch_count.toDouble)
-      val sketch_probShort =(countShort.sketchCount.toDouble / sketch_count.toDouble)
+      val sketch_probShort = (countShort.sketchCount.toDouble / sketch_count.toDouble)
 
-      val real_count = countLong.realCount+countShort.realCount
-
+      val real_count = countLong.realCount + countShort.realCount
       val real_probLong = (countLong.realCount.toDouble / real_count.toDouble)
       val real_probShort = (countShort.realCount.toDouble / real_count.toDouble)
+
+      if (real_probLong > real_probShort ) {
+        sum_longTrips += 1
+      }
+
+      // positive items: long trips
+      // if long predicted, but reality is short
+      if (sketch_probLong > sketch_probShort && real_probLong <= real_probShort ) {
+        sum_false_positive += 1
+      }
+
+      // if long predicted, and reality is long
+      if (sketch_probLong > sketch_probShort && real_probLong > real_probShort ) {
+        sum_true_positive += 1
+      }
+
+      // negative items: short trips
+
+      // if short predicted, but reality is long
+      if (sketch_probLong <= sketch_probShort && real_probLong > real_probShort ) {
+        sum_false_negative += 1
+      }
+
+      // if short predicted, and reality is short
+      if (sketch_probLong <= sketch_probShort && real_probLong <= real_probShort ) {
+        sum_true_negative += 1
+      }
+
+      total_queries += 1
+
+      //println(real_probLong.toDouble +","+ sketch_probLong.toDouble)
 
       if(config.verbose) {
         println("real-result=" + List(h, countLong.realCount, countShort.realCount, sketch_probLong, sketch_probShort).mkString(","))
@@ -212,39 +279,10 @@ object PortoTaxi {
         total_false_positive_items = total_false_positive_items +1
       if( countShort.false_positive>0)
         total_false_positive_items = total_false_positive_items +1
-
     }
 
     result_writer.close()
   }
-
-  /*
-  def count_parzen_window_real(dataset: HashMap[String, Int],  inputspace : InputSpace[DoubleVector], center : DoubleVector, radius : Double, hourFrom : Int, hourTo : Int,  tripType : Int,   normalizer : InputSpaceNormalizer[DoubleVector] ) = {
-    var freq_short = 0L
-    var freq_long = 0L
-    val i = dataset.iterator
-    while( i.hasNext ) {
-      val values = i.next
-      if( values(dataset.getHeader.get("hour").get).toInt >= hourFrom && values(dataset.getHeader.get("hour").get).toInt < hourTo ) {
-        val lat = values(dataset.getHeader.get("lat").get)
-        val lon = values(dataset.getHeader.get("lon").get)
-        val duration = values(dataset.getHeader.get("duration").get).toInt
-
-        if (lat.length > 0 && lon.length > 0) {
-          val coordinates = (normalizer.normalize(DoubleVector(lat.toDouble, lon.toDouble)))
-          val distance = haversineDistance((center.elements(0), center.elements(1)), (coordinates.elements(0), coordinates.elements(1))).toInt
-          //println(coordinates.toString + ", " + distance )
-          if (distance < radius) {
-            if (duration <= config.shortTripLength) {
-              freq_short += 1
-            } else {
-              freq_long += 1
-            }
-          }
-        }
-      }
-    }
-  }*/
 
   def count_parzen_window(dataset: HashMap[String, Int], sketch : CMSketch, inputspace : InputSpace[DoubleVector], center : DoubleVector, radius : Double, hourFrom : Int, hourTo : Int, tripType : Int, normalizer : InputSpaceNormalizer[DoubleVector]  ) = {
     var real_freq_count = 0L

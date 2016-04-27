@@ -1,17 +1,12 @@
 #!/bin/bash
 
 # this script produce the result of the real world dataset
-DATA_DIR=~/tmp/blos/experiments/portotaxi/expt3/
+DATA_DIR=~/tmp/blos/experiments/portotaxi/expt3
 
 # DEFAULT VALUES
 SKETCH_HH=100
-#SKETCH_SIZE_DELTA="0.5 0.1 0.05 0.01"
-#SKETCH_SIZE_EPSILON="0.01 0.001 0.0001 0.000015 0.00001"
-
-SKETCH_SIZE_DELTA="0.01"
- #0.01 0.1"
-SKETCH_SIZE_EPSILON="0.000002"
- #0.00003 0.00005 0.00007"
+SKETCH_SIZE_DELTA="0.5 0.01 0.001"
+SKETCH_SIZE_EPSILON="0.000013 0.00002 0.000027 0.00004 0.00008 0.0002"
 DPI=100
 FORMAT=png
 WINDOW="0.005:0.005"
@@ -22,6 +17,7 @@ SHORT_TRIP_LENGTH=10 # minutes
 RADIUS=200	# in meters
 HOURS="0:24:1"
 NUM=2
+ENUM_WINDOW="41.149168:-8.649800,41.164467:-8.585886"
 
 # cleanup
 rm -r ${DATA_DIR}
@@ -42,31 +38,50 @@ do
 
 		for i in $(seq 2 $NUM); do
 			SEED=$i
-			echo "SEED=$i"
 
 			RANDOM_GPS=$(blos experiments random-gps $MIN_GPS $MAX_GPS $SEED)
 			RANDOM_GPS2=$(echo "$RANDOM_GPS" | tr ',' ':' )
 			#RANDOM_GPS2="41.163723:-8.647637"
 
-			OUTPUT_FILE=${DATA_DIR}/sketch/${SKETCH_FILE}/taxi_dataset_result_${SKETCH_FILE}_$(echo "$RANDOM_GPS2"|tr ':' '_')
+			OUTPUT_FILE=${DATA_DIR}/sketch/${SKETCH_FILE}/taxi_dataset_result
+			OUTPUT_PATH=${DATA_DIR}/sketch/${SKETCH_FILE}
+
+			mkdir -p ${OUTPUT_PATH}
+
+			echo "produce $OUTPUT_PATH"
+
 
 			blos examples run eu.blos.scala.examples.portotaxi.PortoTaxi \
 				--input /home/kay/Dropbox/kay-rep/Uni-Berlin/Masterarbeit/Sources/blos/datasets/portotaxi/taxi2.tsv \
-				--output ${OUTPUT_FILE}.tsv \
+				--output ${OUTPUT_PATH}/taxi_dataset \
 				--sketch ${SKETCH_SIZE} \
-				--center ${RANDOM_GPS2} \
 				--window ${WINDOW} \
 				--resolution ${GPS_RESOLUTION} \
 				--shorttriplength ${SHORT_TRIP_LENGTH} \
 				--radius ${RADIUS} \
-				--hours ${HOURS}
+				--evaluate ${ENUM_WINDOW} \
+				--hours 0:24:1 >> ${OUTPUT_FILE}_results
 
 			# compare sketch-based counts and real counts
-			blos experiments portotaxi-hours-plot \
-					${OUTPUT_FILE}.tsv:0:1:*:r:'-':'real_long_trips',${OUTPUT_FILE}.tsv:0:3:*:r:'--':'sketched_long_trips',${OUTPUT_FILE}.tsv:0:2:o:b:'-':'real_short_trips',${OUTPUT_FILE}.tsv:0:4:o:b:'--':'sketched_short_trips' \
-					${OUTPUT_FILE}.${FORMAT}:${DPI}
+			#blos experiments portotaxi-hours-plot \
+			#		${OUTPUT_FILE}.tsv:0:1:*:r:'-':'real_long_trips',${OUTPUT_FILE}.tsv:0:3:*:r:'--':'sketched_long_trips',${OUTPUT_FILE}.tsv:0:2:o:b:'-':'real_short_trips',${OUTPUT_FILE}.tsv:0:4:o:b:'--':'sketched_short_trips' \
+			#		${OUTPUT_FILE}.${FORMAT}:${DPI}
+			D="$(cat ${OUTPUT_FILE}_results | grep "d="| cut -f2 -d"=" | xargs)"
+			W="$(cat ${OUTPUT_FILE}_results | grep "w="| cut -f2 -d"=" | xargs)"
+			DISTINCT_KEYS=$(cat ${OUTPUT_FILE}_results | grep "distinct keys"| cut -f2 -d: | xargs)
+			TOTAL_ERRORS=$(cat ${OUTPUT_FILE}_results | grep "total errors"| cut -f2 -d: | xargs)
+			PRECISION=$(cat ${OUTPUT_FILE}_results | grep "precision"| cut -f2 -d: | xargs)
+			RECALL=$(cat ${OUTPUT_FILE}_results | grep "recall"| cut -f2 -d: | xargs)
+			REAL_ERROR_PER_QUERY=$(cat ${OUTPUT_FILE}_results | grep "real error per query"| cut -f2 -d: | xargs)
+			ESTIMATED_ERROR_PER_QUERY=$(cat ${OUTPUT_FILE}_results | grep "computed error per query"| cut -f2 -d: | xargs)
 
+
+			echo "${W},${D},${SKETCH_SIZE},${TOTAL_ERRORS},${PRECISION},${RECALL},${REAL_ERROR_PER_QUERY},${ESTIMATED_ERROR_PER_QUERY},${DISTINCT_KEYS}" >> ${DATA_DIR}/results
 
 		done
 	done
 done
+
+
+# evaluate results
+

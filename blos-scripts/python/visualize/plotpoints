@@ -40,6 +40,11 @@ colors[3] = '#2ca12c'
 colors[4] = '#986cc0'
 colors[5] = '#d62728'
 colors[6] = '#2ca02c'
+colors[7] = '#662ca0'
+colors[8] = '#a02c2c'
+colors[9] = '#339933'
+colors[10]= '#a02c83'
+colors[11]= '#ff3333'
 
 print inFile
 
