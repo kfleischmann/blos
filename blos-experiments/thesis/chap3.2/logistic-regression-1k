@@ -3,7 +3,7 @@
 #
 # resolution #.###
 
-DATA_DIR=~/tmp/blos/experiments/logistic-regression/10k
+DATA_DIR=~/tmp/blos/experiments/logistic-regression/1k
 
 # cleanup
 rm -r ${DATA_DIR}
@@ -12,7 +12,7 @@ mkdir -p ${DATA_DIR}/sketch
 
 NUM_SAMPLES=10000
 RESOLUTION=2
-ITERATIONS=100
+ITERATIONS=200
 RANGE=1
 STDDEV=0.2
 DPI=100
@@ -20,12 +20,14 @@ SEED=3
 FORMAT=png
 INPUTSPACE_RESOLUTION=2
 # a+bx=y
-A=1.0
-B=2.5
+A=2
+B=8
 FUNC1="$A:$B"
-SKETCH_SIZE_DELTA=0.5,0.1,0.01,0.001,0.001,0.0001
-SKETCH_SIZE_EPSILON=0.01,0.001,0.0003,0.0002,0.0001
-SKETCH_HH=200
+SKETCH_SIZE_DELTA=0.5,0.1,0.01
+SKETCH_SIZE_EPSILON=0.01,0.001,0.002,0.003,0.004,0.006,0.008
+#SKETCH_SIZE_DELTA=0.1
+#SKETCH_SIZE_EPSILON=0.0001
+SKETCH_HH=100
 
 
 echo "produce dataset for $FUNC1"
@@ -39,8 +41,8 @@ echo ${LEARNED_MODEL} >>  ${DATA_DIR}/dataset/learned-model
 
 echo "$A $B" >>  ${DATA_DIR}/dataset/real-model
 
-echo "Learn model: LEARNED_MODEL"
-echo "Real model: REAL_MODEL"
+echo "Learn model: $LEARNED_MODEL"
+echo "Real model: $REAL_MODEL"
 
 # sketch scatterplot
 blos sketch scatterplot-regression \
@@ -54,4 +56,5 @@ blos sketch scatterplot-regression \
 	--dimension 2 \
 	--format png \
 	--class SketchedLogisticRegression \
-	--seed $SEED
+	--seed $SEED \
+	--regressiontype logistic

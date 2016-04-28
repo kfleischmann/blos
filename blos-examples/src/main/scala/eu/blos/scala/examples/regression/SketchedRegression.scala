@@ -78,7 +78,6 @@ object SketchedRegression {
     var gradient = Vectors.EmptyDoubleVector(regression.model.length)*0.0
     while(discovery.hasNext){
       val item = discovery.next
-
       // for each dimension
       for( d <- Range(0,regression.model.length)) {
         gradient.elements(d) += (regression.gradient(item, d))

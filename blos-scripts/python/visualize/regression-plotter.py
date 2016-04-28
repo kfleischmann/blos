@@ -45,7 +45,7 @@ def apply_func(type, model, t):
 	if type=='linear':
 		return model[0]+t*model[1]
 	if type=='logistic':
-		return 1.0 / ( 1 + math.exp(-(model[0]+t*model[1])))
+		return 1.0 / (1 + np.exp(-(model[0]+t*model[1])))
 	return None
 
 def run(**kwargs):
@@ -85,9 +85,6 @@ def run(**kwargs):
 		fig = plt.figure()
 		ax1 = fig.add_subplot(111)
 
-		ax1.set_xlim([-1,1])
-		ax1.set_ylim([-1,1])
-
 		indicies = map(lambda x:int(x), index.split(","))
 
 		with open(inputFile, 'rb') as file:
@@ -113,14 +110,16 @@ def run(**kwargs):
 			# plot data
 			ax1.scatter(xs, ys, s=25, c="#5b5b5b", edgecolors='None', alpha=0.2)
 
-	#t = np.arange(minY, maxY, 0.2)
 	t = np.arange(minX, maxX, 0.2)
+
+	ax1.set_xlim([minX,maxX])
+	ax1.set_ylim([minY,maxY])
+
 
 	if functions:
 		for i,f in enumerate(functions.split(",")):
 			model = map( lambda x:float(x), f.split(":"))
-			ax1.plot(t, model[0]+t*model[1] , linewidth=3.0)
-			#ax1.plot(t, apply_func(functype, model, t) model[0]+t*model[1] , linewidth=3.0)
+			ax1.plot(t, apply_func(functype, model, t), linewidth=3.0)
 
 	plt.savefig(outputFile, dpi=dpi, bbox_inches='tight' )
 
@@ -149,8 +148,6 @@ if __name__ == "__main__":
 	argparser.add_argument("-F", "--functions", 	action="store", 		required=False, help="func1 y=a+bx, a:b,a1:b1,...")
 	argparser.add_argument("-T", "--functype",	 	action="store", 		required=False, help="linear|logistic")
 	argparser.add_argument("-D", "--delimiter", 	action="store", 		required=False, help="set delimiter")
-
-
 	argparser.add_argument("-I", "--index", 		action="store", 		required=True, 	help="set row fieldindex, x,y")
 	#argparser.add_argument("-s", "--show",			action="store", 		required=False, help="result|dataset")
 

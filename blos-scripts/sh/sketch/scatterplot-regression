@@ -63,6 +63,10 @@ case $key in
 	ITERATIONS="$2"
     shift # past argument
     ;;
+    -T|--regressiontype)
+	REGRESSION_TYPE="$2"
+    shift # past argument
+    ;;
     -C|--class)
 	CLASS="$2"
     shift # past argument
@@ -126,7 +130,7 @@ do
 
 		 exec 5>&1
 
-		OUT=$(blos examples run eu.blos.scala.ml.regression.${CLASS} ${SKIP_LEARNING} \
+		OUT=$(blos examples run eu.blos.scala.examples.regression.${CLASS} ${SKIP_LEARNING} \
 				-i ${DATA_DIR}/dataset/points \
 				-o ${DATA_DIR}/sketch/${SKETCH_FILE} \
 				-n ${ITERATIONS} \
@@ -136,8 +140,8 @@ do
 				--num-heavyhitters ${SKETCH_HH} \
 				--write-sketch true \
 				--verbose true \
-				--min -1,-1 \
-				--max 1,1 \
+				--min 0,-1.1 \
+				--max 1.1,1.1 \
 				|tee >(cat - | grep "" >&5))
 
 
@@ -170,13 +174,15 @@ do
 
 		# plot all results into single plot
 		# dataset, real model, learned model the standard way + sketched-model
-		blos visualize ${REGRESSION_TYPE}-regression-plotter.py \
+		# ${REGRESSION_TYPE}-
+		blos visualize regression-plotter.py \
 				-i  ${DATA_DIR}/dataset/points \
 				-o ${DATA_DIR}/sketch/${SKETCH_FILE}/result-plot-${SKETCH_FILE}.${FORMAT} \
 				-d ${DPI} \
 				--index 2,1 \
 				--functions="$MODELS" \
 				--functype=${REGRESSION_TYPE} \
-				--delimiter=,
+				--delimiter=, \
+
 	done
 done

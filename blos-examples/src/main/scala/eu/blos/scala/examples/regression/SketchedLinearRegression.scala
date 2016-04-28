@@ -57,7 +57,6 @@ object SketchedLinearRegression {
   }
 
   def learning(sketch:CMSketch, iterations:Int, alpha:Double, discoveryStrategy:DiscoveryStrategy, modelOutput : String ) {
-
     val output = new PrintWriter(modelOutput)
     var model = Vectors.EmptyDoubleVector(2)+1
     for(x <- Range(0,iterations) ){
@@ -67,7 +66,6 @@ object SketchedLinearRegression {
       println(model)
     }
     println( modelOutput+ ":"+model)
-
     output.close()
   }
 }

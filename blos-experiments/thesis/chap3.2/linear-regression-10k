@@ -39,8 +39,8 @@ echo ${LEARNED_MODEL} >>  ${DATA_DIR}/dataset/learned-model
 
 echo "$A $B" >>  ${DATA_DIR}/dataset/real-model
 
-echo "Learn model: LEARNED_MODEL"
-echo "Real model: REAL_MODEL"
+echo "Learn model: $LEARNED_MODEL"
+echo "Real model: $REAL_MODEL"
 
 # sketch scatterplot
 blos sketch scatterplot-regression \
