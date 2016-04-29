@@ -213,6 +213,8 @@ object PortoTaxi {
 
     val result_writer = new PrintWriter( config.output+"_"+center.elements.mkString("_")+".tsv" )
 
+    val estimates_writer = new PrintWriter( config.output+"_"+center.elements.mkString("_")+"-estimates.tsv" )
+
     result_writer.write(List("hour","real_count_longtrips","real_count_short_trips","sketch_count_longstrips", "sketch_count_shorttrips").mkString("\t") )
     result_writer.write("\n")
 
@@ -265,6 +267,10 @@ object PortoTaxi {
         println("sketch-result=" + List(h, countLong.sketchCount, countShort.sketchCount, real_probLong, real_probShort).mkString(","))
       }
 
+      estimates_writer.write(List(h, countLong.sketchCount, countLong.realCount, countShort.sketchCount, countShort.realCount).mkString(","))
+      estimates_writer.write("\n")
+
+
       val errors_long = Math.abs(countLong.error)
       val errors_short = Math.abs(countShort.error)
 
@@ -282,6 +288,7 @@ object PortoTaxi {
     }
 
     result_writer.close()
+    estimates_writer.close()
   }
 
   def count_parzen_window(dataset: HashMap[String, Int], sketch : CMSketch, inputspace : InputSpace[DoubleVector], center : DoubleVector, radius : Double, hourFrom : Int, hourTo : Int, tripType : Int, normalizer : InputSpaceNormalizer[DoubleVector]  ) = {

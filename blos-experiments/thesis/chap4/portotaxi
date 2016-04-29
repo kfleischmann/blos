@@ -78,10 +78,52 @@ do
 
 			echo "${W},${D},${SKETCH_SIZE},${TOTAL_ERRORS},${PRECISION},${RECALL},${REAL_ERROR_PER_QUERY},${ESTIMATED_ERROR_PER_QUERY},${DISTINCT_KEYS}" >> ${DATA_DIR}/results
 
+			#cat  ${DATA_DIR}/*.tsv | grep "^[0-9]"| cut -f 2,4 | awk '{print ($2-$1) }' >>  ${DATA_DIR}/window_errors
+
+			# generate  error distribution plot
+			cat ${OUTPUT_PATH}/*-estimates.tsv|cut -d'=' -f2|cut -d',' -f2,3|awk -F',' '{print ($1-$2)}' |  blos visualize histogram.py ${OUTPUT_PATH}-error-distribution.png
+
 		done
 	done
 done
 
+blos visualize portotaxi-plotter.py \
+	--input ${DATA_DIR}/results  \
+	--output ${DATA_DIR}/portotaxi-results-plot-precision.png \
+	--delimiter=',' \
+	-G 1  \
+	--xlabel='w'  \
+	--ylbale="precision" \
+	-x 0 \
+	-y 4
 
-# evaluate results
+blos visualize portotaxi-plotter.py \
+	--input ${DATA_DIR}/results  \
+	--output ${DATA_DIR}/portotaxi-results-plot-recall.png \
+	--delimiter=',' \
+	-G 1  \
+	--xlabel='w'  \
+	--ylbale="recall" \
+	-x 0 \
+	-y 5
+
+blos visualize portotaxi-plotter.py \
+	--input ${DATA_DIR}/results  \
+	--output ${DATA_DIR}/portotaxi-results-plot-totalerrors.png \
+	--delimiter=',' \
+	-G 1  \
+	--xlabel='w'  \
+	--ylbale="total-errors" \
+	-x  \
+	-y 3
+
+blos visualize portotaxi-plotter.py \
+	--input ${DATA_DIR}/results  \
+	--output ${DATA_DIR}/portotaxi-results-plot-overestimate-per-query.png \
+	--delimiter=',' \
+	-G 1 \
+	--xlabel='w' \
+	-Y "overestimate-per-query" \
+	-x 0 \
+	-y 6
 
