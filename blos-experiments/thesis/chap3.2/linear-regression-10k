@@ -26,7 +26,7 @@ FUNC1="$A:0,$B:1"
 SKETCH_SIZE_DELTA=0.5,0.1,0.01,0.001,0.001,0.0001
 SKETCH_SIZE_EPSILON=0.01,0.001,0.0005,0.0002,0.0001
 SKETCH_HH=200
-
+SEED=
 
 echo "produce dataset for $FUNC1"
 
@@ -53,5 +53,4 @@ blos sketch scatterplot-regression \
 	--image-resolution 100 \
 	--dimension 2 \
 	--format png \
-	--class SketchedLinearRegression \
-	--seed $SEED
+	--class SketchedLinearRegression

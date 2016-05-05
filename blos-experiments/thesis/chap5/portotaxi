@@ -1,9 +1,10 @@
 #!/bin/bash
 
 # this script produce the result of the real world dataset
-DATA_DIR=~/tmp/blos/experiments/portotaxi/expt3
+DATA_DIR=~/tmp/blos/experiments/portotaxi/expt-results
 
 # DEFAULT VALUES
+PORTO_DATASET="/home/kay/Dropbox/kay-rep/Uni-Berlin/Masterarbeit/Sources/blos/datasets/portotaxi/taxi2.tsv"
 SKETCH_HH=100
 SKETCH_SIZE_DELTA="0.5 0.01 0.001"
 SKETCH_SIZE_EPSILON="0.000013 0.00002 0.000027 0.00004 0.00008 0.0002"
@@ -50,9 +51,8 @@ do
 
 			echo "produce $OUTPUT_PATH"
 
-
 			blos examples run eu.blos.scala.examples.portotaxi.PortoTaxi \
-				--input /home/kay/Dropbox/kay-rep/Uni-Berlin/Masterarbeit/Sources/blos/datasets/portotaxi/taxi2.tsv \
+				--input ${PORTO_DATASET} \
 				--output ${OUTPUT_PATH}/taxi_dataset \
 				--sketch ${SKETCH_SIZE} \
 				--window ${WINDOW} \
@@ -62,10 +62,12 @@ do
 				--evaluate ${ENUM_WINDOW} \
 				--hours 0:24:1 >> ${OUTPUT_FILE}_results
 
+			# DEPRECATED
 			# compare sketch-based counts and real counts
 			#blos experiments portotaxi-hours-plot \
 			#		${OUTPUT_FILE}.tsv:0:1:*:r:'-':'real_long_trips',${OUTPUT_FILE}.tsv:0:3:*:r:'--':'sketched_long_trips',${OUTPUT_FILE}.tsv:0:2:o:b:'-':'real_short_trips',${OUTPUT_FILE}.tsv:0:4:o:b:'--':'sketched_short_trips' \
 			#		${OUTPUT_FILE}.${FORMAT}:${DPI}
+
 			D="$(cat ${OUTPUT_FILE}_results | grep "d="| cut -f2 -d"=" | xargs)"
 			W="$(cat ${OUTPUT_FILE}_results | grep "w="| cut -f2 -d"=" | xargs)"
 			DISTINCT_KEYS=$(cat ${OUTPUT_FILE}_results | grep "distinct keys"| cut -f2 -d: | xargs)
@@ -75,10 +77,7 @@ do
 			REAL_ERROR_PER_QUERY=$(cat ${OUTPUT_FILE}_results | grep "real error per query"| cut -f2 -d: | xargs)
 			ESTIMATED_ERROR_PER_QUERY=$(cat ${OUTPUT_FILE}_results | grep "computed error per query"| cut -f2 -d: | xargs)
 
-
 			echo "${W},${D},${SKETCH_SIZE},${TOTAL_ERRORS},${PRECISION},${RECALL},${REAL_ERROR_PER_QUERY},${ESTIMATED_ERROR_PER_QUERY},${DISTINCT_KEYS}" >> ${DATA_DIR}/results
-
-			#cat  ${DATA_DIR}/*.tsv | grep "^[0-9]"| cut -f 2,4 | awk '{print ($2-$1) }' >>  ${DATA_DIR}/window_errors
 
 			# generate  error distribution plot
 			cat ${OUTPUT_PATH}/*-estimates.tsv|cut -d'=' -f2|cut -d',' -f2,3|awk -F',' '{print ($1-$2)}' |  blos visualize histogram.py ${OUTPUT_PATH}-error-distribution.png
@@ -126,4 +125,3 @@ blos visualize portotaxi-plotter.py \
 	-Y "overestimate-per-query" \
 	-x 0 \
 	-y 6
-
