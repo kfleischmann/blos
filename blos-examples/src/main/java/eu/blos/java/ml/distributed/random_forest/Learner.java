@@ -19,7 +19,7 @@ import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.*;
 
-
+@Deprecated
 public class Learner {
 	private static final Log LOG = LogFactory.getLog(Learner.class);
 

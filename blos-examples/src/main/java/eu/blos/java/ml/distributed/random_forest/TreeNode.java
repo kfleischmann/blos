@@ -6,6 +6,7 @@ import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.List;
 
+@Deprecated
 public class TreeNode implements Serializable {
 			public int treeId;
 			public BigInteger nodeId;

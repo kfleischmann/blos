@@ -15,6 +15,7 @@ import org.apache.flink.util.Collector;
 import java.math.BigInteger;
 import java.util.*;
 
+@Deprecated
 public class Evaluator {
 
 	private static final BigInteger TWO = new BigInteger("2");

@@ -27,21 +27,26 @@ public class DigestHashFunction implements HashFunction {
 	// encoding used for storing hash values as strings
 	private static final Charset charset = Charset.forName("UTF-8");
 
-	private static MessageDigest digest;
+	private MessageDigest digest;
 
 	private long w;
 
 	private String seed;
 
-	static {
+	/*static {
+		try {
+
+		} catch (NoSuchAlgorithmException e) {
+			e.printStackTrace();
+		}
+	}*/
+
+	public DigestHashFunction(long w, long seed) {
 		try {
 			digest = MessageDigest.getInstance("SHA-256");
 		} catch (NoSuchAlgorithmException e) {
 			e.printStackTrace();
 		}
-	}
-
-	public DigestHashFunction(long w, long seed) {
 		this.w = w;
 		this.seed = StringUtils.leftPad( ""+seed, 5, "0" );
 	}
@@ -49,6 +54,11 @@ public class DigestHashFunction implements HashFunction {
 	@Override
 	public long hash(String text) {
 		return hash((""+seed+text ).getBytes(charset));
+	}
+
+	@Override
+	public long w() {
+		return w;
 	}
 
 	private long hash(byte[] x) {

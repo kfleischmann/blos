@@ -9,6 +9,7 @@ import org.apache.flink.api.java.ExecutionEnvironment;
 import org.apache.flink.api.java.tuple.Tuple4;
 import org.apache.flink.util.Collector;
 
+@Deprecated
 public class Builder {
 	public static boolean fileOutput =  true;
 
@@ -39,7 +40,7 @@ public class Builder {
 		// ------------------------------------------
 		// start sketching phase
 		// ------------------------------------------
-		SketchBuilder.sketch(
+		/*SketchBuilder.sketch(
 			env, preprocessedDataPath, sketchDataPath,
 				SketchBuilder.apply(
 					Preprocessor.PATH_OUTPUT_SKETCH_NODE,
@@ -86,7 +87,7 @@ public class Builder {
 						},
 						SketchBuilder.ReduceSketchByFields(0))
 
-					);
+					);*/
 
 		// ------------------------------------------
 		// Start Learning phase

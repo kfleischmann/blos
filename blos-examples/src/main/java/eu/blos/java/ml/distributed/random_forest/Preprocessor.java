@@ -19,7 +19,7 @@ import org.apache.flink.util.Collector;
 
 import java.util.Iterator;
 
-
+@Deprecated
 public class Preprocessor {
 
 	private static final Log LOG = LogFactory.getLog(Preprocessor.class);

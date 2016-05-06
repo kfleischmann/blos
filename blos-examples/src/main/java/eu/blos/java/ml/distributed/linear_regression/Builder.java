@@ -14,8 +14,10 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.flink.api.java.ExecutionEnvironment;
 
+@Deprecated
 public class Builder {
-	public static final String NAME = "Linear SketchedRegression Builder";
+
+	public static final String NAME = "Linear SketchedRegression DistributedSketchedLinearRegression";
 	private static final Log LOG = LogFactory.getLog(Builder.class);
 
 	public static String getPreprocessedPath(String path){
@@ -196,6 +198,8 @@ public class Builder {
 	/**
 	 * sketch the preprocessed data. this output can be used for the
 	 * learning phase.
+	 * dataset schema
+	 * index,y,x
 	 * @param env
 	 * @param preprocessPath
 	 * @param sketchPath
@@ -206,18 +210,20 @@ public class Builder {
 							  String preprocessPath,
 							  String sketchPath,
 							  Sketch[] sketches ) throws Exception {
+				/*
 		SketchBuilder.sketch(env,
-				preprocessPath, sketchPath,
+				preprocessPath,
+				sketchPath,
 				SketchBuilder.apply(
-						"sketch_labels",/*input preprocessed*/
-						"sketch_labels",  /* output sketch */
-						sketches[0].getHashfunctions(),
+						"sketch_labels", // input preprocessed
+						"sketch_labels",  // output sketch file
+						sketches[0].getHashfunctions(), // this hash functions are distributed for the sketching process
 						SketchBuilder.SKETCHTYPE_CM_SKETCH,
 						new SketchBuilder.FieldSketcherUDF(
 								SketchBuilder.FIELD_DELIMITER, // split line by comma
 								2,	// emit y-value
 								SketchBuilder.Fields(3)), // extract fields for hashing (i,k)
-						SketchBuilder.ReduceSketchByFields(0, 1) // group by hash
+						SketchBuilder.ReduceSketchByFields(0, 1) // group by hash and column
 				)
 				,
 				SketchBuilder.apply(
@@ -227,11 +233,23 @@ public class Builder {
 						SketchBuilder.SKETCHTYPE_CM_SKETCH,
 						new SketchBuilder.FieldSketcherUDF(
 								SketchBuilder.FIELD_DELIMITER, // split line by comma
-								3,	// emit y-value
+								3,	// emit x-value
 								SketchBuilder.Fields(4)), // extract fields for hashing (i,k)
-						SketchBuilder.ReduceSketchByFields(0, 1) // group by hash
+						SketchBuilder.ReduceSketchByFields(0, 1) // group by hash and column
+				),
+				SketchBuilder.apply(
+						"sketch_samples",
+						"sketch_samples",
+						sketches[1].getHashfunctions(),
+						SketchBuilder.SKETCHTYPE_CM_SKETCH,
+						new SketchBuilder.FieldSketcherUDF(
+								SketchBuilder.FIELD_DELIMITER, // split line by comma
+								3,	// emit x-value
+								SketchBuilder.Fields(4)), // extract fields for hashing (i,k)
+						SketchBuilder.ReduceSketchByFields(0, 1) // group by hash and column
 				)
-		);
+
+		);*/
 	}
 
 	/**
@@ -246,10 +264,11 @@ public class Builder {
 				OptionBuilder
 						.withLongOpt("input-path")
 						.withDescription("dataset input path. necessary for preporcessing")
-						//.isRequired()
+								//.isRequired()
 						.withValueSeparator('=')
 						.hasArg()
-						.create("i"));
+						.create("i")
+		);
 
 		lvOptions.addOption(
 				OptionBuilder
@@ -299,21 +318,12 @@ public class Builder {
 
 		lvOptions.addOption(
 				OptionBuilder
-						.withLongOpt("sketch1")
+						.withLongOpt("sketch")
 						.withDescription("set parameters for sketch1 delta:epsilon")
 								.isRequired()
 								//.withValueSeparator('=')
 								.hasArg()
-						.create("s1"));
-
-		lvOptions.addOption(
-				OptionBuilder
-						.withLongOpt("sketch2")
-						.withDescription("set parameters for sketch2 delta:epsilon")
-								.isRequired()
-								//.withValueSeparator('=')
-								.hasArg()
-						.create("s2"));
+						.create("s"));
 
 
 		lvOptions.addOption(

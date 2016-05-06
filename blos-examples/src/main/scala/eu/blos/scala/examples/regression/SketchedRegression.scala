@@ -165,14 +165,14 @@ object SketchedRegression {
     }
   }
 
-  def write_sketch(config : Config, sketch:CMSketch, inputspace : InputSpace[DoubleVector], inputspaceNormalizer : InputSpaceNormalizer[DoubleVector], stepsize : DoubleVector ) = {
-    if(config.output.length >0) {
+  def write_sketch( output : String, sketch:CMSketch, inputspace : InputSpace[DoubleVector], inputspaceNormalizer : InputSpaceNormalizer[DoubleVector], stepsize : DoubleVector ) = {
+    if(output.length >0) {
 
-      new File(config.output).mkdir()
+      new File(output).mkdir()
 
-      val outHHInputSpace = new PrintWriter(config.output + "/hh-input-space")
-      val outEnumInputSpace = new PrintWriter(config.output + "/enumerated-input-space")
-      val outHH = new PrintWriter(config.output + "/heavyhitters")
+      val outHHInputSpace = new PrintWriter(output + "/hh-input-space")
+      val outEnumInputSpace = new PrintWriter(output + "/enumerated-input-space")
+      val outHH = new PrintWriter(output + "/heavyhitters")
       val mapHH = new mutable.HashMap[String, Long]()
 
       val hhIt = new DiscoveryStrategyHH(sketch).iterator

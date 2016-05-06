@@ -53,7 +53,7 @@ object SketchedLinearRegression {
     }
 
     if(config.writeSketch)
-      write_sketch(config, sketch, inputspace, inputspaceNormalizer, stepsize )
+      write_sketch(config.output, sketch, inputspace, inputspaceNormalizer, stepsize )
   }
 
   def learning(sketch:CMSketch, iterations:Int, alpha:Double, discoveryStrategy:DiscoveryStrategy, modelOutput : String ) {

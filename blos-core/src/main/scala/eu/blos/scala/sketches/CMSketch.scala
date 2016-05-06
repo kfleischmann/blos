@@ -1,9 +1,11 @@
 package eu.blos.scala.sketches
 
 import pl.edu.icm.jlargearrays.LongLargeArray
-import eu.blos.java.sketches.{HeavyHittersPriorityQueue, Sketch, HashFunction, DigestHashFunction}
+import eu.blos.java.sketches._
 import org.apache.commons.lang3.StringUtils
 import java.io.PrintStream
+import eu.blos.scala.sketches.HeavyHitters
+import eu.blos.scala.sketches.CMEstimate
 
 case class HeavyHitters(var maxSize : Int ) extends HeavyHittersPriorityQueue[CMEstimate] with Serializable {
   val lnOf2 = scala.math.log(2)
@@ -60,6 +62,7 @@ class CMSketch( var delta: Double,
 
   def alloc {
     count = new LongLargeArray(w*d, true /*init memory with zeros*/ )
+    hashfunctions = create_hashfunctions
   }
 
   def reset {
@@ -76,8 +79,12 @@ class CMSketch( var delta: Double,
   def size = if(count == null) 0 else d*w*bucket_size_in_bytes // Bytes
   def alloc_size = d*w*bucket_size_in_bytes // Bytes
   def estimate(t: (Float,String)) = -get(t._2)
+  def set_hashfunctions( f : java.util.ArrayList[HashFunction]) = this.hashfunctions = f
+
   def get_hashfunctions = hashfunctions
   def getHashfunctions = hashfunctions.toArray( new Array[HashFunction]( hashfunctions.size() ) )
+
+
   def array_get(row : Long ,col : Long ) : Long = {
     count.get(row*w+col)
   }

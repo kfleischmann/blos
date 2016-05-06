@@ -22,6 +22,7 @@ import org.apache.flink.util.Collector;
 import java.io.Serializable;
 import java.util.*;
 
+@Deprecated
 public class Learner {
 
 	public static DataSetStatistics statistics;

@@ -92,6 +92,7 @@ object Vectors {
   implicit def doubleArrayToVector(arr: Array[Double]) = new DoubleVector(arr)
 
   def DoubleVector(d: Double*) = new DoubleVector(d.toArray)
+  def DoubleVector2(d: Array[Double]) = new DoubleVector(d)
 
   // find component wise minimum
   def MinSpaceVector(vec:List[DoubleVector]) : DoubleVector = {

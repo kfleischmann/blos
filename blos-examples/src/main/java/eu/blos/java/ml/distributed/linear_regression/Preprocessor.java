@@ -13,6 +13,7 @@ import org.apache.flink.core.fs.FileSystem;
 import org.apache.flink.core.fs.Path;
 import org.apache.flink.util.Collector;
 
+@Deprecated
 public class Preprocessor {
 
 	private static final Log LOG = LogFactory.getLog(Preprocessor.class);

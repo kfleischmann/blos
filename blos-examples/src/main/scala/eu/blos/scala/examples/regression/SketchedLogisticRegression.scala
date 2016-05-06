@@ -78,7 +78,7 @@ object SketchedLogisticRegression {
       learning(sketch, config.numIterations, config.alpha, new DiscoveryStrategyHH(sketch), config.output + "/model-results-hh")
       learning(sketch, config.numIterations, config.alpha, new DiscoveryStrategyEnumeration(sketch, inputspace, inputspaceNormalizer), config.output + "/model-results-enumeration")
     }
-    write_sketch(config, sketch, inputspace, inputspaceNormalizer, stepsize )
+    write_sketch(config.output, sketch, inputspace, inputspaceNormalizer, stepsize )
   }
 
   def learning(sketch:CMSketch, iterations:Int, alpha:Double, discoveryStrategy:DiscoveryStrategy, modelOutput : String ) {
