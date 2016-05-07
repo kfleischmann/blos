@@ -55,14 +55,14 @@ object SketchExample {
   def learning {
     val discoveryHH = new SketchDiscoveryHHIterator(sketch);
 
-    while(discovery.hasNext){
-      val item = discovery.next
+    while(discoveryHH.hasNext){
+      val item = discoveryHH.next
       println( item.vector.toString+" => "+item.count )
     }
 
     val discoveryEnum = new SketchDiscoveryEnumerationIterator(sketch, inputspace, inputspaceNormalizer);
-    while(discovery.hasNext){
-      val item = discovery.next
+    while(discoveryEnum.hasNext){
+      val item = discoveryEnum.next
       println( item.vector.toString+" => "+item.count )
     }
 

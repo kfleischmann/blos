@@ -7,28 +7,29 @@ import scala.collection.mutable
 import eu.blos.scala.sketches.InputSpaceElement
 import eu.blos.scala.inputspace.Vectors.DoubleVector
 
+
 case class Config(
-         input:String="",
-         output:String="",
-         epsilon:Double=0.0,
-         delta:Double=0.0,
-         alpha:Double=0.5,
-         numIterations:Int=100,
-         numHeavyHitters:Int=200,
-         dimension:Int=2,
-         inputspaceResolution:Int=2,
-         discovery:String="hh",
-         skiplearning : Boolean = false,
-         writeSketch : Boolean = false,
-         verbose : Boolean = false,
-         min : String ="",
-         max : String =""
-         );
+                   input:String="",
+                   output:String="",
+                   epsilon:Double=0.0,
+                   delta:Double=0.0,
+                   alpha:Double=0.5,
+                   numIterations:Int=100,
+                   numHeavyHitters:Int=200,
+                   dimension:Int=2,
+                   inputspaceResolution:Int=2,
+                   discovery:String="hh",
+                   skiplearning : Boolean = false,
+                   writeSketch : Boolean = false,
+                   verbose : Boolean = false,
+                   min : String ="",
+                   max : String =""
+                   );
 
 
 object SketchedRegression {
 
-   val config : Config = null
+  val config : Config = null
   trait TransformFunc {
     def apply(x:DoubleVector) : DoubleVector;
   }
