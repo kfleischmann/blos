@@ -38,7 +38,7 @@ public class LinearRegressionSketchLearner {
 			// write resuls of the single nodes into a folder, for each node
 			s = env.readTextFile(new String(inputPath))
 						.mapPartition(
-								new LineareRegressionLearningOperator(iterations,
+								new LineareRegressionSketchOperator(iterations,
 										delta, epsilon, worker, inputSpaceDetails,
 										outputPath ))
 								.setParallelism(1);
@@ -85,17 +85,17 @@ public class LinearRegressionSketchLearner {
 	 * this operator reads the sketch into memory built in the previous phase and starts the learning process
 	 * output: final trees
 	 */
-	static class LineareRegressionLearningOperator implements
+	static class LineareRegressionSketchOperator implements
 			Serializable, MapPartitionFunction<String, Tuple1<String>> {
 
-		private final Log LOG = LogFactory.getLog(LineareRegressionLearningOperator.class);
+		private final Log LOG = LogFactory.getLog(LineareRegressionSketchOperator.class);
 		private int worker;
 		private Double delta;
 		private Double epsilon;
 		private InputSpaceDetails inputSpaceDetails;
 		private String output;
 		private int iterations;
-		public LineareRegressionLearningOperator(int iterations, Double delta, Double epsilon, int worker,
+		public LineareRegressionSketchOperator(int iterations, Double delta, Double epsilon, int worker,
 												 InputSpaceDetails inputSpaceDetails,
 												 String output) {
 			super();
@@ -116,10 +116,8 @@ public class LinearRegressionSketchLearner {
 		public void mapPartition(Iterable<String> sketch,
 								 Collector<Tuple1<String>> collector)
 				throws Exception {
-
-			CMSketch cms = new CMSketch(delta, epsilon);
-
 			// allocate memory
+			CMSketch cms = new CMSketch(delta, epsilon);
 			cms.alloc();
 
 			Iterator<String> it = sketch.iterator();
@@ -129,7 +127,6 @@ public class LinearRegressionSketchLearner {
 				Long w = Long.parseLong(fields[0]);
 				Long d = Long.parseLong(fields[1]);
 				Long count = Long.parseLong(fields[2]);
-
 				cms.array_set(d, w, count);
 			}//while
 
@@ -162,14 +159,21 @@ public class LinearRegressionSketchLearner {
 					new Vectors.DoubleVector(max),
 					new Vectors.DoubleVector(my_stepsize) );
 			// starting model
+
 			Vectors.DoubleVector model = Vectors.EmptyDoubleVector(2).$plus(1);
 			// sketch enumeration
 			DiscoveryStrategyEnumeration discovery = new DiscoveryStrategyEnumeration(cms, inputspace, discretizer);
 
-			SketchedRegression.write_sketch( output+"/worker"+worker+"/", cms, inputspace, discretizer, new Vectors.DoubleVector(my_stepsize) );
+			// Debug reasons
+			SketchedRegression.write_sketch( output+"/worker"+worker+"/", cms,
+					inputspace,
+					discretizer,
+					new Vectors.DoubleVector(my_stepsize) );
 
 			for( int i=0; i < iterations; i++ ) {
-				model = model.$minus( SketchedRegression.gradient_decent_step(new SketchedRegression.LinearRegressionModel(model), discovery.iterator()).$times(alpha) );
+				model = model.$minus( SketchedRegression.gradient_decent_step(
+						new SketchedRegression.LinearRegressionModel(model),
+						discovery.iterator()).$times(alpha) );
 			}
 
 			// write out the final learned model

@@ -28,8 +28,13 @@ object SketchedLinearRegression {
     var inputspace : InputSpace[DoubleVector] =  new DynamicInputSpace(stepsize)
 
     if (config.min.length > 0 && config.max.length > 0) {
-      println("use static input space min:" + new DoubleVector(config.min.split(",").map(x => x.toDouble)) + ", max:"+ new DoubleVector(config.max.split(",").map(x => x.toDouble)))
-      inputspace = new StaticInputSpace(new DoubleVector(config.min.split(",").map(x => x.toDouble)), new DoubleVector(config.max.split(",").map(x => x.toDouble)), stepsize)
+      println("use static input space min:" +
+        new DoubleVector(config.min.split(",").map(x => x.toDouble)) +
+        ", max:"+ new DoubleVector(config.max.split(",").map(x => x.toDouble)))
+      inputspace = new StaticInputSpace(
+        new DoubleVector(config.min.split(",").map(x => x.toDouble)),
+        new DoubleVector(config.max.split(",").map(x => x.toDouble)),
+        stepsize)
     }
 
     sketch.alloc
@@ -41,26 +46,48 @@ object SketchedLinearRegression {
       inputspace,
       new DataSetIterator(is, ","),
       // skip first column (index)
-      new TransformFunc() { def apply(x: DoubleVector) = x.tail},
+      new TransformFunc() {
+        def apply(x: DoubleVector) = x.tail},
       inputspaceNormalizer
     )
     is.close()
 
 
     if(!config.skiplearning) {
-      learning(sketch, config.numIterations, config.alpha, new DiscoveryStrategyEnumeration(sketch, inputspace, inputspaceNormalizer), config.output + "/model-results-enumeration")
-      learning(sketch, config.numIterations, config.alpha, new DiscoveryStrategyHH(sketch), config.output + "/model-results-hh")
+      learning(sketch, config.numIterations, config.alpha,
+        new DiscoveryStrategyEnumeration(
+          sketch,
+          inputspace,
+          inputspaceNormalizer),
+        config.output + "/model-results-enumeration")
+
+      learning(
+          sketch,
+        config.numIterations,
+        config.alpha,
+        new DiscoveryStrategyHH(sketch),
+        config.output + "/model-results-hh"
+      )
     }
 
     if(config.writeSketch)
-      write_sketch(config.output, sketch, inputspace, inputspaceNormalizer, stepsize )
+      write_sketch(config.output,
+        sketch, inputspace,
+        inputspaceNormalizer,
+        stepsize )
   }
 
-  def learning(sketch:CMSketch, iterations:Int, alpha:Double, discoveryStrategy:DiscoveryStrategy, modelOutput : String ) {
+  def learning(sketch:CMSketch, iterations:Int,
+               alpha:Double, discoveryStrategy:DiscoveryStrategy,
+               modelOutput : String ) {
     val output = new PrintWriter(modelOutput)
     var model = Vectors.EmptyDoubleVector(2)+1
     for(x <- Range(0,iterations) ){
-      model = model - gradient_decent_step( new LinearRegressionModel(model), discoveryStrategy.iterator )*alpha
+
+      model = model - gradient_decent_step(
+        new LinearRegressionModel(model),
+        discoveryStrategy.iterator )*alpha
+
       output.write(model.elements.mkString(" "))
       output.write("\n")
       println(model)

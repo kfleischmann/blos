@@ -1,11 +1,12 @@
 package eu.blos.scala.examples.sketch
 
 import eu.blos.scala.inputspace.Vectors.DoubleVector
-import eu.blos.scala.sketches.{DiscoveryStrategyEnumeration, DiscoveryStrategyHH, SketchDiscoveryHHIterator, CMSketch}
+import eu.blos.scala.sketches._
 import eu.blos.scala.inputspace.normalizer.Rounder
 import eu.blos.scala.inputspace.{InputSpace, InputSpaceNormalizer, DataSetIterator, DynamicInputSpace}
 import java.io.{PrintWriter, File, FileReader}
 import scala.collection.mutable
+import eu.blos.scala.inputspace.Vectors.DoubleVector
 
 
 /**
@@ -31,9 +32,7 @@ object SketchExample {
   def main(args: Array[String]): Unit = {
     val filename = "/path/do/dataset"
     val is = new FileReader(new File(filename))
-
     sketch.alloc
-
     skeching(sketch,
       new DataSetIterator(is, ","),
       // skip first column (index)
@@ -41,7 +40,6 @@ object SketchExample {
       inputspaceNormalizer
     )
     is.close()
-
     learning
   }
 
@@ -55,12 +53,18 @@ object SketchExample {
   }
 
   def learning {
-    //val discovery = new SketchDiscoveryEnumeration(sketch, inputspace, inputspaceNormalizer);
-    val discovery = new SketchDiscoveryHHIterator(sketch);
+    val discoveryHH = new SketchDiscoveryHHIterator(sketch);
 
     while(discovery.hasNext){
       val item = discovery.next
       println( item.vector.toString+" => "+item.count )
     }
+
+    val discoveryEnum = new SketchDiscoveryEnumerationIterator(sketch, inputspace, inputspaceNormalizer);
+    while(discovery.hasNext){
+      val item = discovery.next
+      println( item.vector.toString+" => "+item.count )
+    }
+
   }
 }

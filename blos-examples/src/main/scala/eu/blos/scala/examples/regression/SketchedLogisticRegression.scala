@@ -85,7 +85,9 @@ object SketchedLogisticRegression {
     val output = new PrintWriter(modelOutput)
     var model = Vectors.EmptyDoubleVector(2)+1
     for(x <- Range(0,iterations) ){
-      model = model - logistic_gradient_decent_step( new LogisticRegressionModel(model), discoveryStrategy.iterator )*alpha
+      model = model - logistic_gradient_decent_step(
+        new LogisticRegressionModel(model),
+        discoveryStrategy.iterator )*alpha
       output.write(model.elements.mkString(" "))
       output.write("\n")
       println(model)

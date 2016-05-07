@@ -159,7 +159,7 @@ public class DistributedSketchedLinearRegression {
 
 
 	/**
-	 * sketch the preprocessed data. this output can be used for the
+	 * sketch the dataset. this output can be used for the
 	 **/
 	public static void sketch(final ExecutionEnvironment env,
 							  String inputPath,
@@ -176,15 +176,18 @@ public class DistributedSketchedLinearRegression {
 			env	.readTextFile(inputPath)
 				.mapPartition(new MapPartitionFunction<String, Tuple3<Long,Long,Long>>() {
 					@Override
-					public void mapPartition(Iterable<String> samples, Collector<Tuple3<Long,Long,Long>> out)
+					public void mapPartition(Iterable<String> samples,
+											 Collector<Tuple3<Long,Long,Long>> out)
 							throws Exception {
 
-						HashFunction[] hashfunctions = DigestHashFunction.generateHashfunctions((int) d.intValue(), w );
+						HashFunction[] hashfunctions =
+								DigestHashFunction.generateHashfunctions((int) d.intValue(), w );
 						Iterator<String> it = samples.iterator();
 						while(it.hasNext()) {
 							String line = it.next();
 							String[] values = line.split(",");
-							Double[] datapoint = { discretize(Double.parseDouble(values[1]), resolution),
+							Double[] datapoint =
+									{ discretize(Double.parseDouble(values[1]), resolution),
 									discretize(Double.parseDouble(values[2]), resolution) };
 							String key = "("+StringUtils.join(datapoint,FIELD_DELIMITER)+")";
 							for( int d = 0; d < hashfunctions.length; d++  ){
@@ -202,14 +205,21 @@ public class DistributedSketchedLinearRegression {
 					@Override
 					public Tuple3<Long, Long, Long>
 					reduce(Tuple3<Long, Long, Long> left,
-						   Tuple3<Long, Long, Long> right) throws Exception {
+						   Tuple3<Long, Long, Long> right)
+							throws Exception {
 						return
-								new Tuple3<Long, Long, Long>(left.f0, left.f1, left.f2 + right.f2);
+								new Tuple3<Long, Long, Long>(
+										left.f0,
+										left.f1,
+										left.f2 + right.f2);
 					}
 				});
 
-		sketched.writeAsCsv(sketchPath, "\n", FIELD_DELIMITER, FileSystem.WriteMode.OVERWRITE);
-
+		sketched.writeAsCsv(
+				sketchPath,
+				"\n",
+				FIELD_DELIMITER,
+				FileSystem.WriteMode.OVERWRITE);
 		env.execute();
 	}
 
