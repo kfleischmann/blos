@@ -16,7 +16,7 @@ FLINK_PATH=/path/to/flink
 ```
 
 
-Sime examples are built on flink.apache.org. 
+Some examples are built on flink.apache.org, the cool new streaming framework! Check it out ;)
 
 Used libraries
 
