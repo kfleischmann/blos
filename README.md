@@ -6,6 +6,7 @@ Install & Build
 git clone
 cd blos/
 sudo apt-get install jshon
+sudo apt-get install python-matplotlib
 mvn clean package
 ```
 
