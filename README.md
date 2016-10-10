@@ -15,6 +15,10 @@ BLOS_PATH=/path/to/blos
 FLINK_PATH=/path/to/flink
 ```
 
+call blos script from everywhere
+```
+sudo ln -s $BLOS_PATH/blos-scripts/blos /usr/bin/blos
+```
 
 Some examples are built on flink.apache.org, the cool new streaming framework! Check it out ;)
 
