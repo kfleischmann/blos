@@ -1,0 +1,76 @@
+#!/bin/bash
+
+DATA_DIR="/home/kay/blos-temp/sketched_kmeans"
+mkdir -p $DATA_DIR
+mkdir -p $DATA_DIR/dataset
+mkdir -p $DATA_DIR/sketch
+
+#SKETCH_SIZE=0.01:0.0003
+SKETCH_FILE=0.01_0.0003
+FORMAT=png
+#DPI=100
+SKETCHED_DATA="${DATA_DIR}/sketch/${SKETCH_FILE}"
+mkdir -p $SKETCHED_DATA
+#SEED=1
+blos examples run eu.blos.java.ml.clustering.KMeansDatasetGenerator \
+-points $POINTS \
+-k $K \
+-stddev $STDDEV \
+-range $RANGE \
+-resolution $RESOLUTION \
+-output ${DATA_DIR}/dataset \
+-seed $SEED
+
+# produce initial centers
+blos experiments kmeans-manipulate-centers \
+${DATA_DIR}/dataset/real_centers \
+0.8 \
+$SEED > ${DATA_DIR}/dataset/init_centers
+blos examples run eu.blos.java.ml.clustering.SketchedKMeans \
+--heavyhitters \
+--enumeration \
+-i ${DATA_DIR}/dataset/points \
+-o ${SKETCHED_DATA} \
+--init-file ${DATA_DIR}/dataset/init_centers \
+-k $K \
+-n $N \
+-p $P \
+-s ${SKETCH_SIZE} \
+--num-heavyhitters $NUM_HEAVYHITTERS \
+--discover-inputspace \
+--print-sketch \
+--verbose
+
+# make some nice plots
+blos visualize sketch-inputspace \
+-i ${DATA_DIR}/sketch/${SKETCH_FILE}/enumerated-input-space \
+--output="${SKETCHED_DATA}/enumerated-input-space-${SKETCH_FILE}" \
+-f ${FORMAT} \
+-C \
+-d ${DPI}
+blos visualize sketch-inputspace \
+-i ${DATA_DIR}/sketch/${SKETCH_FILE}/hh-input-space \
+--output="${SKETCHED_DATA}/hh-input-space-${SKETCH_FILE}" \
+-f ${FORMAT} \
+-C \
+-d ${DPI}
+
+blos visualize apply-centroids \
+${SKETCHED_DATA}/centers-enum ${DATA_DIR}/dataset/points \
+> "${SKETCHED_DATA}/sketch-result-enum-${SKETCH_FILE}"
+
+blos visualize apply-centroids \
+$SKETCHED_DATA/centers-hh ${DATA_DIR}/dataset/points \
+> "$SKETCHED_DATA/sketch-result-hh-${SKETCH_FILE}"
+
+# plot datapoints with its computed centers using enumeration
+blos visualize plotpoints result \
+$SKETCHED_DATA/sketch-result-enum-${SKETCH_FILE} \
+$SKETCHED_DATA/sketch-result-enum-plot-${SKETCH_FILE}.${FORMAT}:${DPI} \
+$SKETCHED_DATA/centers-enum
+
+# plot datapoints with its computed centers using heavyhitters
+blos visualize plotpoints result \
+$SKETCHED_DATA/sketch-result-hh-${SKETCH_FILE} \
+$SKETCHED_DATA/sketch-result-hh-plot-${SKETCH_FILE}.${FORMAT}:${DPI} \
+$SKETCHED_DATA/centers-hh

@@ -1,0 +1,85 @@
+#!/usr/bin/python3
+import sys
+import json
+import os
+import subprocess
+from tkinter import *
+from PIL import ImageTk, Image
+format = 'png'
+output = '${DATA_DIR}/dataset' 
+
+fields = [ 
+		('SKETCH_SIZE','0.01:0.003'),  
+		('DPI','100'),
+		('POINTS', '10000'),
+		('K', 3 ), 
+		('STDDEV', '0.09'),
+		('RANGE', '1.0'),
+		('RESOLUTION', '2'),
+		('SEED', '1'),
+		('N', '20'),
+		('P', '2'),
+		('NUM_HEAVYHITTERS', '200') 
+	]
+
+def show_images():
+     app_root = Toplevel()
+     path = "/home/kay/blos-temp/sketched_kmeans/sketch/0.01_0.0003/"
+     #Setting it up
+     img1 = ImageTk.PhotoImage(Image.open(path+"enumerated-input-space-0.01_0.0003.png"))
+     img2 = ImageTk.PhotoImage(Image.open(path+"hh-input-space-0.01_0.0003.png"))
+     img3 = ImageTk.PhotoImage(Image.open(path+"sketch-result-enum-plot-0.01_0.0003.png"))
+     img4 = ImageTk.PhotoImage(Image.open(path+"sketch-result-hh-plot-0.01_0.0003.png"))
+
+     #Displaying it
+     imglabel = Label(app_root, image=img1).grid(row=1, column=1) 
+     imglabel = Label(app_root, image=img2).grid(row=1, column=2)
+     imglabel = Label(app_root, image=img3).grid(row=2, column=1)
+     imglabel = Label(app_root, image=img4).grid(row=2, column=2)
+     
+     app_root.mainloop()
+
+def fetch(entries):
+   for entry in entries:
+      field = entry[0]
+      text  = entry[1].get()
+      os.environ[field] = text
+      print('%s: "%s"' % (field, text)) 
+   #os.system("blos gui run-sketched-kmeans")
+   env = os.environ.copy()  
+   cmd="blos gui run-sketched-kmeans"
+   p =subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, env=env)
+   (output, err) = p.communicate()
+   p_status = p.wait()
+   print( output )
+   #print "Command exit status/return code : ", p_status
+   show_images()
+   
+
+def makeform(root, fields):
+   entries = []
+   for field in fields:
+      v = StringVar()
+      v.set(field[1])
+      row = Frame(root)
+      lab = Label(row, width=15, text=field[0], anchor='w')
+      ent = Entry(row, textvariable=v )
+      row.pack(side=TOP, fill=X, padx=5, pady=5)
+      lab.pack(side=LEFT)
+      ent.pack(side=RIGHT, expand=YES, fill=X)
+      entries.append((field[0], ent))
+   return entries
+
+if __name__ == '__main__':
+   root = Tk()
+   root.title("Sketched K-Means")
+   ents = makeform(root, fields)
+   root.bind('<Return>', (lambda event, e=ents: fetch(e)))   
+   b1 = Button(root, text='generate results',
+          command=(lambda e=ents: fetch(e)))
+   b1.pack(side=LEFT, padx=5, pady=5)
+   b2 = Button(root, text='quit', command=root.quit)
+   b2.pack(side=LEFT, padx=5, pady=5)
+   root.mainloop()
+
+
