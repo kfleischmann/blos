@@ -7,7 +7,8 @@ git clone
 cd blos/
 sudo apt-get install jshon
 sudo apt-get install python-matplotlib
-sudo apt-get install python python-tk idle python-pmw python-imaging
+sudo apt-get install python3-tk
+
 mvn clean package
 ```
 
