@@ -30,6 +30,7 @@ def show_images():
      app_root.title(params_settings)
      sketch_file = params['SKETCH_SIZE'].replace(':','_')
      path = params['DATA_DIR']+"/sketch/"+sketch_file+"/"
+     print (path)
      #Setting it up
      img1 = ImageTk.PhotoImage(Image.open(path+"enumerated-input-space-"+sketch_file+".png"))
      img2 = ImageTk.PhotoImage(Image.open(path+"hh-input-space-"+sketch_file+".png"))
@@ -48,6 +49,7 @@ def fetch(entries):
    for entry in entries:
       field = entry[0]
       text  = entry[2].get()
+      params[field] = text
       os.environ[field] = text
       print('%s: "%s"' % (field, text)) 
    #os.system("blos gui run-sketched-kmeans")

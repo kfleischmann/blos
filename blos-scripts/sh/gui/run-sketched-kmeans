@@ -11,6 +11,9 @@ SKETCH_FILE=$(echo $SKETCH_SIZE|tr ":" "_")
 FORMAT=png
 #DPI=100
 SKETCHED_DATA="${DATA_DIR}/sketch/${SKETCH_FILE}"
+
+echo $SKETCH_FILE
+
 mkdir -p $SKETCHED_DATA
 #SEED=1
 blos examples run eu.blos.java.ml.clustering.KMeansDatasetGenerator \
