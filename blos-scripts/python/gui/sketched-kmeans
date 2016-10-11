@@ -6,30 +6,35 @@ import subprocess
 from tkinter import *
 from PIL import ImageTk, Image
 format = 'png'
-output = '${DATA_DIR}/dataset' 
 
-fields = [ 
-		('SKETCH_SIZE','0.01:0.003'),  
-		('DPI','100'),
-		('POINTS', '10000'),
-		('K', 3 ), 
-		('STDDEV', '0.09'),
-		('RANGE', '1.0'),
-		('RESOLUTION', '2'),
-		('SEED', '1'),
-		('N', '20'),
-		('P', '2'),
-		('NUM_HEAVYHITTERS', '200') 
-	]
+params = { 
+		'DATA_DIR': '/home/kay/blos-temp/exp_sketched_kmeans',
+		'SKETCH_SIZE':'0.01:0.003',  
+		'DPI':'100',
+		'POINTS': '10000',
+		'K': '3' , 
+		'STDDEV': '0.09',
+		'RANGE': '1.0',
+		'RESOLUTION': '2',
+		'SEED': '1',
+		'N': '20',
+		'P': '2',
+		'NUM_HEAVYHITTERS' : '200' 
+	}
 
 def show_images():
      app_root = Toplevel()
-     path = "/home/kay/blos-temp/sketched_kmeans/sketch/0.01_0.0003/"
+     params_display=dict(params)
+     params_display.pop('DATA_DIR')
+     params_settings = ",".join("= ".join(_) for _ in params_display.items())
+     app_root.title(params_settings)
+     sketch_file = params['SKETCH_SIZE'].replace(':','_')
+     path = params['DATA_DIR']+"/sketch/"+sketch_file+"/"
      #Setting it up
-     img1 = ImageTk.PhotoImage(Image.open(path+"enumerated-input-space-0.01_0.0003.png"))
-     img2 = ImageTk.PhotoImage(Image.open(path+"hh-input-space-0.01_0.0003.png"))
-     img3 = ImageTk.PhotoImage(Image.open(path+"sketch-result-enum-plot-0.01_0.0003.png"))
-     img4 = ImageTk.PhotoImage(Image.open(path+"sketch-result-hh-plot-0.01_0.0003.png"))
+     img1 = ImageTk.PhotoImage(Image.open(path+"enumerated-input-space-"+sketch_file+".png"))
+     img2 = ImageTk.PhotoImage(Image.open(path+"hh-input-space-"+sketch_file+".png"))
+     img3 = ImageTk.PhotoImage(Image.open(path+"sketch-result-enum-plot-"+sketch_file+".png"))
+     img4 = ImageTk.PhotoImage(Image.open(path+"sketch-result-hh-plot-"+sketch_file+".png"))
 
      #Displaying it
      imglabel = Label(app_root, image=img1).grid(row=1, column=1) 
@@ -42,7 +47,7 @@ def show_images():
 def fetch(entries):
    for entry in entries:
       field = entry[0]
-      text  = entry[1].get()
+      text  = entry[2].get()
       os.environ[field] = text
       print('%s: "%s"' % (field, text)) 
    #os.system("blos gui run-sketched-kmeans")
@@ -56,24 +61,24 @@ def fetch(entries):
    show_images()
    
 
-def makeform(root, fields):
+def makeform(root, params):
    entries = []
-   for field in fields:
+   for key,value in sorted(params.items()):
       v = StringVar()
-      v.set(field[1])
+      v.set(value)
       row = Frame(root)
-      lab = Label(row, width=15, text=field[0], anchor='w')
+      lab = Label(row, width=15, text=key, anchor='w')
       ent = Entry(row, textvariable=v )
       row.pack(side=TOP, fill=X, padx=5, pady=5)
       lab.pack(side=LEFT)
       ent.pack(side=RIGHT, expand=YES, fill=X)
-      entries.append((field[0], ent))
+      entries.append((key, value, ent))
    return entries
 
 if __name__ == '__main__':
    root = Tk()
    root.title("Sketched K-Means")
-   ents = makeform(root, fields)
+   ents = makeform(root, params)
    root.bind('<Return>', (lambda event, e=ents: fetch(e)))   
    b1 = Button(root, text='generate results',
           command=(lambda e=ents: fetch(e)))

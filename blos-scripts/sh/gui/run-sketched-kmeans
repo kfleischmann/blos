@@ -1,12 +1,13 @@
 #!/bin/bash
 
-DATA_DIR="/home/kay/blos-temp/sketched_kmeans"
+#DATA_DIR="~/blos-temp/sketched_kmeans"
+
 mkdir -p $DATA_DIR
 mkdir -p $DATA_DIR/dataset
 mkdir -p $DATA_DIR/sketch
 
 #SKETCH_SIZE=0.01:0.0003
-SKETCH_FILE=0.01_0.0003
+SKETCH_FILE=$(echo $SKETCH_SIZE|tr ":" "_")
 FORMAT=png
 #DPI=100
 SKETCHED_DATA="${DATA_DIR}/sketch/${SKETCH_FILE}"
